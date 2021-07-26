@@ -1,0 +1,33 @@
+
+main(int argc, char** argv)
+{
+	ServerManager	server_manager;
+	if (argc > 1)
+		ret = server_manager.parseConfig(arg[1]);
+	else
+		ret = server_manager.parseConfig(DEFAULT);
+	if (ret == -1)
+		return (1);
+	server_manager.init();
+
+	server_manager.kq(kqueue) // kq를 생성하고 등록
+	server_manager.enrollServer(port_num) // 포트번호를 listen, bind하고 포트번호와 fd쌍을 생성하여 map에 등록. 생성된 fd를 keventlist에 함.
+	while (true)
+	{
+		n = server_manager.callKevent() // kevent를 호출함
+		server_manager.enrollClient() // 신호가 있다면 construct Client. keventlist에 등록.
+		if (n > 0)
+			server_manager.clientRecv(n) // Client에 신호가 있다면 Client에서 read 시작. Client와 RawRequestReader의 상호작용
+		server_manager.clientSend() // 보낼 Response가 있다면 보냄
+		server_manager.clientClose() // 닫을 Client가 있다면 닫음
+	}
+}
+class	ServerManager
+{
+
+}
+
+class	Server
+{
+	map<path, location>	locations
+}
