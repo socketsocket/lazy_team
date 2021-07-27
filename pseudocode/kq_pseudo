@@ -8,26 +8,149 @@ main(int argc, char** argv)
 		ret = server_manager.parseConfig(DEFAULT);
 	if (ret == -1)
 		return (1);
-	server_manager.init();
+	server_manager.initWebserv();
 
-	server_manager.kq(kqueue) // kq를 생성하고 등록
+	server_manager.initKqueue(kqueue) // kq를 생성하고 등록
 	server_manager.enrollServer(port_num) // 포트번호를 listen, bind하고 포트번호와 fd쌍을 생성하여 map에 등록. 생성된 fd를 keventlist에 함.
 	while (true)
 	{
 		n = server_manager.callKevent() // kevent를 호출함
-		server_manager.enrollClient() // 신호가 있다면 construct Client. keventlist에 등록.
 		if (n > 0)
-			server_manager.clientRecv(n) // Client에 신호가 있다면 Client에서 read 시작. Client와 RawRequestReader의 상호작용
-		server_manager.clientSend() // 보낼 Response가 있다면 보냄
+			server_manager.reactEvent(n) // 개개의 event에 반응함. client생성, client에서 read, client에서 write, resource에서 read, 모두 안에서 분기.
 		server_manager.clientClose() // 닫을 Client가 있다면 닫음
 	}
 }
+
+
+// type[fd] 서버를 의미하면 servers[fd] 로 접근하면 해당 서버가 들어있음
+// 클라이언트를 의미하면 clients[fd] 로 접근하면 해당 클라이언트가 들어있음
+// resources[fd]로 접근하면 해당 리소스가 들어있음
 class	ServerManager
 {
+	vector<type>		types
 
+	vector<Server>		servers
+	vector<Client>		clients
+	vector<Resource>	resources
+
+	unsigned long		send_time_out
+	unsigned long		recv_time_out
+
+	vector<kevent>		change_events
+	kevent				event_list[EVENT_SIZE]
+	kevent				current_event
+	int					type
+
+	acceptClient(int fd)
+	{
+		int client_fd = accept()
+		client(client_fd, servers[fd])
+	}
+
+public
+	parseConfig(std::string config_path)
+	initWebserv()
+	initKqueue()
+	enrollServer()
+	callKevent()
+	reactEvent(int event_num)
+	{
+		current_event = event_list[event_num]
+		type = types[current_event.ident]
+		if (error)
+			deal_with_it
+		if (type == SERVER)
+			acceptClient(fd)
+		else if (type == CLIENT)
+		{
+			if (filter == EVFILT_READ)
+			{
+				clients[fd].readRequest
+
+				status = status_check();
+				if (status == BLANK || status == FINISH)
+
+				read(fd, 1024);
+				parsing();
+				status_mark();
+			}
+			else if (filter == EVFILT_WRITE)
+			{
+				client[fd].writeResponse
+
+				status_check();
+				write(respond);
+			}
+		}
+		else
+		{
+			read resource
+			clients[fd].processResource()
+		}
+	}
+	clientClose()
+
+}
+
+class	Resource
+{
+	Client&
+	int				status
+	int				resource_fd
+	string			content
 }
 
 class	Server
 {
+	int					server_fd
+	int					port
+	string				server_name
+	string				default_root
+	map<int, string>	default_error_page
+	unsigned long		client_body_limit
 	map<path, location>	locations
+}
+
+class	Client
+{
+	int				status
+	int				client_fd;
+	Server&			linked_server
+
+	unsigned long	last_request_time;
+	unsigned long	last_response_time;
+
+	queue<Request>	requests;
+	queue<Response>	responses;
+}
+
+class	Request{
+
+	parseRequest()
+
+	int		status; // parsing status;
+	string	method
+	string	uri
+	map<string, string>	header
+	string	body
+}
+
+class	Response{
+	int		status
+	string	status_codd
+	map<string, string>	header
+	string	body
+}
+
+class	Location
+{
+	string				path; // uri
+	string				root
+	vector<string>		indexes // 여러 개가 올 수 있음
+	bool				auto_index = false;
+	map<int, string>	error_pages // 에러코드에 따라 여러 개가 올 수 있음
+
+	char				methods_allowed // 비트로 처리
+	map<string, string>	cgi_infos // 여러 개가 올 수 있음
+
 }

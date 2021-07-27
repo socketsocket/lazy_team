@@ -1,0 +1,4 @@
+#ifndef WEBSERV_LOCATION_HPP_
+#define WEBSERV_LOCATION_HPP_
+
+#endif
