@@ -18,24 +18,29 @@
 #include "Client.hpp"
 #include "Resource.hpp"
 
+#define EVENT_SIZE	1024
+
 class ServerManager {
 	private:
-		std::vector<FdType>		types;
-		std::vector<Server>		servers;
-		std::vector<Client>		clients;
-		std::vector<Resource>	resources;
+		static std::vector<FdType>		types;
+		static std::vector<Server>		servers;
+		static std::vector<Client>		clients;
+		static std::vector<Resource>	resources;
 
-		unsigned long			send_time_out;
-		unsigned long			recv_time_out;
+		static unsigned long			send_time_out;
+		static unsigned long			recv_time_out;
 
-		std::vector<struct kevent>	event_changes;
-		struct kevent
+		static std::vector<struct kevent>	event_changes;
+		static struct kevent				event_list[EVENT_SIZE];
+		static struct kevent				event_current;
+		static FdType						type;
+
+		ServerManager(const ServerManager &ref);
+		ServerManager& operator=(const ServerManager &ref);
+		ServerManager();
+		~ServerManager();
 
 	public:
-		ServerManager(/* args*/);
-		ServerManager(const ServerManager &ref);
-		~ServerManager();
-		ServerManager& operator=(const ServerManager &ref);
 };
 
 

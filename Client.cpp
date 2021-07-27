@@ -1,7 +1,11 @@
 #include "Client.hpp"
 
-Client::Client(int client_fd)
+Client::Client(int client_fd, Server& linked_server):client_fd(client_fd)
 {
+	status = Status::nothing;
+
+
+
 }
 
 Client::Client(const Client &ref)

@@ -65,21 +65,19 @@ public
 		{
 			if (filter == EVFILT_READ)
 			{
-				clients[fd].readRequest
-
-				status = status_check();
-				if (status == BLANK || status == FINISH)
-
-				read(fd, 1024);
-				parsing();
-				status_mark();
+				status = clients[fd].readRequest;
+				//status = status_check();
+				//if (status == BLANK || status == FINISH)
+				//read(fd, 1024);
+				//parsing();
+				//status_mark();
 			}
 			else if (filter == EVFILT_WRITE)
 			{
-				client[fd].writeResponse
+				status = client[fd].writeResponse;
 
-				status_check();
-				write(respond);
+				//status_check();
+				//write(respond);
 			}
 		}
 		else

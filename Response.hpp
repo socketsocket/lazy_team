@@ -8,6 +8,10 @@ class Response
 {
 	private:
 		/* data */
+		int		status;
+		std::string	status_code;
+		map<std::string, std::string> header;
+		std::string	body;
 	public:
 		Response(/* args*/);
 		Response(const Response &ref);

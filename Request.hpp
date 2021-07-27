@@ -8,6 +8,11 @@ class Request
 {
 	private:
 		/* data */
+		int			status;
+		std::string	uri;
+		std::string	method;
+		std::string	body;
+		map<std::string, std::string>	header;
 	public:
 		Request(/* args*/);
 		Request(const Request &ref);
