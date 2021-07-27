@@ -3,6 +3,7 @@
 
 #include <string>
 #include <iostream>
+#include <map>
 
 class Response
 {
@@ -10,13 +11,14 @@ class Response
 		/* data */
 		int		status;
 		std::string	status_code;
-		map<std::string, std::string> header;
+		std::map<std::string, std::string> header;
 		std::string	body;
+
 	public:
 		Response(/* args*/);
-		Response(const Response &ref);
+		Response(const Response& ref);
 		~Response();
-		Response& operator=(const Response &ref);
+		Response& operator=(const Response& ref);
 };
 
 #endif

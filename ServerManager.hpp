@@ -20,27 +20,38 @@
 
 #define EVENT_SIZE	1024
 
+
+// ServerManager is a singleton class which manages I/O of servers, clients, resources.
 class ServerManager {
 	private:
-		static std::vector<FdType>		types;
-		static std::vector<Server>		servers;
-		static std::vector<Client>		clients;
-		static std::vector<Resource>	resources;
+// instnace is the single instance of the class.
+		static ServerManager*	instance;
 
-		static unsigned long			send_time_out;
-		static unsigned long			recv_time_out;
+// Variable types stores the type of fd, which can be connected to a server, a client or a resource.
+// These connection can be reached by variables servers, clients, resources.
+		std::vector<FdType>		types;
+		std::vector<Server>		servers;
+		std::vector<Client>		clients;
+		std::vector<Resource>	resources;
 
-		static std::vector<struct kevent>	event_changes;
-		static struct kevent				event_list[EVENT_SIZE];
-		static struct kevent				event_current;
-		static FdType						type;
+// Send_time_out and recv_time_out is determined by configuration file.
+		unsigned long			send_time_out;
+		unsigned long			recv_time_out;
 
+// These variables are needed for using kqueue
+		std::vector<struct kevent>	event_changes;
+		struct kevent				event_list[EVENT_SIZE];
+		struct kevent				event_current;
+		FdType						type;
+
+// Base constructor, copy constructor, and assignation operator are disabled.
+		ServerManager();
 		ServerManager(const ServerManager &ref);
 		ServerManager& operator=(const ServerManager &ref);
-		ServerManager();
-		~ServerManager();
 
 	public:
+		~ServerManager();
+		static ServerManager&	getServerManager();
 };
 
 
