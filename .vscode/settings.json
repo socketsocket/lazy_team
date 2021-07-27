@@ -1,6 +1,8 @@
 {
 	"files.associations": {
 		"string": "cpp",
-		"queue": "cpp"
+		"queue": "cpp",
+		"__config": "cpp",
+		"memory_resource": "cpp"
 	}
 }

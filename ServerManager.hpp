@@ -39,6 +39,7 @@ class ServerManager {
 		unsigned long			recv_time_out;
 
 // These variables are needed for using kqueue
+		int							kq;
 		std::vector<struct kevent>	event_changes;
 		struct kevent				event_list[EVENT_SIZE];
 		struct kevent				event_current;
@@ -52,6 +53,12 @@ class ServerManager {
 	public:
 		~ServerManager();
 		static ServerManager&	getServerManager();
+
+		int	parseConfig(const char* config_path);
+		int	initWebserv();
+		int	initKqueue();
+		int	callKevent();
+		int	reactEvent(int event_num);
 };
 
 

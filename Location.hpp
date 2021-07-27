@@ -17,8 +17,8 @@ class Location {
 
 	public:
 		Location();
-		Location(Location& ref);
-		Location&	operator=(Location& ref);
+		Location(const Location& ref);
+		Location&	operator=(const Location& ref);
 		~Location();
 };
 
