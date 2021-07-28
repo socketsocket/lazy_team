@@ -14,5 +14,5 @@
 
 - kqueue event (소켓 프로그래밍) : jolim
 - read/write event : jinbekim
-- request/response/resource : seohchoi
+- response/resource : seohchoi
 - cgi :

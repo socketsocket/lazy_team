@@ -5,11 +5,10 @@
 #include <iostream>
 #include <map>
 
-class Response
-{
+class Response {
 	private:
 		/* data */
-		int		status;
+		int		state;
 		std::string	status_code;
 		std::map<std::string, std::string> header;
 		std::string	body;

@@ -7,11 +7,20 @@ enum	FdType {
 	resource
 };
 
+
 enum	Status{
 	nothing,
-	working,
-	finished
+	header,
+	body,
+	finished,
 };
+
+enum	ReadError{
+	good,
+	disconnect,
+	readFail,
+};
+
 
 #define GET    0b001
 #define POST   0b010
