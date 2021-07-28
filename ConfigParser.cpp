@@ -346,6 +346,7 @@ int ConfigParser::readFile(std::vector<Server>& servers, const char* config_path
 		std::cerr << std::string("") + "ConfigParser: " + "ReadFile: " + OPEN_FILE_ERR;
 		return ERROR;
 	}
+
 	ConfigParser::httpBlock(servers);
 	ConfigParser::config_file.close();
 	return OK;
