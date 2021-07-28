@@ -126,7 +126,7 @@ class	Request{
 
 	parseRequest()
 
-	int		state; // parsing status;
+	int		status; // parsing status;
 	string	method
 	string	uri
 	map<string, string>	header
@@ -134,7 +134,7 @@ class	Request{
 }
 
 class	Response{
-	int		state
+	int		status
 	string	status_codd
 	map<string, string>	header
 	string	body

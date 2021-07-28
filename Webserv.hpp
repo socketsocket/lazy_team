@@ -7,7 +7,7 @@ enum	FdType {
 	resource
 };
 
-enum	Status{
+enum	status{
 	nothing,
 	working,
 	finished
