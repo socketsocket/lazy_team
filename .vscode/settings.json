@@ -3,6 +3,8 @@
 		"string": "cpp",
 		"queue": "cpp",
 		"__config": "cpp",
-		"memory_resource": "cpp"
+		"memory_resource": "cpp",
+		"vector": "cpp",
+		"iosfwd": "cpp"
 	}
 }

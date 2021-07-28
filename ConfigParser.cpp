@@ -1,10 +1,6 @@
 #include "ConfigParser.hpp"
 
-<<<<<<< HEAD
 const std::string	ConfigParser::server_config_arr[6] = {
-=======
-const std::string	ConfigParser::serverConfigArr[6] = {
->>>>>>> 341bcf5 (the function getting a valid line, a function checking a block entry is complete. A function getting path of location is worked on.)
 	"listen",
 	"server_name",
 	"root",
@@ -13,17 +9,12 @@ const std::string	ConfigParser::serverConfigArr[6] = {
 	"return"
 };
 
-<<<<<<< HEAD
 const std::string	ConfigParser::location_config_arr[7] = {
-=======
-const std::string	ConfigParser::locationConfigArr[6] = {
->>>>>>> 341bcf5 (the function getting a valid line, a function checking a block entry is complete. A function getting path of location is worked on.)
 	"root",
 	"error_page"
 	"index",
 	"auto_index",
 	"method_allowed",
-<<<<<<< HEAD
 	"cgi_info",
 	"return"
 };
@@ -53,23 +44,6 @@ void	ConfigParser::initStatusCodeMap() {
 		ConfigParser::status_code_map[std::string(status_code_arr[i]).substr(0, 3)]
 			= status_code_arr[i];
 }
-=======
-	"cgi_info"
-};
-
-const std::set<std::string>	ConfigParser::serverConfig(
-	ConfigParser::serverConfigArr,
-	ConfigParser::serverConfigArr
-		+ sizeof(ConfigParser::serverConfigArr) / sizeof(std::string)
-);
-
-const std::set<std::string>	ConfigParser::locationConfig(
-	ConfigParser::locationConfigArr,
-	ConfigParser::locationConfigArr
-		+ sizeof(ConfigParser::locationConfigArr) / sizeof(std::string)
-);
-
->>>>>>> 341bcf5 (the function getting a valid line, a function checking a block entry is complete. A function getting path of location is worked on.)
 
 int	ConfigParser::getSemanticLine(std::string& line) {
 	char	buffer[LINE_BUFF_SIZE];
@@ -77,22 +51,14 @@ int	ConfigParser::getSemanticLine(std::string& line) {
 	while (line.length() == 0) {
 		ConfigParser::config_file.getline(buffer, LINE_BUFF_SIZE);
 		if (ConfigParser::config_file.bad()) {
-<<<<<<< HEAD
 			std::cerr << "ConfigParser: " << "getSemanticLine: " << READ_LINE_ERR << std::endl;;
-=======
-			std::cerr << std::string("") + "ConfigParser: " + "getSemanticLine: " + READ_LINE_ERR;
->>>>>>> 341bcf5 (the function getting a valid line, a function checking a block entry is complete. A function getting path of location is worked on.)
 			return ERROR;
 		}
 		line = buffer;
 		while (ConfigParser::config_file.fail()) {
 			ConfigParser::config_file.getline(buffer, LINE_BUFF_SIZE);
 			if (config_file.bad()) {
-<<<<<<< HEAD
 				std::cerr << "ConfigParser: " << "getSemanticLine: " << READ_LINE_ERR << std::endl;
-=======
-				std::cerr << std::string("") + "ConfigParser: " + "getSemanticLine: " + READ_LINE_ERR;
->>>>>>> 341bcf5 (the function getting a valid line, a function checking a block entry is complete. A function getting path of location is worked on.)
 				return ERROR;
 			}
 			line += buffer;
@@ -105,11 +71,7 @@ int	ConfigParser::getSemanticLine(std::string& line) {
 		}
 
 		// Trim whitespaces.
-<<<<<<< HEAD
 		line = trimWhitespace(line);
-=======
-		trimWhitespace(line);
->>>>>>> 341bcf5 (the function getting a valid line, a function checking a block entry is complete. A function getting path of location is worked on.)
 	}
 	return OK;
 }
@@ -126,31 +88,19 @@ int ConfigParser::getIntoBlock(std::string block_name, std::string line = "") {
 	// Compare block name and leading part of the line
 	std::string candidate = line.substr(0, block_name.length());
 	if (block_name.compare(candidate)) {
-<<<<<<< HEAD
 		std::cerr << "ConfigParser: " << "getIntoBlock: " << NAME_MATCH_ERR << std::endl;
-=======
-		std::cerr << std::string("") + "ConfigParser: " + "getIntoBlock: " + NAME_MATCH_ERR;
->>>>>>> 341bcf5 (the function getting a valid line, a function checking a block entry is complete. A function getting path of location is worked on.)
 		return ERROR;
 	}
 
 	// Check if there is only a opening bracket.
 	line.erase(0, block_name.length());
-<<<<<<< HEAD
 	line = trimWhitespace(line);
-=======
-	trimWhitespace(line);
->>>>>>> 341bcf5 (the function getting a valid line, a function checking a block entry is complete. A function getting path of location is worked on.)
 	if (line.length() == 0)
 		if (ConfigParser::getSemanticLine(line));
 			return ERROR;
 
 	if (line.compare("{")) {
-<<<<<<< HEAD
 		std::cerr << "ConfigParser: " << "getIntoBlock: " << SEMANTIC_ERR << std::endl;;
-=======
-		std::cerr << std::string("") + "ConfigParser: " + "getIntoBlock: " + SEMANTIC_ERR;
->>>>>>> 341bcf5 (the function getting a valid line, a function checking a block entry is complete. A function getting path of location is worked on.)
 		return ERROR;
 	}
 	return OK;
@@ -165,27 +115,18 @@ int	ConfigParser::getPath(std::string& line) {
 	// Compare block name and leading part of the line
 	std::string candidate = line.substr(0, block_name.length());
 	if (block_name.compare(candidate)) {
-<<<<<<< HEAD
 		std::cerr << "ConfigParser: " << "getPath: " << NAME_MATCH_ERR << std::endl;
-=======
-		std::cerr << std::string("") + "ConfigParser: " + "getPath: " + NAME_MATCH_ERR;
->>>>>>> 341bcf5 (the function getting a valid line, a function checking a block entry is complete. A function getting path of location is worked on.)
 		return ERROR;
 	}
 
 	// Delete opening bracket and white spaces
 	line.erase(0, block_name.length());
-<<<<<<< HEAD
 	line = trimWhitespace(line);
-=======
-	trimWhitespace(line);
->>>>>>> 341bcf5 (the function getting a valid line, a function checking a block entry is complete. A function getting path of location is worked on.)
 	if (*(line.end() - 1) != '{') {
 		std::string temp;
 		if (getSemanticLine(temp))
 			return ERROR;
 		if (temp.compare("{")) {
-<<<<<<< HEAD
 			std::cerr << "ConfigParser: " << "getPath: " << NAME_MATCH_ERR << std::endl;
 			return ERROR;
 		}
@@ -214,18 +155,6 @@ int	ConfigParser::getLineElements(std::vector<std::string> elements) {
 }
 
 
-=======
-			std::cerr << std::string("") + "ConfigParser: " + "getPath: " + NAME_MATCH_ERR;
-			return ERROR;
-		}
-	} else {
-
-	}
-	trimWhitespace(line);
-	return OK;
-}
-
->>>>>>> 341bcf5 (the function getting a valid line, a function checking a block entry is complete. A function getting path of location is worked on.)
 // int	ConfigParser::getOutOfLine(std::string line = "") {
 // 	if (line.length() == 0)
 // 		ConfigParser::getSemanticLine(line);
@@ -236,38 +165,22 @@ int	ConfigParser::getLineElements(std::vector<std::string> elements) {
 // 	return OK;
 // }
 
-<<<<<<< HEAD
-=======
-
->>>>>>> 341bcf5 (the function getting a valid line, a function checking a block entry is complete. A function getting path of location is worked on.)
 int	ConfigParser::httpBlock(std::vector<Server>& servers) {
 	if (getIntoBlock("http"));
 		return ERROR;
 
-<<<<<<< HEAD
-=======
-	Server		server;
->>>>>>> 341bcf5 (the function getting a valid line, a function checking a block entry is complete. A function getting path of location is worked on.)
 	std::string	trails = "";
 	int			ret = 0;
 
 	while (!ret) {
-<<<<<<< HEAD
 		ret = ConfigParser::serverBlock(servers);
 		if (ret == ERROR)
 			return ERROR;
 		// what does it do when there is no server block?
-=======
-		ret = serverBlock(server);
-		if (ret == ERROR)
-			return ERROR;
-
->>>>>>> 341bcf5 (the function getting a valid line, a function checking a block entry is complete. A function getting path of location is worked on.)
 	}
 	return OK;
 }
 
-<<<<<<< HEAD
 int	ConfigParser::serverBlock(std::vector<Server>& servers) {
 
 }
@@ -425,14 +338,6 @@ int	ConfigParser::locationBlock(std::vector<Location>& locations, std::string& l
 		return ERROR;
 	}
 	locations.push_back(Location(path, root, indexes, auto_index, error_pages, methods_allowed, cgi_infos, return_to));
-=======
-int	ConfigParser::serverBlock(Server& server) {
-
-}
-
-int	ConfigParser::locationBlock(Location& location, trails, ) {
-	getPath()
->>>>>>> 341bcf5 (the function getting a valid line, a function checking a block entry is complete. A function getting path of location is worked on.)
 }
 
 int ConfigParser::readFile(std::vector<Server>& servers, const char* config_path) {
@@ -441,23 +346,13 @@ int ConfigParser::readFile(std::vector<Server>& servers, const char* config_path
 		std::cerr << std::string("") + "ConfigParser: " + "ReadFile: " + OPEN_FILE_ERR;
 		return ERROR;
 	}
-<<<<<<< HEAD
-
-=======
->>>>>>> 341bcf5 (the function getting a valid line, a function checking a block entry is complete. A function getting path of location is worked on.)
 	ConfigParser::httpBlock(servers);
 	ConfigParser::config_file.close();
 	return OK;
 }
 
-<<<<<<< HEAD
 std::string	trimWhitespace(std::string str) {
 	str.erase(str.begin(), str.begin() + str.find_first_not_of(WHITE_SPACES));
 	str.erase(str.find_last_not_of(WHITE_SPACES) + 1);
 	return str;
-=======
-void	trimWhitespace(std::string& str) {
-	str.erase(str.begin(), str.begin() + str.find_first_not_of(WHITE_SPACES));
-	str.erase(str.find_last_not_of(WHITE_SPACES) + 1);
->>>>>>> 341bcf5 (the function getting a valid line, a function checking a block entry is complete. A function getting path of location is worked on.)
 }
