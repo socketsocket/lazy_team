@@ -18,12 +18,14 @@ class Response {
 
 	public:
 		Response();
-		Response::Response(int status, std::string http_status_code, std::map<std::string, std::string> header, std::string body, std::string version);
+		Response(int status, std::string http_status_code, std::map<std::string, std::string> header, std::string body, std::string version);
 		Response(const Response& ref);
 		~Response();
 		Response& operator=(const Response& ref);
-		std::string getResponseMessage();
-		void appendBody(std::string buffer);
+
+		std::string GetResponseMessage();
+		void AppendBody(std::string buffer);
+		void AddHeader(std::string key, std::string value);
 };
 
 #endif

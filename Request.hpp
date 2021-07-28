@@ -3,6 +3,7 @@
 
 #include <string>
 #include <iostream>
+#include <map>
 
 class Request
 {
@@ -13,11 +14,16 @@ class Request
 		std::string	method;
 		std::string	body;
 		map<std::string, std::string>	header;
+		Location location
+		
 	public:
 		Request(/* args*/);
 		Request(const Request &ref);
 		~Request();
 		Request& operator=(const Request &ref);
+		Location getLocation() const;
+		void	setLocation(const Location &location);
+
 };
 
 #endif

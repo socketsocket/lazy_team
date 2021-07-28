@@ -12,25 +12,25 @@ Resource::~Resource(){
 };
 
 Resource& Resource::operator=(const Resource &ref){
-    if (this == &ref)
-        return ;
-    this->status = ref.status;
-    this->client = ref.client;
-    this->resource_fd = ref.resource_fd;
+	if (this == &ref)
+		return ;
+	this->status = ref.status;
+	this->client = ref.client;
+	this->resource_fd = ref.resource_fd;
 }
 
 int Resource::getStatus(){
-    return this->status;
+	return this->status;
 }
 
 Client &Resource::getClientAddress(){
-    return this->client;
+	return this->client;
 }
 
 int Resource::getResourceFD(){
-    return this->resource_fd;
+	return this->resource_fd;
 }
 
 void Resource::setStatus(int status){
-    this->status = status;
+	this->status = status;
 }
