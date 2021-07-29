@@ -15,16 +15,13 @@ if (client Request message read done)
 }
 */
 
-
-int Server::RequestValidCheck(Client& client)
-{
+int Server::RequestValidCheck(Client& client) {
 	Location curr_location = client.GetRequest().GetLocation();
-	if (client.GetRequest().GetMethod() & GET != true)
+	if (client.GetRequest().GetMethod() & GET == false)
 		if (client.GetRequest().GetMethod() & curr_location.GetMethodsAllowed() == 0)
 			return 405;
 	if (this->client_body_limit != 0)
-		if (client.GetRequest().GetHeader().count("Content-Length") == 1)
-		{
+		if (client.GetRequest().GetHeader().count("Content-Length")) {
 			int content_length;
 			std::stringstream temp(client.GetRequest().GetHeader()["Content-Length"]);
 			temp >> content_length;
@@ -34,12 +31,10 @@ int Server::RequestValidCheck(Client& client)
 	return OK;
 }
 
-Location& Server::CurrLocation(std::string request_uri)
-{
+Location& Server::CurrLocation(std::string request_uri) {
 	Location	res;
 
-	for (std::vector<Location>::iterator it = this->locations.begin(); it != this->locations.end(); it++)
-	{
+	for (std::vector<Location>::iterator it = this->locations.begin(); it != this->locations.end(); it++) {
 		std::string path = it.GetPath();
 		if (request_uri.compare(0, path.length(), path) == 0)
 			res = *it;
@@ -47,8 +42,7 @@ Location& Server::CurrLocation(std::string request_uri)
 	return res;
 }
 
-void Server::MakeResponse(Client& client)
-{
+void Server::MakeResponse(Client& client) {
 	Location curr_location = client.GetRequest().GetLocation();
 	std::string resource_path = client.GetRequest().GetUri();
 	size_t path_pos = resource_path.find_first_of(curr_location.GetPath());
@@ -62,13 +56,11 @@ void Server::MakeResponse(Client& client)
 	{};*/
 }
 
-int Server::checkPath(std::string path)
-{
+int Server::checkPath(std::string path) {
 	struct stat buffer;
 
 	int exist = stat(path.c_str(), &buffer);
-	if (exist == 0)
-	{
+	if (exist == 0) {
 		if (S_ISREG(buffer.st_mode))
 			return File;
 		else if (S_ISDIR(buffer.st_mode))
@@ -77,8 +69,7 @@ int Server::checkPath(std::string path)
 	return Notfound;
 }
 
-std::string Server::DateHeaderInfo()
-{
+std::string Server::DateHeaderInfo() {
 	time_t rawtime;
 	struct tm* timeinfo;
 	char buffer[80];
@@ -89,16 +80,14 @@ std::string Server::DateHeaderInfo()
 	return buffer;
 }
 
-std::string Server::LastModifiedHeaderInfo(struct stat sb)
-{
+std::string Server::LastModifiedHeaderInfo(struct stat sb) {
 	struct tm*	timeinfo = localtime(&sb.st_mtime);
 	char buffer[80];
 	strftime(buffer, 80, "%a, %d, %b %Y %X GMT", timeinfo);
 	return buffer;
 }
 
-void Server::MakeGetResponse(Client& client, std::string resource_path)
-{
+void Server::MakeGetResponse(Client& client, std::string resource_path) {
 	struct stat	sb;
 	int fd;
 	std::map<std::string, std::string> header;
@@ -107,28 +96,23 @@ void Server::MakeGetResponse(Client& client, std::string resource_path)
 	header["Date"] = DateHeaderInfo();
 	header["Server"] = "Passive Server";
 
-	if (checkPath(resource_path) == Directory)
-	{
+	if (checkPath(resource_path) == Directory) {
 		if (resource_path[resource_path.length() - 1] != '/')
 			resource_path += '/';
 
 		bool indexFileFlag = false;
-		if (!request.GetLocation().GetIndex().empty())
-		{
+		if (!request.GetLocation().GetIndex().empty()) {
 			for (std::vector<std::string>::iterator iter = request.GetLocation().GetIndex().begin();
-					iter != request.GetLocation().GetIndex().end(); iter++)
-			{
+					iter != request.GetLocation().GetIndex().end(); iter++) {
 				struct stat buffer;
-				if (stat((resource_path + *iter).c_str(), &buffer) == 0)
-				{
+				if (stat((resource_path + *iter).c_str(), &buffer) == 0) {
 					resource_path = resource_path + *iter;
 					indexFileFlag = true;
 					break ;
 				}
 			}
 		}
-		if (indexFileFlag == false && request.GetLocation().GetAutoIndex() == true)
-		{
+		if (indexFileFlag == false && request.GetLocation().GetAutoIndex() == true) {
 			header["Content-Type"] = ContentTypeHeaderInfo(".html");
 			std::string autoindex_body = MakeAutoIndexPage(request, resource_path);
 			std::stringstream length;
@@ -141,8 +125,7 @@ void Server::MakeGetResponse(Client& client, std::string resource_path)
 	}
 	if ((fd = open(resource_path.c_str(), O_RDONLY)) < 0)
 		ErrorResponse(404);
-	if (fstat(fd, &sb) < 0)
-	{
+	if (fstat(fd, &sb) < 0) {
 		close(fd);
 		ErrorResponse(500);
 	}
@@ -157,8 +140,7 @@ void Server::MakeGetResponse(Client& client, std::string resource_path)
 	setResource(working, client, fd);
 }
 
-std::string Server::ContentTypeHeaderInfo(std::string extension)
-{
+std::string Server::ContentTypeHeaderInfo(std::string extension) {
 	std::map<std::string, std::string> mimeType;
 	mimeType[".aac"] = "audio/aac";
 	mimeType[".abw"] = "application/x-abiword";
@@ -224,8 +206,7 @@ std::string Server::ContentTypeHeaderInfo(std::string extension)
 		return mimeType[extension];
 }
 
-std::string	Server::MakeAutoIndexPage(Request& request, std::string resource_path)
-{
+std::string	Server::MakeAutoIndexPage(Request& request, std::string resource_path) {
 	std::string body;
 	std::string addr = "http://" + request.GetHeader()["Host"] + "/"; //하이퍼링크용 경로
 
@@ -252,8 +233,7 @@ std::string	Server::MakeAutoIndexPage(Request& request, std::string resource_pat
 }
 
 //이녀석의 리턴값에 대한 고민 필요 및 리스폰스 전달방식에대하 고민필요
-void Server::ErrorResponse(Client& client, int http_status_code)
-{
+void Server::ErrorResponse(Client& client, int http_status_code) {
 	std::map<std::string, std::string> header;
 	Location& location = client.GetRequest().GetLocation();
 
@@ -264,13 +244,11 @@ void Server::ErrorResponse(Client& client, int http_status_code)
 	if (location.GetDefaultErrorPages(http_status_code).empty())
 		// setResponse(makeErrorResponse(http_status_code));
 		// client.PushResponse(Response(finished, "200 OK", header, autoindex_body, request.GetHttpVersion()));
-	else
-	{
+	else {
 		int fd = open(location.GetDefaultErrorPages(http_status_code).c_str(), O_RDONLY);
 		if (fd == -1) // 실패 -> 디폴트페이지가 아니라 자체적으로 만들어내는 페이지로 리턴
 			// setResponse(makeErrorResponse(http_status_code));
-		else
-		{
+		else {
 			struct stat sb;
 
 			fstat(fd, &sb);
