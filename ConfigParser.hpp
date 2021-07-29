@@ -20,7 +20,6 @@ class ConfigParser {
 		static const std::set<std::string>	server_config;
 		static const std::set<std::string>	location_config;
 		static const char*					status_code_arr[];
-		static std::map<std::string, const char*>	status_code_map;
 		static std::ifstream				config_file;
 
 		ConfigParser();
