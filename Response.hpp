@@ -14,7 +14,7 @@ class Response {
 		std::string	http_status_code;
 		std::map<std::string, std::string> header;
 		std::string	body;
-		std::string version;
+		std::string	version;
 
 	public:
 		Response();
