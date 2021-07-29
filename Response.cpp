@@ -2,7 +2,7 @@
 
 Response::Response() {}
 
-Response::Response(int status, std::string http_status_code, 
+Response::Response(int status, std::string http_status_code,
 std::map<std::string, std::string> header, std::string body, std::string version)
 :status(status), http_status_code(http_status_code), header(header), body(body), version(version) {}
 
@@ -26,7 +26,7 @@ Response& Response::operator=(const Response& ref) {
 	this->version = ref.version;
 }
 
-std::string Response::GetResponseMessage() {
+std::string Response::getResponseMessage() {
 	std::string res;
 
 	res = this->version + " " + this->http_status_code + "\r\n";
@@ -38,10 +38,10 @@ std::string Response::GetResponseMessage() {
 }
 
 //resource를 읽을때마다 body에 이어붙이기위함
-void Response::AppendBody(std::string buffer) {
+void Response::appendBody(std::string buffer) {
 	this->body += buffer;
 }
 
-void Response::AddHeader(std::string key, std::string value) {
+void Response::addHeader(std::string key, std::string value) {
 	this->header[key] = value;
 }

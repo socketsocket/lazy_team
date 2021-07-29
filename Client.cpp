@@ -47,20 +47,20 @@ int	Client::lengthParser(Request& request) {
 	std::string	tmp;
 	size_t		len;
 
-	len = atoi((request.getHeader())["Content-Length"].c_str());
+	len = atoi(request.getHeader()["Content-Length"].c_str());
 	if (this->read_buff.size() >= len) {
 		tmp = this->read_buff.substr(0, len);
 		this->read_buff.erase(0, len);
 		request.appendBody(tmp);
 		request.setStatus(finished);
 	} else {
-		return next_time; // return
+		return 0;//next_time; // return
 	}
 	return good;
 }
 
 int	Client::headerParser(Request& request) {
-	std::string	tmp
+	std::string	tmp;
 	size_t		pos;
 
 	request.setStatus(header);
@@ -107,7 +107,7 @@ int	Client::Parser(void) {
 	}
 	if (request.getStatus() == body) {
 		if (request.getHeader().find("Transfer-Encoding") != request.getHeader().end()
-		&& *request.getHeader().find("Transfer-Encoding") == "chunked")
+		&& request.getHeader()["Transfer-Encoding"] == "chunked")
 			this->chunkedParser(request);
 		else if (request.getHeader().find("Content-Length") != request.getHeader().end())
 			this->lengthParser(request);
@@ -130,11 +130,16 @@ int	Client::readRequest() {
 	}
 	tmp_buff[read_size] = '\0';
 	this->read_buff += tmp_buff;
-	if (this->requests.empty() || this->requests.back()->getStatus() == finished)
+	if (this->requests.empty() || this->requests.back().getStatus() == finished)
 		this->requests.push(Request());
 	return this->Parser();
 }
 
 int	Client::writeResponse() {
-	while (this->responses.back().getStatus)
+	while (!this->responses.empty()\
+	&& this->responses.front().getStatus() == finished) {
+		std::string& tmp = this->responses.front().getResponseMessage();
+		write(client_fd, tmp.c_str(), tmp.size());
+		this->responses.pop();
+	}
 }
