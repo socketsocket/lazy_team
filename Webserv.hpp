@@ -54,13 +54,14 @@ enum	FdType {
 enum	Status{
 	nothing,
 	working,
-	finished
+	finished,
+	error
 };
 
 enum	FileType{
 	File,
 	Directory,
-	Notfound
+	NotFound
 };
 
 #define GET    0b001
@@ -68,5 +69,6 @@ enum	FileType{
 #define DELETE 0b100
 
 typedef	unsigned char	method;
+static std::map<std::string, const char*>   status_code_map;
 
 #endif

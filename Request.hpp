@@ -13,7 +13,7 @@ class Request
 		std::string	uri;
 		std::string	method;
 		std::string	body;
-		map<std::string, std::string>	header;
+		map<std::string, std::string>	headers;
 		Location location
 		
 	public:

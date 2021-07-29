@@ -12,20 +12,20 @@ class Response {
 		int		status;
 		//예시:200 OK
 		std::string	http_status_code;
-		std::map<std::string, std::string> header;
+		std::map<std::string, std::string> headers;
 		std::string	body;
 		std::string	version;
 
 	public:
 		Response();
-		Response(int status, std::string http_status_code, std::map<std::string, std::string> header, std::string body, std::string version);
+		Response(int status, std::string http_status_code, std::map<std::string, std::string> headers, std::string body, std::string version);
 		Response(const Response& ref);
 		~Response();
 		Response& operator=(const Response& ref);
 
-		std::string GetResponseMessage();
-		void AppendBody(std::string buffer);
-		void AddHeader(std::string key, std::string value);
+		std::string getResponseMessage();
+		void appendBody(std::string buffer);
+		void addHeader(std::string key, std::string value);
 };
 
 #endif

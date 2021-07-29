@@ -4,26 +4,26 @@
 if (client Request message read done)
 {
 	Request curr_request = client->getRequest();
-	curr_request.setLocation = this->CurrLocation(curr_request.GetUri());
+	curr_request.setLocation = this->currLocation(curr_request.getUri());
 	
 	
-	stat = RequestValidCheck();
+	stat = requestValidCheck();
 	if (stat == OK)
-		MakeResponse(Client)
+		makeResponse(Client)
 	else
-		ErrorResponse(status)
+		errorResponse(status)
 }
 */
 
-int Server::RequestValidCheck(Client& client) {
-	Location curr_location = client.GetRequest().GetLocation();
-	if (client.GetRequest().GetMethod() & GET == false)
-		if (client.GetRequest().GetMethod() & curr_location.GetMethodsAllowed() == 0)
+int Server::requestValidCheck(Client& client) {
+	Location curr_location = client.getRequest().getLocation();
+	if (client.getRequest().getMethod() & GET == false)
+		if (client.getRequest().getMethod() & curr_location.getMethodsAllowed() == 0)
 			return 405;
 	if (this->client_body_limit != 0)
-		if (client.GetRequest().GetHeader().count("Content-Length")) {
+		if (client.getRequest().getHeader().count("Content-Length")) {
 			int content_length;
-			std::stringstream temp(client.GetRequest().GetHeader()["Content-Length"]);
+			std::stringstream temp(client.getRequest().getHeader()["Content-Length"]);
 			temp >> content_length;
 			if (content_length > this->client_body_limit)
 				return 413;
@@ -31,25 +31,26 @@ int Server::RequestValidCheck(Client& client) {
 	return OK;
 }
 
-Location& Server::CurrLocation(std::string request_uri) {
+Location& Server::currLocation(std::string request_uri) {
 	Location	res;
 
 	for (std::vector<Location>::iterator it = this->locations.begin(); it != this->locations.end(); it++) {
-		std::string path = it.GetPath();
+		std::string path = it.getPath();
 		if (request_uri.compare(0, path.length(), path) == 0)
 			res = *it;
 	}
 	return res;
 }
 
-void Server::MakeResponse(Client& client) {
-	Location curr_location = client.GetRequest().GetLocation();
-	std::string resource_path = client.GetRequest().GetUri();
-	size_t path_pos = resource_path.find_first_of(curr_location.GetPath());
-	resource_path.replace(path_pos, curr_location.GetPath().length(), curr_location.GetRoot());
+void Server::makeResponse(Client& client) {
+	Request curr_request = client.getRequest();
+	Location curr_location = curr_request.getLocation();
+	std::string resource_path = curr_request.getUri();
+	size_t path_pos = resource_path.find_first_of(curr_location.getPath());
+	resource_path.replace(path_pos, curr_location.getPath().length(), curr_location.getRoot());
 
-	if (curr_request->getMethod() == "GET")
-		MakeGetResponse(client, resource_path);
+	if (curr_request.getMethod() == "GET")
+		client.pushResponse(makeGetResponse(client, resource_path));
 	/*if (curr_request->getMethod() == "POST")
 	{};
 	if (curr_request->getMethod() == "DELETE")
@@ -66,10 +67,10 @@ int Server::checkPath(std::string path) {
 		else if (S_ISDIR(buffer.st_mode))
 			return Directory;
 	}
-	return Notfound;
+	return NotFound;
 }
 
-std::string Server::DateHeaderInfo() {
+std::string Server::dateHeaderInfo() {
 	time_t rawtime;
 	struct tm* timeinfo;
 	char buffer[80];
@@ -80,30 +81,30 @@ std::string Server::DateHeaderInfo() {
 	return buffer;
 }
 
-std::string Server::LastModifiedHeaderInfo(struct stat sb) {
+std::string Server::lastModifiedHeaderInfo(struct stat sb) {
 	struct tm*	timeinfo = localtime(&sb.st_mtime);
 	char buffer[80];
 	strftime(buffer, 80, "%a, %d, %b %Y %X GMT", timeinfo);
 	return buffer;
 }
 
-void Server::MakeGetResponse(Client& client, std::string resource_path) {
+Response Server::makeGetResponse(Client& client, std::string resource_path) {
 	struct stat	sb;
 	int fd;
-	std::map<std::string, std::string> header;
-	Request request = client.GetRequest();
+	std::map<std::string, std::string> headers;
+	Request request = client.getRequest();
 
-	header["Date"] = DateHeaderInfo();
-	header["Server"] = "Passive Server";
+	headers["Date"] = dateHeaderInfo();
+	headers["Server"] = "Passive Server";
 
 	if (checkPath(resource_path) == Directory) {
 		if (resource_path[resource_path.length() - 1] != '/')
 			resource_path += '/';
 
 		bool indexFileFlag = false;
-		if (!request.GetLocation().GetIndex().empty()) {
-			for (std::vector<std::string>::iterator iter = request.GetLocation().GetIndex().begin();
-					iter != request.GetLocation().GetIndex().end(); iter++) {
+		if (!request.getLocation().getIndex().empty()) {
+			for (std::vector<std::string>::iterator iter = request.getLocation().getIndex().begin();
+					iter != request.getLocation().getIndex().end(); iter++) {
 				struct stat buffer;
 				if (stat((resource_path + *iter).c_str(), &buffer) == 0) {
 					resource_path = resource_path + *iter;
@@ -112,35 +113,37 @@ void Server::MakeGetResponse(Client& client, std::string resource_path) {
 				}
 			}
 		}
-		if (indexFileFlag == false && request.GetLocation().GetAutoIndex() == true) {
-			header["Content-Type"] = ContentTypeHeaderInfo(".html");
-			std::string autoindex_body = MakeAutoIndexPage(request, resource_path);
+		if (indexFileFlag == false && request.getLocation().getAutoIndex() == true) {
+			headers["Content-Type"] = contentTypeHeaderInfo(".html");
+			std::string autoindex_body = makeAutoIndexPage(request, resource_path);
+			if (autoindex_body.empty())
+				return errorResponse(client, "500");
 			std::stringstream length;
 			length << (int)sb.st_size;
-			header["Content-Length"] = length.str();
-			client.PushResponse(Response(finished, "200 OK", header, autoindex_body, request.GetHttpVersion()));
+			headers["Content-Length"] = length.str();
+			return Response(finished, "200 OK", headers, autoindex_body, request.getHttpVersion());
 		}
-		if (checkPath(resource_path) == Notfound || checkPath(resource_path) == Directory)
-			ErrorResponse(404);
+		if (checkPath(resource_path) == NotFound || checkPath(resource_path) == Directory)
+			return errorResponse(client, "404");
 	}
 	if ((fd = open(resource_path.c_str(), O_RDONLY)) < 0)
-		ErrorResponse(404);
+		return errorResponse(client, "404");
 	if (fstat(fd, &sb) < 0) {
 		close(fd);
-		ErrorResponse(500);
+		return errorResponse(client, "500");
 	}
-	header["Content-Type"] = ContentTypeHeaderInfo(fileExtension(resource_path.substr(1)));
-	header["Content-Language"] = "ko-KR";
-	header["Content-Location"] = resource_path.substr(1);
+	headers["Content-Type"] = contentTypeHeaderInfo(fileExtension(resource_path.substr(1)));
+	headers["Content-Language"] = "ko-KR";
+	headers["Content-Location"] = resource_path.substr(1);
 	std::stringstream length;
 	length << (int)sb.st_size;
-	header["Content-Length"] = length.str();
-	header["Last-Modified"] = LastModifiedHeaderInfo(sb);
+	headers["Content-Length"] = length.str();
+	headers["Last-Modified"] = lastModifiedHeaderInfo(sb);
 
 	setResource(working, client, fd);
 }
 
-std::string Server::ContentTypeHeaderInfo(std::string extension) {
+std::string Server::contentTypeHeaderInfo(std::string extension) {
 	std::map<std::string, std::string> mimeType;
 	mimeType[".aac"] = "audio/aac";
 	mimeType[".abw"] = "application/x-abiword";
@@ -206,20 +209,20 @@ std::string Server::ContentTypeHeaderInfo(std::string extension) {
 		return mimeType[extension];
 }
 
-std::string	Server::MakeAutoIndexPage(Request& request, std::string resource_path) {
+std::string	Server::makeAutoIndexPage(Request& request, std::string resource_path) {
 	std::string body;
-	std::string addr = "http://" + request.GetHeader()["Host"] + "/"; //하이퍼링크용 경로
+	std::string addr = "http://" + request.getHeader()["Host"] + "/"; //하이퍼링크용 경로
 
 	body += "<!DOCTYPE html>\n";
 	body += "<html>\n";
 	body += "<head>\n";
 	body += "</head>\n";
 	body += "<body>\n";
-	body += "<h1> Index of "+ request.GetUri() + "</h1>\n";
+	body += "<h1> Index of "+ request.getUri() + "</h1>\n";
 
 	DIR *dir = NULL;
 	if ((dir = opendir(resource_path.c_str())) == NULL)
-		ErrorResponse(500);
+		return NULL;
 
 	struct dirent *file = NULL;
 	while ((file = readdir(dir)) != NULL)
@@ -231,30 +234,59 @@ std::string	Server::MakeAutoIndexPage(Request& request, std::string resource_pat
 
 	return (body);
 }
+/*
+* HTML 페이지를 만듭니다.
+* @param HTML 상에 출력할 string
+* @return HTML 코드 string
+*/
+std::string Server::makeHTMLPage(std::string str) {
+	std::string body;
 
-//이녀석의 리턴값에 대한 고민 필요 및 리스폰스 전달방식에대하 고민필요
-void Server::ErrorResponse(Client& client, int http_status_code) {
-	std::map<std::string, std::string> header;
-	Location& location = client.GetRequest().GetLocation();
+	body += "<!DOCTYPE html>\n";
+	body += "<html>\n";
+	body += "<head>\n";
+	body += "</head>\n";
+	body += "<body>\n";
+	body += "<h1>";
+	body += str;
+	body += "<h1>\n";
+	body += "</body>\n";
+	body += "</html>";
+	return (body);
+}
 
-	header["Date"] = DateHeaderInfo();
-	header["Server"] = "Passive Server";
-	header["Content-Type"] = ContentTypeHeaderInfo(".html");
+Response Server::errorResponse(Client& client, std::string http_status_code) {
+	std::map<std::string, std::string> headers;
+	Location& location = client.getRequest().getLocation();
 
-	if (location.GetDefaultErrorPages(http_status_code).empty())
-		// setResponse(makeErrorResponse(http_status_code));
-		// client.PushResponse(Response(finished, "200 OK", header, autoindex_body, request.GetHttpVersion()));
+	headers["Date"] = dateHeaderInfo();
+	headers["Server"] = "Passive Server";
+	headers["Content-Type"] = contentTypeHeaderInfo(".html");
+
+	//해당 에러코드의 디폴트 에러페이지가 없으면 새로만듦
+	if (location.getDefaultErrorPages(http_status_code).empty()) {
+		std::string error_page_body = makeHTMLPage(http_status_code);
+		std::stringstream length;
+		length << error_page_body.length();
+		headers["Content-Length"] = length.str();
+		return Response(error, status_code_map[http_status_code], headers, error_page_body, client.getRequest().getHttpVersion());
+	}
 	else {
-		int fd = open(location.GetDefaultErrorPages(http_status_code).c_str(), O_RDONLY);
-		if (fd == -1) // 실패 -> 디폴트페이지가 아니라 자체적으로 만들어내는 페이지로 리턴
-			// setResponse(makeErrorResponse(http_status_code));
+		int fd = open(location.getDefaultErrorPages(http_status_code).c_str(), O_RDONLY);
+		// 디폴트 에러페이지 오픈 실패 -> 디폴트페이지가 아니라 자체적으로 만들어내는 페이지로 리턴 
+		if (fd == -1) {
+			std::string error_page_body = makeHTMLPage(http_status_code);
+			std::stringstream length;
+			length << error_page_body.length();
+			headers["Content-Length"] = length.str();
+			return Response(error, status_code_map[http_status_code], headers, error_page_body, client.getRequest().getHttpVersion());
+		}
 		else {
 			struct stat sb;
-
 			fstat(fd, &sb);
-				std::stringstream length;
+			std::stringstream length;
 			length << (int)sb.st_size;
-			header["Content-Length"] = length.str();
+			headers["Content-Length"] = length.str();
 			setResource(working, fd, client);
 		}
 	}

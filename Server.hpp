@@ -21,17 +21,18 @@ class Server
 		unsigned long					client_body_limit;
 		std::vector<Location>			locations;
 
-		Location&	CurrLocation(std::string request_uri);
-		int			RequestValidCheck(Client& client);
-		void		MakeResponse(Client& client);
-		void 		MakeGetResponse(Client& client, std::string resource_path);
+		Location&	currLocation(std::string request_uri);
+		int			requestValidCheck(Client& client);
+		void		makeResponse(Client& client);
+		void 		makeGetResponse(Client& client, std::string resource_path);
 		int			checkPath(std::string path);
-		std::string	DateHeaderInfo();
-		std::string	LastModifiedHeaderInfo(struct stat sb);
-		std::string ContentTypeHeaderInfo(std::string extension);
+		std::string	dateHeaderInfo();
+		std::string	lastModifiedHeaderInfo(struct stat sb);
+		std::string contentTypeHeaderInfo(std::string extension);
 		std::string fileExtension(std::string resource_path);
-		std::string	MakeAutoIndexPage(Request& request, std::string resource_path);
-		void ErrorResponse(int http_status_code);
+		std::string	makeAutoIndexPage(Request& request, std::string resource_path);
+		std::string makeHTMLPage(std::string str);
+		Response	errorResponse(Client& client, std::string http_status_code);
 
 	public:
 		Server(/* args*/);
