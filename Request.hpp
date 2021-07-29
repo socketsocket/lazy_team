@@ -2,6 +2,7 @@
 #define WEBSERV_REQUEST_HPP_
 
 #include "Webserv.hpp"
+#include "Server.hpp"
 #include <string>
 #include <iostream>
 #include <map>
@@ -36,10 +37,10 @@ class Request {
 		const Method&								getMethod();
 		const std::string&							getUri();
 		const std::string&							getVersion();
-		std::map<std::string, std::string>&	getHeader();
+		std::map<std::string, std::string>&			getHeader();
 		const std::string&							getBody();
 		Location									getLocation() const;
-		void										setLocation(const Location &location);
+		void										setLocation(const Location& location);
 };
 
 #endif

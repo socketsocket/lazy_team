@@ -49,9 +49,9 @@ class Client {
 
 	public:
 		Client(int client_fd, Server& linked_server);
-		Client(const Client &ref);
+		Client(const Client& ref);
 		~Client();
-		Client& operator=(const Client &ref);
+		Client& operator=(const Client& ref);
 
 		int	readRequest();
 		int	writeResponse();

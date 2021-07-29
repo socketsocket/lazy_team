@@ -3,10 +3,9 @@
 Request::Request() {
 	this->status = nothing;
 	this->method = 0;
-	this->uri = NULL;
-	this->version = NULL;
-	this->header = NULL;
-	this->body = NULL;
+	this->uri = "";
+	this->version = "";
+	this->body = "";
 }
 
 Request::Request(const Request &ref) {
@@ -21,14 +20,15 @@ Request& Request::operator=(const Request &ref) {
 }
 
 int	Request::insertHeader(std::string& key, std::string& value) {
-	std::map<std::map
-	this->header.insert(std::pair<key, value>);
+	this->header.insert(std::make_pair(key, value));
 }
+
 Location	Request::getLocation() const
 {
 	return location;
 }
-void	Request::setLocation(const Location &location)
+
+void	Request::setLocation(const Location& location)
 {
 	this->location = location;
 }

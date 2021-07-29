@@ -1,47 +1,49 @@
 #include "Client.hpp"
 
 Client::Client(int client_fd, Server& linked_server)
-	:client_fd(client_fd), linked_server(linked_server) {
+	: client_fd(client_fd), linked_server(linked_server) {
 	this->status = nothing;
 	// last_request_time = 0;
 	// last_response_time = 0;
 	this->read_buff = "";
 }
 
-Client::Client(const Client &ref)
-	:client_fd(ref.client_fd), linked_server(ref.linked_server) {
+Client::Client(const Client& ref)
+	: client_fd(ref.client_fd), linked_server(ref.linked_server) {
 	*this = ref;
 }
 
 Client::~Client() {
 }
 
-Client& Client::operator=(const Client &ref) {
+Client& Client::operator=(const Client& ref) {
 	return *this;
 }
 
 int	Client::chunkedParser(Request& request) {
 	std::string tmp;
 	size_t		len;
-	size_t		pos_len;
-	size_t		pos_contents;
+	size_t		len_end;
+	size_t		contents_end;
 
 	for(;;) {
-		pos_len = this->read_buff.find("\r\n");
-		pos_contents = this->read_buff.find("\r\n", pos_len + 2);
-		if (pos_len == std::string::npos || pos_contents == std::string::npos)
+		len_end = this->read_buff.find("\r\n");
+		contents_end = this->read_buff.find("\r\n", len_end + 2);
+		if (len_end == std::string::npos || contents_end == std::string::npos)
 			break ; // return;
-		tmp = this->read_buff.substr(0, pos_len);
+		tmp = this->read_buff.substr(0, len_end);
 		len = strtol(tmp.c_str(), NULL, 16);
-		tmp = this->read_buff.substr(pos_len + 2, pos_contents - pos_len - 2);
-		this->read_buff.erase(0, pos_contents + 2);
+		tmp = this->read_buff.substr(len_end + 2, contents_end - len_end - 2);
+		this->read_buff.erase(0, contents_end + 2);
 		if (len == 0)
 			break ;
 		request.appendBody(tmp);
 	}
-	if (len == 0)
+	if (len == 0) {
 		request.setStatus(finished);
-	return good;
+		return 1; //one_more_times;
+	}
+	return OK;
 }
 
 int	Client::lengthParser(Request& request) {
@@ -54,10 +56,11 @@ int	Client::lengthParser(Request& request) {
 		this->read_buff.erase(0, len);
 		request.appendBody(tmp);
 		request.setStatus(finished);
+		return 1; // one_more_times;
 	} else {
-		return 0;//next_time; // return
+		return OK;//next_time; // return
 	}
-	return good;
+	return OK;
 }
 
 int	Client::headerParser(Request& request) {
@@ -109,30 +112,31 @@ int	Client::Parser(void) {
 	if (request.getStatus() == body) {
 		if (request.getHeader().find("Transfer-Encoding") != request.getHeader().end()
 		&& request.getHeader()["Transfer-Encoding"] == "chunked")
-			this->chunkedParser(request);
+			return (this->chunkedParser(request));
 		else if (request.getHeader().find("Content-Length") != request.getHeader().end())
-			this->lengthParser(request);
+			return (this->lengthParser(request));
 		else if (request.getMethod() == POST)
 			return 411; //Length Required code
 	}
-	return good;
+	return OK;
 }
 
 int	Client::readRequest() {
 	char	tmp_buff[READSIZE];
 	int		read_size = read(client_fd, tmp_buff, READSIZE);
+	int		one_more_times;
 
 	if (read_size == 0)
-		return disconnect; // disconnect
+		return ERROR; // disconnect
 	else if (read_size == -1) {
 		std::cerr << "Read failed: " << this->client_fd << " client!!" << std::endl;
-		return readFail; // read fail
+		return ERROR; // read fail
 	}
 	tmp_buff[read_size] = '\0';
 	this->read_buff += tmp_buff;
-	while (this->read_buff.size())
-		this->Parser();
-	return good;
+	while (this->read_buff.size() && one_more_times)
+		one_more_times = this->Parser();
+	return OK;
 }
 
 int	Client::writeResponse() {
