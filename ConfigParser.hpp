@@ -20,10 +20,6 @@ class ConfigParser {
 		static const std::set<std::string>	server_config;
 		static const std::set<std::string>	location_config;
 		static const char*					status_code_arr[];
-<<<<<<< HEAD
-=======
-		static std::map<std::string, const char*>	status_code_map;
->>>>>>> 35fff02 (ConfigParser changed for corresponding cpp)
 		static std::ifstream				config_file;
 
 		ConfigParser();
