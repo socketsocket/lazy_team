@@ -8,8 +8,7 @@ Resource::Resource(const Resource &ref)
 : status(ref.status), client(ref.client), resource_fd(ref.resource_fd) {
 };
 
-Resource::~Resource(){  
-};
+Resource::~Resource(){};
 
 Resource& Resource::operator=(const Resource &ref){
 	if (this == &ref)
