@@ -6,12 +6,12 @@
 
 #define BLOCK_END 101
 
-#define OPEN_FILE_ERR "Failed to open file."
-#define READ_LINE_ERR "Failed to read a line."
-#define NAME_MATCH_ERR "Name is not matching."
-#define SEMANTIC_ERR "Wrong semantics."
-#define NAME_DUP_ERR "Token or name is duplicated."
-#define NO_ENTITY_ERR "There is no entity."
+#define OPEN_FILE_ERR	"Failed to open file."
+#define READ_LINE_ERR	"Failed to read a line."
+#define NAME_MATCH_ERR	"Name is not matching."
+#define SEMANTIC_ERR	"Wrong semantics."
+#define NAME_DUP_ERR	"Token or name is duplicated."
+#define NO_ENTITY_ERR	"There is no entity."
 
 #define LINE_BUFF_SIZE 1024
 
