@@ -24,3 +24,11 @@ int	Request::insertHeader(std::string& key, std::string& value) {
 	std::map<std::map
 	this->header.insert(std::pair<key, value>);
 }
+Location	Request::getLocation() const
+{
+	return location;
+}
+void	Request::setLocation(const Location &location)
+{
+	this->location = location;
+}
