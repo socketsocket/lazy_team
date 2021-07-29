@@ -15,8 +15,9 @@ class Request {
 		std::string							version;
 		std::map<std::string, std::string>	header;
 		std::string							body;
-		// Location*							location;
-	public:
+		Location							location
+
+	public :
 		Request(/* args*/);
 		Request(const Request &ref);
 		~Request();
@@ -37,6 +38,8 @@ class Request {
 		const std::string&							getVersion();
 		const std::map<std::string, std::string>&	getHeader();
 		const std::string&							getBody();
+		Location									getLocation() const;
+		void										setLocation(const Location &location);
 };
 
 #endif

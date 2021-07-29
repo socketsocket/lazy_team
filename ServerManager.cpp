@@ -16,3 +16,9 @@ ServerManager&	ServerManager::getServerManager() {
 	static ServerManager instance = ServerManager();
 	return instance;
 }
+
+int	parseConfig(const char* config_path) {
+	std::ifstream	config_file(config_path);
+
+	return 0;
+}

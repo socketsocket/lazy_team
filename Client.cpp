@@ -50,7 +50,7 @@ int	Client::lengthParser(Request& request) {
 	len = atoi((request.getHeader())["Content-Length"].c_str());
 	if (this->read_buff.size() >= len) {
 		tmp = this->read_buff.substr(0, len);
-		this->read_buff.erase(0, len)
+		this->read_buff.erase(0, len);
 		request.appendBody(tmp);
 		request.setStatus(finished);
 	} else {
