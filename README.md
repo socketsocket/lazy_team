@@ -15,7 +15,7 @@
 - The #define Guard
 	- 최대한 노미넷을 위배하는 방향으로
 	- #와 define 사이는 띄지 않기
-	- *<PROJECT>_<PATH>_<FILE>_H_.* 방식
+	- `<PROJECT>_<PATH>_<FILE>_H_`. 방식
 
 - webserv헤더는 스탠다드 라이브러리가 아닌 아무것도 include 하지않고, 다만 매크로나 enum 등을 define함.
 - 스태틱 멤버변수를 해당 클래스 내에서 사용할 때, 반드시 클래스 명을 명시할 것
