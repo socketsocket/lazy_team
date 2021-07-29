@@ -1,11 +1,11 @@
 #include "Resource.hpp"
 
 Resource::Resource(int status, Client& client, int resource_fd)
-:status(status), client(client), resource_fd(resource_fd){
+: status(status), client(client), resource_fd(resource_fd) {
 };
 
 Resource::Resource(const Resource &ref)
-:status(ref.status), client(ref.client), resource_fd(ref.resource_fd){
+: status(ref.status), client(ref.client), resource_fd(ref.resource_fd) {
 };
 
 Resource::~Resource(){  
