@@ -5,10 +5,10 @@ Location::Location(
 	std::string root,
 	std::vector<std::string> indexes,
 	bool auto_index,
-	std::map<std::string, std::string> error_pages,
+	std::map<stat_type, std::string> error_pages,
 	Method methods_allowed,
 	std::map<std::string, std::string> cgi_infos,
-	std::pair<const char*, std::string> return_to)
+	std::pair<stat_type, std::string> return_to)
 	: path(path),
 	  root(root),
 	  indexes(indexes),
