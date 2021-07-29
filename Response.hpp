@@ -8,8 +8,8 @@
 class Response {
 	private:
 		/* data */
-		int		state;
-		std::string	status_code;
+		int		status;
+		std::string	http_status_code;
 		std::map<std::string, std::string> header;
 		std::string	body;
 

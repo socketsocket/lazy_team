@@ -2,8 +2,8 @@
 
 Request::Request()
 {
-	this->state = nothing;
-	this->method = nullptr;
+	this->status = nothing;
+	this->method = 0;
 	this->uri = nullptr;
 	this->version = nullptr;
 	this->header = nullptr;

@@ -9,12 +9,13 @@
 class Request {
 	private:
 		/* data */
-		int									state;
-		std::string							method;
+		int									status;
+		Method								method;
 		std::string							uri;
 		std::string							version;
 		std::map<std::string, std::string>	header;
 		std::string							body;
+		// Location*							location;
 	public:
 		Request(/* args*/);
 		Request(const Request &ref);
@@ -22,8 +23,14 @@ class Request {
 		Request& operator=(const Request &ref);
 
 		//setter
+		int	setStatus(int);
+		int	setMethod(int);
+		int	setUri(std::string);
+		int	setVersion(std::string);
+
 		//getter
-		const std::string&							getMethod();
+		const int&									getStatus();
+		const Method&								getMethod();
 		const std::string&							getUri();
 		const std::string&							getVersion();
 		const std::map<std::string, std::string>&	getHeader();
@@ -31,3 +38,12 @@ class Request {
 };
 
 #endif
+
+// Location	Request::getLocation() const
+// {
+// 	return location;
+// }
+// void	Request::setLocation(const Location &location)
+// {
+// 	this->location = location;
+// }

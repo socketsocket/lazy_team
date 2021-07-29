@@ -26,6 +26,6 @@ enum	ReadError{
 #define POST   0b010
 #define DELETE 0b100
 
-typedef	unsigned char	method;
+typedef	unsigned char	Method;
 
 #endif

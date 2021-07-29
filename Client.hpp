@@ -33,19 +33,18 @@ class Client {
 		const int		client_fd;
 		Server&			linked_server;
 
-		int				state;
+		int				status;
 
 		unsigned long	last_request_time;
 		unsigned long	last_response_time;
 
-		size_t					buff_size;
-		std::stringstream		read_buff;
+		std::string				read_buff;
 		std::queue<Request*>	requests;
 		std::queue<Response*>	responses;
 
-		int	chunkedParser(Request& request);
-		int	lengthParser(Request& request);
-		int	headerParser(Request& request);
+		int	chunkedParser(Request* request);
+		int	lengthParser(Request* request);
+		int	headerParser(Request* request);
 		int	Parser(void);
 
 	public:
@@ -56,6 +55,9 @@ class Client {
 
 		int	readRequest();
 		int	writeResponse();
+
+		std::queue<Request*>&	getRequests();
+		std::queue<Response*>&	getResponses();
 };
 
 #endif
