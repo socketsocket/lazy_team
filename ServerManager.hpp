@@ -30,8 +30,8 @@ class ServerManager {
 // Variable types stores the type of fd, which can be connected to a server, a client or a resource.
 // These connection can be reached by variables servers, clients, resources.
 		std::vector<FdType>		types;
-		std::vector<Server>		servers;
-		std::vector<Client>		clients;
+		std::vector<Server>	servers;
+		std::vector<Client>	clients;
 		std::vector<Resource>	resources;
 
 // Send_time_out and recv_time_out is determined by configuration file.
@@ -47,14 +47,13 @@ class ServerManager {
 
 // Base constructor, copy constructor, and assignation operator are disabled.
 		ServerManager();
-		ServerManager(const ServerManager &ref);
-		ServerManager& operator=(const ServerManager &ref);
+		ServerManager(const ServerManager& ref);
+		ServerManager&	operator=(const ServerManager& ref);
+		~ServerManager();
 
 	public:
-		~ServerManager();
 		static ServerManager&	getServerManager();
 
-		int	parseConfig(const char* config_path);
 		int	initWebserv();
 		int	initKqueue();
 		int	callKevent();

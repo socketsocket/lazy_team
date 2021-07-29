@@ -4,6 +4,17 @@
 #define ERROR -1
 #define OK     0
 
+#define BLOCK_END 101
+
+#define OPEN_FILE_ERR "Failed to open file."
+#define READ_LINE_ERR "Failed to read a line."
+#define NAME_MATCH_ERR "Name is not matching."
+#define SEMANTIC_ERR "Wrong semantics."
+#define NAME_DUP_ERR "Token or name is duplicated."
+#define NO_ENTITY_ERR "There is no entity."
+
+#define LINE_BUFF_SIZE 1024
+
 #define C100 "100 Continue"
 #define C101 "101 Switching Protocols"
 #define C200 "200 OK"
@@ -45,6 +56,17 @@
 #define C504 "504 Gateway Time-out"
 #define C505 "505 HTTP Version not supported"
 
+typedef const char*	stat_type;
+
+static stat_type	status_code_arr[] = {C100, C101, C200, C201, C202,
+	C203, C204, C205, C206, C300, C301, C302, C303, C304, C305, C307, C400,
+	C401, C402, C403, C404, C405, C406, C407, C408, C409, C410, C411, C412,
+	C413, C414, C415, C416, C417, C500, C501, C502, C503, C504, C505};
+
+#include <map>
+#include <string>
+static std::map<std::string, stat_type>	status_code_map;
+
 enum	FdType {
 	server,
 	client,
@@ -67,6 +89,8 @@ enum	FileType{
 #define POST   0b010
 #define DELETE 0b100
 
-typedef	unsigned char	method;
+typedef	unsigned char	Method;
+
+void	initStatusCodeMap();
 
 #endif
