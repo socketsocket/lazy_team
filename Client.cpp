@@ -5,7 +5,7 @@ Client::Client(int client_fd, Server& linked_server)
 	this->status = nothing;
 	// last_request_time = 0;
 	// last_response_time = 0;
-	this->read_buff = nullptr;
+	this->read_buff = "";
 }
 
 Client::Client(const Client &ref)
@@ -32,7 +32,7 @@ int	Client::chunkedParser(Request& request) {
 		if (pos_len == std::string::npos || pos_contents == std::string::npos)
 			break ; // return;
 		tmp = this->read_buff.substr(0, pos_len);
-		len = atoi(tmp.c_str());
+		len = strtol(tmp.c_str(), NULL, 16);
 		tmp = this->read_buff.substr(pos_len + 2, pos_contents - pos_len - 2);
 		this->read_buff.erase(0, pos_contents + 2);
 		if (len == 0)
@@ -43,6 +43,7 @@ int	Client::chunkedParser(Request& request) {
 		request.setStatus(finished);
 	return good;
 }
+
 int	Client::lengthParser(Request& request) {
 	std::string	tmp;
 	size_t		len;
@@ -100,11 +101,11 @@ int	Client::headerParser(Request& request) {
 }
 
 int	Client::Parser(void) {
+	if (this->requests.empty() || this->requests.back().getStatus() == finished)
+		this->requests.push(Request());
 	Request& request = requests.back();
-
-	if (request.getStatus() == nothing || request.getStatus() == header) {
+	if (request.getStatus() == nothing || request.getStatus() == header)
 		this->headerParser(request);
-	}
 	if (request.getStatus() == body) {
 		if (request.getHeader().find("Transfer-Encoding") != request.getHeader().end()
 		&& request.getHeader()["Transfer-Encoding"] == "chunked")
@@ -116,7 +117,6 @@ int	Client::Parser(void) {
 	}
 	return good;
 }
-
 
 int	Client::readRequest() {
 	char	tmp_buff[READSIZE];
@@ -130,15 +130,15 @@ int	Client::readRequest() {
 	}
 	tmp_buff[read_size] = '\0';
 	this->read_buff += tmp_buff;
-	if (this->requests.empty() || this->requests.back().getStatus() == finished)
-		this->requests.push(Request());
-	return this->Parser();
+	while (this->read_buff.size())
+		this->Parser();
+	return good;
 }
 
 int	Client::writeResponse() {
 	while (!this->responses.empty()\
 	&& this->responses.front().getStatus() == finished) {
-		std::string& tmp = this->responses.front().getResponseMessage();
+		std::string tmp = this->responses.front().getResponseMessage();
 		write(client_fd, tmp.c_str(), tmp.size());
 		this->responses.pop();
 	}

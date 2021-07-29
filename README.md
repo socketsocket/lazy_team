@@ -43,13 +43,11 @@ std::cerr << "ConfigParser: " << "getIntoBlock: " << NAME_MATCH_ERR << std::endl
 		- Location 생성
 		- Server 생성
 		- config파일의 path는 반드시 /로 끝날 것
-	- Location
 	- Server
 
 - read/write event/request 파싱 : jinbekim
 	- Client
 		- Request를 읽고 파싱
-		- Response를 쓰기
 		- Request / Response -> 요청 리퀘스트/리스폰스 스트링을 '담아두는' 클래스
 
 - response 클래스 제작/response 처리/resource : seohchoi

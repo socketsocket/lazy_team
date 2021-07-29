@@ -3,10 +3,10 @@
 Request::Request() {
 	this->status = nothing;
 	this->method = 0;
-	this->uri = nullptr;
-	this->version = nullptr;
-	this->header = nullptr;
-	this->body = nullptr;
+	this->uri = NULL;
+	this->version = NULL;
+	this->header = NULL;
+	this->body = NULL;
 }
 
 Request::Request(const Request &ref) {
