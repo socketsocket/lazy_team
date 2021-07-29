@@ -39,12 +39,12 @@ class Client {
 		unsigned long	last_response_time;
 
 		std::string				read_buff;
-		std::queue<Request*>	requests;
-		std::queue<Response*>	responses;
+		std::queue<Request>		requests;
+		std::queue<Response>	responses;
 
-		int	chunkedParser(Request* request);
-		int	lengthParser(Request* request);
-		int	headerParser(Request* request);
+		int	chunkedParser(Request& request);
+		int	lengthParser(Request& request);
+		int	headerParser(Request& request);
 		int	Parser(void);
 
 	public:
@@ -56,8 +56,10 @@ class Client {
 		int	readRequest();
 		int	writeResponse();
 
-		std::queue<Request*>&	getRequests();
-		std::queue<Response*>&	getResponses();
+		int	pushResponse(Response& response);
+
+		std::queue<Request>&	getRequests();
+		std::queue<Response>&	getResponses();
 };
 
 #endif

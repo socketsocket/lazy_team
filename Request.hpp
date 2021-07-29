@@ -25,8 +25,10 @@ class Request {
 		//setter
 		int	setStatus(int);
 		int	setMethod(int);
-		int	setUri(std::string);
-		int	setVersion(std::string);
+		int	setUri(std::string&);
+		int	setVersion(std::string&);
+		int	insertHeader(std::string& key, std::string& value);
+		int	appendBody(std::string& buffer);
 
 		//getter
 		const int&									getStatus();
@@ -38,7 +40,9 @@ class Request {
 };
 
 #endif
-
+// void Response::AppendBody(std::string buffer){
+// 	this->body += buffer;
+// }
 // Location	Request::getLocation() const
 // {
 // 	return location;
