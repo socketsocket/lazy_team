@@ -44,7 +44,7 @@ int	ConfigParser::getSemanticLine(std::string& line) {
 		while (this->config_file.fail()) {
 			this->config_file.getline(buffer, LINE_BUFF_SIZE);
 			if (config_file.bad())
-				treturn his->putError(READ_LINE_ERR);
+				return this->putError(READ_LINE_ERR);
 			line += buffer;
 		}
 

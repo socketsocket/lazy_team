@@ -34,8 +34,7 @@ class ConfigParser {
 
 		int		getSemanticLine(std::string& line);
 		int		getIntoBlock(std::string block_name, std::string line = "");
-		int		getPath(std::string& path, \
-			std::vector<std::string>& elements);
+		int		getPath(std::string& path, std::vector<std::string>& elements);
 		int		getLineElements(std::vector<std::string>& elements);
 
 		int		httpBlock(std::vector<Server>& servers);
