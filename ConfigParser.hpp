@@ -28,6 +28,10 @@ class ConfigParser {
 		std::set<std::string>	location_config;
 		std::ifstream			config_file;
 
+		// variables for error_message;
+		std::string				class_name;
+		std::string				method_name;
+
 		int		getSemanticLine(std::string& line);
 		int		getIntoBlock(std::string block_name, std::string line = "");
 		int		getPath(std::string& path, \
@@ -38,6 +42,8 @@ class ConfigParser {
 		int		serverBlock(std::vector<Server>& server);
 		int		locationBlock(std::vector<Location>& location, \
 			std::vector<std::string>& elements);
+
+		int		putError(const char* err_msg, std::string opt);
 
 	public:
 		ConfigParser(const char* config_path);

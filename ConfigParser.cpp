@@ -28,27 +28,23 @@ std::string	ConfigParser::location_config_arr[7] = {
 
 // get a line from config file which does not contain comment and is not blank.
 int	ConfigParser::getSemanticLine(std::string& line) {
+	this->method_name = "getSemanticLine";
+
 	char	buffer[LINE_BUFF_SIZE];
 
 	while (line.length() == 0) { // skipping semantically blank line
 
 		// first trial for get a line
 		this->config_file.getline(buffer, LINE_BUFF_SIZE);
-		if (this->config_file.bad()) {
-			std::cerr << "ConfigParser: " << "getSemanticLine: " \
-				<< READ_LINE_ERR << std::endl;;
-			return ERROR;
-		}
+		if (this->config_file.bad())
+			return this->putError(READ_LINE_ERR);
 		line = buffer;
 
 		// get line till the end of line
 		while (this->config_file.fail()) {
 			this->config_file.getline(buffer, LINE_BUFF_SIZE);
-			if (config_file.bad()) {
-				std::cerr << "ConfigParser: " << "getSemanticLine: " \
-					<< READ_LINE_ERR << std::endl;
-				return ERROR;
-			}
+			if (config_file.bad())
+				treturn his->putError(READ_LINE_ERR);
 			line += buffer;
 		}
 
@@ -66,6 +62,8 @@ int	ConfigParser::getSemanticLine(std::string& line) {
 
 // Identify whether the line is block start or not.
 int ConfigParser::getIntoBlock(std::string block_name, std::string line = "") {
+	this->method_name = "getIntoBlock";
+
 	if (line.compare("}"))
 		return BLOCK_END;
 
@@ -75,11 +73,8 @@ int ConfigParser::getIntoBlock(std::string block_name, std::string line = "") {
 
 	// Compare block name and leading part of the line
 	std::string candidate = line.substr(0, block_name.length());
-	if (block_name.compare(candidate)) {
-		std::cerr << "ConfigParser: " << "getIntoBlock: " \
-			<< NAME_MATCH_ERR << std::endl;
-		return ERROR;
-	}
+	if (block_name.compare(candidate))
+		return this->putError(NAME_MATCH_ERR);
 
 	// Check if there is only a opening bracket.
 	line.erase(0, block_name.length());
@@ -89,54 +84,41 @@ int ConfigParser::getIntoBlock(std::string block_name, std::string line = "") {
 			return ERROR;
 
 	// if it is not block end, error.
-	if (line.compare("{")) {
-		std::cerr << "ConfigParser: " << "getIntoBlock: " \
-			<< SEMANTIC_ERR << std::endl;
-		return ERROR;
-	}
+	if (line.compare("{"))
+		return this->putError(SEMANTIC_ERR);
 	return OK;
 }
 
 // Get path for location block. '{' can be included in the line or not.
 int	ConfigParser::getPath(std::string& path, \
 	std::vector<std::string>& elements) {
-	if (elements.size() < 2 || elements.size() > 3) {
-		std::cerr << "ConfigParser: " << "getPath: " \
-			<< SEMANTIC_ERR << std::endl;
-		return ERROR;
-	}
+	this->method_name = "getPath";
+
+	if (elements.size() < 2 || elements.size() > 3)
+		return this->putError(SEMANTIC_ERR);
 	// check if the block name is location
-	if (elements[0].compare("location")) {
-		std::cerr << "ConfigParser: " << "getPath: " \
-			<< SEMANTIC_ERR << std::endl;
-		return ERROR;
-	}
+	if (elements[0].compare("location"))
+		return this->putError(SEMANTIC_ERR);
 	path = elements[1];
 	// if it seems like having starting bracket
 	if (elements.size() == 3) {
 		// but when it is not starting bracket
-		if (elements[2].compare("{")) {
-			std::cerr << "ConfigParser: " << "getPath: " << \
-				SEMANTIC_ERR << std::endl;
-			return ERROR;
-		}
+		if (elements[2].compare("{"))
+			return this->putError(SEMANTIC_ERR);
 		return OK;
 	}
 	if (this->getLineElements(elements))
 		return ERROR;
-	if (elements.size() != 1) {
-		std::cerr << "ConfigParser: " << "getPath: " << \
-			SEMANTIC_ERR << std::endl;
-		return ERROR;
-	}
-	if (elements[0].compare("{")) {
-		std::cerr << "ConfigParser: " << "getPath: " << \
-			SEMANTIC_ERR << std::endl;
-		return ERROR;
-	}
+	if (elements.size() != 1)
+		return this->putError(SEMANTIC_ERR);
+	if (elements[0].compare("{"))
+		return this->putError(SEMANTIC_ERR);
+	return OK;
 }
 
 int	ConfigParser::getLineElements(std::vector<std::string>& elements) {
+	this->method_name = "getLineElements";
+
 	std::string	line;
 	if (this->getSemanticLine(line))
 		return ERROR;
@@ -152,6 +134,8 @@ int	ConfigParser::getLineElements(std::vector<std::string>& elements) {
 }
 
 int	ConfigParser::httpBlock(std::vector<Server>& servers) {
+	this->method_name = "httpBlock";
+
 	if (getIntoBlock("http"))
 		return ERROR;
 
@@ -160,9 +144,7 @@ int	ConfigParser::httpBlock(std::vector<Server>& servers) {
 	while (!ret)
 		ret = this->serverBlock(servers);
 	if (servers.size() == 0) {
-		std::cerr << "ConfigParser: " << "httpBlock: " \
-			<< NO_ENTITY_ERR << std::endl;
-		return ERROR;
+		return this->putError(NO_ENTITY_ERR);
 	} else if (ret == BLOCK_END) {
 		return OK;
 	}
@@ -170,6 +152,8 @@ int	ConfigParser::httpBlock(std::vector<Server>& servers) {
 }
 
 int	ConfigParser::serverBlock(std::vector<Server>& servers) {
+	this->method_name = "serverBlock";
+
 	int	ret;
 	if ((ret = getIntoBlock("server")))
 		return ret;
@@ -198,130 +182,77 @@ int	ConfigParser::serverBlock(std::vector<Server>& servers) {
 			}
 		// listen directive
 		} else if (!elements[0].compare("listen")) {
-			if (port_check) {
-				std::cerr << "ConfigParser: " << "serverBlock: " \
-					"listen: " << NAME_DUP_ERR << std::endl;
-				return ERROR;
-			}
-			if (elements.size() != 2) {
-				std::cerr << "ConfigParser: " << "serverBlock: " \
-					<< "listen: " << SEMANTIC_ERR << std::endl;
-				return ERROR;
-			}
+			if (port_check)
+				return this->putError(NAME_DUP_ERR, "listen");
+			if (elements.size() != 2)
+				return this->putError(SEMANTIC_ERR, "listen");
 			// input port number and also check if it only contains digits.
 			std::istringstream	iss(elements[1]);
 			iss >> port;
-			if (iss.fail()) {
-				std::cerr << "ConfigParser: " << "serverBlock: " \
-					<< "listen: " << SEMANTIC_ERR << std::endl;
-				return ERROR;
-			}
+			if (iss.fail())
+				return this->putError(SEMANTIC_ERR, "listen");
 			port_check = true;
 		// server_name directive
 		} else if (!elements[0].compare("server_name")) {
-			if (server_name_check) {
-				std::cerr << "ConfigParser: " << "serverBlock: " \
-					"server_name: " << NAME_DUP_ERR << std::endl;
-				return ERROR;
-			}
-			if (elements.size() != 2) {
-				std::cerr << "ConfigParser: " << "serverBlock: " \
-					"server_name: " << SEMANTIC_ERR << std::endl;
-				return ERROR;
-			}
+			if (server_name_check)
+				return this->putError(NAME_DUP_ERR, "server_name");
+			if (elements.size() != 2)
+				return this->putError(SEMANTIC_ERR, "server_name");
 			server_name = elements[1];
 			server_name_check = true;
 		// root directive
 		} else if (!elements[0].compare("root")) {
-			if (default_root.length()) {
-				std::cerr << "ConfigParser: " << "serverBlock: " \
-					"root: " << NAME_DUP_ERR << std::endl;
-				return ERROR;
-			}
-			if (elements.size() != 2) {
-				std::cerr << "ConfigParser: " << "serverBlock: " \
-					"server_name: " << SEMANTIC_ERR << std::endl;
-				return ERROR;
-			}
+			if (default_root.length())
+				return this->putError(NAME_DUP_ERR, "root");
+			if (elements.size() != 2)
+				return this->putError(SEMANTIC_ERR, "root");
 			default_root = elements[1];
 		// error_page directive
 		} else if (!elements[0].compare("error_page")) {
-			if (!(elements.size() % 2)) {
-				std::cerr << "ConfigParser: " << "serverBlock: " \
-					<< "error_page:" << SEMANTIC_ERR << std::endl;
-			}
+			if (!(elements.size() % 2))
+				return this->putError(SEMANTIC_ERR, "error_page");
 			// error_page 1 2 3 4 a b c d :config
 			// 0          1 2 3 4 5 6 7 8 :index
 			for (size_t i = 1; i <= elements.size() / 2; ++i) {
 				std::map<std::string, stat_type>::iterator error_code
 					= status_code_map.find(elements[i]);
-				if (error_code == status_code_map.end()) {
-					std::cerr << "ConfigParser: " << "serverBlock: " \
-						<< "error_page: " << SEMANTIC_ERR << std::endl;
-					return ERROR;
-				}
+				if (error_code == status_code_map.end())
+					return this->putError(SEMANTIC_ERR, "error_page");
 				// if the code already exists
-				if (default_error_pages.count((*error_code).second)) {
-					std::cerr << "ConfigParser: " << "serverBlock: " \
-						<< "error_page: " << NAME_DUP_ERR << std::endl;
-					return ERROR;
-				}
+				if (default_error_pages.count((*error_code).second))
+					return this->putError(NAME_DUP_ERR, "error_page");
 				default_error_pages[(*error_code).second] = elements[i * 2];
 			}
 		// client_body_limit directive
 		} else if (!elements[0].compare("client_body_limit")) {
-			if (client_body_limit_check) {
-				std::cerr << "ConfigParser: " << "serverBlock: " \
-					"client_body_limit: " << NAME_DUP_ERR << std::endl;
-				return ERROR;
-			}
-			if (elements.size() != 2) {
-				std::cerr << "ConfigParser: " << "serverBlock: " \
-					"client_body_limit: " << SEMANTIC_ERR << std::endl;
-				return ERROR;
-			}
+			if (client_body_limit_check)
+				return this->putError(NAME_DUP_ERR, "client_body_limit");
+			if (elements.size() != 2)
+				return this->putError(SEMANTIC_ERR, "client_body_limit");
 			std::istringstream	iss(elements[1]);
 			iss >> client_body_limit;
-			if (iss.fail()) {
-				std::cerr << "ConfigParser: " << "serverBlock: " \
-					"client_body_limit: " << SEMANTIC_ERR << std::endl;
-				return ERROR;
-			}
+			if (iss.fail())
+				return this->putError(SEMANTIC_ERR, "client_body_limit");
 			client_body_limit_check = true;
 		// return directive
 		} else {
 			// if return directive is duplicated
-			if (return_to.first) {
-				std::cerr << "ConfigParser: " << "serverBlock: " \
-					"return: " << NAME_DUP_ERR << std::endl;
-				return ERROR;
-			}
-			if (elements.size() != 3) {
-				std::cerr << "ConfigParser: " << "serverBlock: " \
-					"return: " << SEMANTIC_ERR << std::endl;
-				return ERROR;
-			}
-			if (status_code_map.find(elements[1]) == status_code_map.end()) {
-				std::cerr << "ConfigParser: " << "serverBlock: " \
-					"return: " << SEMANTIC_ERR << std::endl;
-				return ERROR;
-			}
+			if (return_to.first)
+				return this->putError(NAME_DUP_ERR, "return");
+			if (elements.size() != 3)
+				return this->putError(SEMANTIC_ERR, "return");
+			if (status_code_map.find(elements[1]) == status_code_map.end())
+				return this->putError(SEMANTIC_ERR, "return");
 			return_to.first = status_code_map[elements[1]];
 			return_to.second = elements[2];
 		}
 	} while (elements.size() > 1);
 	// if the code block is not ending
-	if (elements[0].compare("}")) {
-		std::cerr << "ConfigParser: " << "locationBlock: " \
-			<< SEMANTIC_ERR << std::endl;
-		return ERROR;
-	}
+	if (elements[0].compare("}"))
+		return this->putError(SEMANTIC_ERR);
 	// if there is no root directive and location or no return directive
-	if ((!default_root.length() && !locations.size()) || !return_to.first) {
-		std::cerr << "ConfigParser: " << "locationBlock: " \
-			<< "root: " << NO_ENTITY_ERR << std::endl;
-		return ERROR;
-	}
+	if ((!default_root.length() && !locations.size()) || !return_to.first)
+		return this->putError(NO_ENTITY_ERR, "root");
 	servers.push_back(Server(port, server_name, default_root, \
 		default_error_pages, client_body_limit, locations, return_to));
 	return OK;
@@ -329,6 +260,8 @@ int	ConfigParser::serverBlock(std::vector<Server>& servers) {
 
 int	ConfigParser::locationBlock(std::vector<Location>& locations, \
 	std::vector<std::string>& elements) {
+	this->method_name = "locationBlock";
+
 	std::string	path;
 	if (this->getPath(path, elements))
 		return ERROR;
@@ -349,96 +282,61 @@ int	ConfigParser::locationBlock(std::vector<Location>& locations, \
 		if (this->getLineElements(elements))
 			return ERROR;
 		if ((this->location_config.find(elements[0]) \
-			== this->location_config.end())) {
-			std::cerr << "ConfigParser: " << "locationBlock: " \
-				<< NAME_MATCH_ERR << std::endl;
-			return ERROR;
-		}
+			== this->location_config.end()))
+			return this->putError(NAME_MATCH_ERR);
 		// root directive. check directive size and duplication.
 		if (!elements[0].compare("root")) {
-			if (elements.size() != 2) {
-				std::cerr << "ConfigParser: " << "locationBlock: " \
-					<< "root: "<< SEMANTIC_ERR << std::endl;
-				return ERROR;
-			}
-			if (root.length()) {
-				std::cerr << "ConfigParser: " << "locationBlock: " \
-					<< "root: " << NAME_DUP_ERR << std::endl;
-				return ERROR;
-			}
+			if (elements.size() != 2)
+				return this->putError(SEMANTIC_ERR, "root");
+			if (root.length())
+				return this->putError(NAME_DUP_ERR, "root");
 			root = elements[1];
 		// error_page directive. check directive number.
 		} else if (!elements[0].compare("error_page")) {
-			if (!(elements.size() % 2)) {
-				std::cerr << "ConfigParser: " << "locationBlock: " \
-					<< "error_page:" << SEMANTIC_ERR << std::endl;
-			}
+			if (!(elements.size() % 2))
+				return this->putError(SEMANTIC_ERR, "error_page");
 			// error_page 1 2 3 4 a b c d :config
 			// 0          1 2 3 4 5 6 7 8 :index
 			for (size_t i = 1; i <= elements.size() / 2; ++i) {
 				std::map<std::string, stat_type>::iterator error_code
 					= status_code_map.find(elements[i]);
-				if (error_code == status_code_map.end()) {
-					std::cerr << "ConfigParser: " << "locationBlock: " \
-						<< "error_page: " << SEMANTIC_ERR << std::endl;
-					return ERROR;
-				}
+				if (error_code == status_code_map.end())
+					return this->putError(SEMANTIC_ERR, "error_page");
 				// if the code already exists
-				if (error_pages.count((*error_code).second)) {
-					std::cerr << "ConfigParser: " << "locationBlock: " \
-						<< "error_page: " << NAME_DUP_ERR << std::endl;
-					return ERROR;
-				}
+				if (error_pages.count((*error_code).second))
+					return this->putError(NAME_DUP_ERR, "error_page");
 				error_pages[(*error_code).second] = elements[i * 2];
 			}
 		// index directive. check directive size.
 		} else if (!elements[0].compare("index")) {
-			if (elements.size() == 1) {
-				std::cerr << "ConfigParer: " << "locationBlock: " \
-					<< "index: " << NO_ENTITY_ERR << std::endl;
-			}
+			if (elements.size() == 1)
+				return this->putError(NO_ENTITY_ERR, "index");
 			for (size_t i = 1; i < elements.size(); ++i)
 				indexes.push_back(elements[i]);
 		// auto_index directive. check duplication, directive size, and value.
 		} else if (!elements[0].compare("auto_index")) {
-			if (auto_index_check) {
-				std::cerr << "ConfigParser: " << "locationBlock: " \
-					<< "auto_index: " << NAME_DUP_ERR << std::endl;
-			}
-			if (elements.size() != 2) {
-				std::cerr << "ConfigParser: " << "locationBlock: " \
-					<< "auto_index: " << SEMANTIC_ERR << std::endl;
-				return ERROR;
-			}
+			if (auto_index_check)
+				return this->putError(NAME_DUP_ERR, "auto_index");
+			if (elements.size() != 2)
+				return this->putError(SEMANTIC_ERR, "auto_index");
 			if (!elements[1].compare("on")) {
 				auto_index = true;
 			} else if (!elements[1].compare("off")) {
 				auto_index = false;
 			} else {
-				std::cerr << "ConfigParser: " << "locationBlock: " \
-					<< "auto_index: " << SEMANTIC_ERR << std::endl;
-				return ERROR;
+				return this->putError(SEMANTIC_ERR, "auto_index");
 			}
 			auto_index_check = true;
 		// method_allowed directive. check duplication, directive size, and method names.
 		} else if (!elements[0].compare("method_allowed")) {
-			if (method_allowed_check) {
-				std::cerr << "ConfigParser: " << "locationBlock: " \
-					<< "method_allowed: " << NAME_DUP_ERR << std::endl;
-				return ERROR;
-			}
-			if (elements.size() > 4) {
-				std::cerr << "ConfigParser: " << "locationBlock: " \
-					<< "method_allowed: " << SEMANTIC_ERR << std::endl;
-				return ERROR;
-			}
+			if (method_allowed_check)
+				return this->putError(NAME_DUP_ERR, "method_allowed");
+			if (elements.size() > 4)
+				return this->putError(SEMANTIC_ERR, "method_allowed");
 			bool	get = false, post = false, del = false;
 			for (size_t i = 1; i < elements.size(); ++i) {
-				if (get || post || del) {
-					std::cerr << "ConfigParser: " << "locationBlock: " \
-						<< "method_allowed: " << NAME_DUP_ERR << std::endl;
-					return ERROR;
-				}
+				if (get || post || del)
+					return this->putError(NAME_DUP_ERR, "method_allowed");
 				if (!elements[i].compare("GET")) {
 					methods_allowed |= GET;
 					get = true;
@@ -449,60 +347,49 @@ int	ConfigParser::locationBlock(std::vector<Location>& locations, \
 					methods_allowed |= DELETE;
 					del = true;
 				} else {
-					std::cerr << "ConfigParser: " << "locationBlock: " \
-						<< "method_allowed: " << SEMANTIC_ERR << std::endl;
+					return this->putError(SEMANTIC_ERR, "method_allowed");
 				}
 			}
 			method_allowed_check = true;
 		// cgi_info directive. check directive size, cgi extension duplication.
 		} else if (!elements[0].compare("cgi_info")) {
-			if (elements.size() != 3) {
-				std::cerr << "ConfigParser: " << "locationBlock: " \
-					<< "cgi_info: " << SEMANTIC_ERR << std::endl;
-				return ERROR;
-			}
-			if (cgi_infos.count(elements[1])) {
-				std::cerr << "ConfigParser: " << "locationBlock: " \
-					<< "cgi_info: " << NAME_DUP_ERR << std::endl;
-				return ERROR;
-			}
+			if (elements.size() != 3)
+				return this->putError(SEMANTIC_ERR, "cgi_info");
+			if (cgi_infos.count(elements[1]))
+				return this->putError(NAME_DUP_ERR, "cgi_info");
 			cgi_infos[elements[1]] = elements[2];
 		// return directive. check duplication, directive size, and code check.
 		} else {
-			if (return_to.first) {
-				std::cerr << "ConfigParser: " << "locationBlock: " \
-					<< "return: " << NAME_DUP_ERR<< std::endl;
-			}
-			if (elements.size() != 3) {
-				std::cerr << "ConfigParser: " << "locationBlock: " \
-					<< "return: " << SEMANTIC_ERR << std::endl;
-				return ERROR;
-			}
-			if (!status_code_map.count(elements[1])) {
-				std::cerr << "ConfigParser: " << "locationBlock: " \
-					<< "return: " << SEMANTIC_ERR << std::endl;
-				return ERROR;
-			}
+			if (return_to.first)
+				return this->putError(NAME_DUP_ERR, "return");
+			if (elements.size() != 3)
+				return this->putError(SEMANTIC_ERR, "return");
+			if (!status_code_map.count(elements[1]))
+				return this->putError(SEMANTIC_ERR, "return");
 			return_to.first = status_code_map[elements[1]];
 			return_to.second = elements[2];
 		}
 	} while (elements.size() > 1);
 	// if the code block is not ending
-	if (elements[0].compare("}")) {
-		std::cerr << "ConfigParser: " << "locationBlock: " \
-			<< SEMANTIC_ERR << std::endl;
-		return ERROR;
-	}
+	if (elements[0].compare("}"))
+		return this->putError(SEMANTIC_ERR);
 	// if there is no root directive or no return directive
-	if (!root.length() || !return_to.first) {
-		std::cerr << "ConfigParser: " << "locationBlock: " \
-			<< "root: " << NO_ENTITY_ERR << std::endl;
-		return ERROR;
-	}
+	if (!root.length() || !return_to.first)
+		return this->putError(NO_ENTITY_ERR, "root");
 	locations.push_back(Location(path, root, indexes, auto_index, error_pages, \
 		methods_allowed, cgi_infos, return_to));
 	return OK;
 }
+
+int		ConfigParser::putError(const char* err_msg, std::string opt = "") {
+	std::string	seperator(": ");
+	std::cerr << class_name << seperator << method_name << seperator;
+	if (opt.length())
+		std::cerr << opt << seperator;
+	std::cerr << err_msg << std::endl;
+	return ERROR;
+}
+
 
 //------------------------------------------------------------------------------
 // Public Functions
@@ -513,21 +400,21 @@ ConfigParser::ConfigParser(const char* config_path)
 			+ sizeof(ConfigParser::server_config_arr) / sizeof(std::string)),
 	  location_config(ConfigParser::location_config_arr, ConfigParser::location_config_arr \
 			+ sizeof(ConfigParser::location_config_arr) / sizeof(std::string)),
-	  config_file(config_path) {}
+	  config_file(config_path),
+	  class_name("Config_parser") {}
 
 ConfigParser::~ConfigParser() {}
 
 // the only public function of the class. initilized server_manager.
 int ConfigParser::setServers(std::vector<Server>& servers) {
+	this->method_name = "setServers";
+
 	if (is_used)
 		return ERROR;
 	is_used = true;
 	// Check if configfile is properly opened.
-	if (!this->config_file.is_open()) {
-		std::cerr << std::string("") + "ConfigParser: " \
-			+ "ReadFile: " + OPEN_FILE_ERR;
-		return ERROR;
-	}
+	if (!this->config_file.is_open())
+		return this->putError(OPEN_FILE_ERR, "readFile");
 	this->httpBlock(servers);
 	this->config_file.close();
 	return OK;
