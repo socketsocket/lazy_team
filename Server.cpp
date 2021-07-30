@@ -267,6 +267,15 @@ std::string Server::fileExtension(std::string resource_path)
 	return resource_path;
 }
 
+Server::Server(const Server &ref)
+	: server_fd(ref.server_fd),
+	  port(ref.port),
+	  server_name(ref.server_name),
+	  default_root(ref.default_root),
+	  default_error_pages(ref.default_error_pages),
+	  client_body_limit(ref.client_body_limit),
+	  locations(ref.locations),
+	  return_to(ref.return_to) {}
 
 Server::Server(
 	unsigned int port,

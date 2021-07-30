@@ -35,11 +35,11 @@ class Server
 		std::string	MakeAutoIndexPage(Request& request, std::string resource_path);
 		void ErrorResponse(int http_status_code);
 
-		Server(/* args*/);
-		Server(const Server &ref);
-		Server& operator=(const Server &ref);
+		Server();
+		Server&	operator=(const Server &ref);
 
 	public:
+		Server(const Server &ref);
 		Server(
 			unsigned int port,
 			std::string server_name,

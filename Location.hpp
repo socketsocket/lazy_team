@@ -18,10 +18,10 @@ class Location {
 		std::pair<stat_type, std::string>	return_to;
 
 		Location();
-		Location(const Location& ref);
 		Location&	operator=(const Location& ref);
 
 	public:
+		Location(const Location& ref);
 		Location(
 			std::string path,
 			std::string root,

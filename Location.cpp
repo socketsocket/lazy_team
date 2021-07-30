@@ -1,5 +1,16 @@
 #include "Location.hpp"
 
+Location::Location(const Location& ref)
+	: path(ref.path),
+	  root(ref.root),
+	  indexes(ref.indexes),
+	  auto_index(ref.auto_index),
+	  error_pages(ref.error_pages),
+	  methods_allowed(ref.methods_allowed),
+	  cgi_infos(ref.cgi_infos),
+	  return_to(ref.return_to) {}
+
+
 Location::Location(
 	std::string path,
 	std::string root,
