@@ -8,6 +8,11 @@
 #include <queue>
 #include <string>
 #include <iostream>
+#include <sstream>
+#include <unistd.h>
+
+#define READSIZE 1024
+
 
 // class	Client
 // {
@@ -22,29 +27,39 @@
 // 	queue<Response>	responses;
 // }
 
-class Client{
+class Client {
 	private:
 		// Client();
-		/* data */
 		const int		client_fd;
-		int				status;
 		Server&			linked_server;
+
+		int				status;
 
 		unsigned long	last_request_time;
 		unsigned long	last_response_time;
 
-		std::string				readBuff;
+		std::string				read_buff;
 		std::queue<Request>		requests;
 		std::queue<Response>	responses;
 
+		int	chunkedParser(Request& request);
+		int	lengthParser(Request& request);
+		int	headerParser(Request& request);
+		int	Parser(void);
+
 	public:
 		Client(int client_fd, Server& linked_server);
-		Client(const Client &ref);
+		Client(const Client& ref);
 		~Client();
-		Client& operator=(const Client &ref);
+		Client& operator=(const Client& ref);
 
 		int	readRequest();
 		int	writeResponse();
+
+		int	pushResponse(Response& response);
+
+		std::queue<Request>&	getRequests();
+		std::queue<Response>&	getResponses();
 };
 
 #endif

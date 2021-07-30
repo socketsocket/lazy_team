@@ -51,13 +51,21 @@ enum	FdType {
 	resource
 };
 
-enum	Status{
+
+enum	Status {
 	nothing,
-	working,
-	finished
+	header,
+	body,
+	finished,
 };
 
-enum	FileType{
+enum	ReadError {
+	good,
+	disconnect,
+	readFail,
+};
+
+enum	FileType {
 	File,
 	Directory,
 	Notfound
@@ -67,6 +75,6 @@ enum	FileType{
 #define POST   0b010
 #define DELETE 0b100
 
-typedef	unsigned char	method;
+typedef	unsigned char	Method;
 
 #endif
