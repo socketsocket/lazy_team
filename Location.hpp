@@ -12,11 +12,12 @@ class Location {
 		std::string							root;
 		std::vector<std::string>			indexes;
 		bool								auto_index;
+
 		std::map<stat_type, std::string>	error_pages;
 		Method								methods_allowed; // discerned by bits
 		std::map<std::string, std::string>	cgi_infos;
 		std::pair<stat_type, std::string>	return_to;
-
+ 
 		Location();
 		Location&	operator=(const Location& ref);
 

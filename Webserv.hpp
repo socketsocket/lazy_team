@@ -4,6 +4,8 @@
 #define ERROR -1
 #define OK     0
 
+#define STDERR 2
+
 #define BLOCK_END 101
 
 #define OPEN_FILE_ERR	"Failed to open file."
@@ -68,18 +70,27 @@ static stat_type	status_code_arr[] = {C100, C101, C200, C201, C202,
 static std::map<std::string, stat_type>	status_code_map;
 
 enum	FdType {
-	server,
-	client,
-	resource
+	ServerFd,
+	ClientFd,
+	ResourceFd,
+  StderrFd
 };
 
-enum	Status{
-	nothing,
-	working,
-	finished
+
+enum	Status {
+	Nothing,
+	Header,
+	Body,
+	Finished,
 };
 
-enum	FileType{
+enum	ReadError {
+	Good,
+	Disconnect,
+	ReadFail,
+};
+
+enum	FileType {
 	File,
 	Directory,
 	Notfound
