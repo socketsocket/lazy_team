@@ -1,39 +1,11 @@
 #include "ConfigParser.hpp"
 
-// array for initializing server_config set
-const std::string	ConfigParser::server_config_arr[6] = {
-	"listen",
-	"server_name",
-	"root",
-	"error_page",
-	"client_body_limit",
-	"return"
-};
 
-// array for initializing location_config set
-const std::string	ConfigParser::location_config_arr[7] = {
-	"root",
-	"error_page"
-	"index",
-	"auto_index",
-	"method_allowed",
-	"cgi_info",
-	"return"
-};
+bool	ConfigParser::is_used = false;
 
-// directive set for server block
-const std::set<std::string>	ConfigParser::server_config(\
-	ConfigParser::server_config_arr, \
-	ConfigParser::server_config_arr \
-		+ sizeof(ConfigParser::server_config_arr) / sizeof(std::string)
-);
-
-// directive set for location block
-const std::set<std::string>	ConfigParser::location_config(\
-	ConfigParser::location_config_arr, \
-	ConfigParser::location_config_arr \
-		+ sizeof(ConfigParser::location_config_arr) / sizeof(std::string)
-);
+//-----------------------------------------------------------------------------
+// Private Functions
+//-----------------------------------------------------------------------------
 
 // get a line from config file which does not contain comment and is not blank.
 int	ConfigParser::getSemanticLine(std::string& line) {
@@ -42,8 +14,8 @@ int	ConfigParser::getSemanticLine(std::string& line) {
 	while (line.length() == 0) { // skipping semantically blank line
 
 		// first trial for get a line
-		ConfigParser::config_file.getline(buffer, LINE_BUFF_SIZE);
-		if (ConfigParser::config_file.bad()) {
+		this->config_file.getline(buffer, LINE_BUFF_SIZE);
+		if (this->config_file.bad()) {
 			std::cerr << "ConfigParser: " << "getSemanticLine: " \
 				<< READ_LINE_ERR << std::endl;;
 			return ERROR;
@@ -51,8 +23,8 @@ int	ConfigParser::getSemanticLine(std::string& line) {
 		line = buffer;
 
 		// get line till the end of line
-		while (ConfigParser::config_file.fail()) {
-			ConfigParser::config_file.getline(buffer, LINE_BUFF_SIZE);
+		while (this->config_file.fail()) {
+			this->config_file.getline(buffer, LINE_BUFF_SIZE);
 			if (config_file.bad()) {
 				std::cerr << "ConfigParser: " << "getSemanticLine: " \
 					<< READ_LINE_ERR << std::endl;
@@ -79,7 +51,7 @@ int ConfigParser::getIntoBlock(std::string block_name, std::string line = "") {
 		return BLOCK_END;
 
 	if (line.length() == 0)
-		if (ConfigParser::getSemanticLine(line));
+		if (this->getSemanticLine(line));
 			return ERROR;
 
 	// Compare block name and leading part of the line
@@ -94,7 +66,7 @@ int ConfigParser::getIntoBlock(std::string block_name, std::string line = "") {
 	line.erase(0, block_name.length());
 	line = trimWhitespace(line);
 	if (line.length() == 0)
-		if (ConfigParser::getSemanticLine(line));
+		if (this->getSemanticLine(line));
 			return ERROR;
 
 	// if it is not block end, error.
@@ -131,7 +103,7 @@ int	ConfigParser::getPath(std::string& path, \
 		}
 		return OK;
 	}
-	if (ConfigParser::getLineElements(elements))
+	if (this->getLineElements(elements))
 		return ERROR;
 	if (elements.size() != 1) {
 		std::cerr << "ConfigParser: " << "getPath: " << \
@@ -147,7 +119,7 @@ int	ConfigParser::getPath(std::string& path, \
 
 int	ConfigParser::getLineElements(std::vector<std::string>& elements) {
 	std::string	line;
-	if (ConfigParser::getSemanticLine(line))
+	if (this->getSemanticLine(line))
 		return ERROR;
 	elements.clear();
 
@@ -167,7 +139,7 @@ int	ConfigParser::httpBlock(std::vector<Server>& servers) {
 	int	ret = 0;
 
 	while (!ret)
-		ret = ConfigParser::serverBlock(servers);
+		ret = this->serverBlock(servers);
 	if (servers.size() == 0) {
 		std::cerr << "ConfigParser: " << "httpBlock: " \
 			<< NO_ENTITY_ERR << std::endl;
@@ -196,13 +168,13 @@ int	ConfigParser::serverBlock(std::vector<Server>& servers) {
 
 	std::vector<std::string>	elements;
 	do { // while (elements.size() > 1);
-		if (ConfigParser::getLineElements(elements))
+		if (this->getLineElements(elements))
 			return ERROR;
 
 		// Find something else, assuming it a location block.
-		if ((ConfigParser::location_config.find(elements[0])) \
-			== ConfigParser::location_config.end()) {
-			if (ConfigParser::locationBlock(locations, elements)) {
+		if ((this->location_config.find(elements[0])) \
+			== this->location_config.end()) {
+			if (this->locationBlock(locations, elements)) {
 				return ERROR;
 			}
 		// listen directive
@@ -339,7 +311,7 @@ int	ConfigParser::serverBlock(std::vector<Server>& servers) {
 int	ConfigParser::locationBlock(std::vector<Location>& locations, \
 	std::vector<std::string>& elements) {
 	std::string	path;
-	if (ConfigParser::getPath(path, elements))
+	if (this->getPath(path, elements))
 		return ERROR;
 
 	// Arguments for Location constructor.
@@ -355,10 +327,10 @@ int	ConfigParser::locationBlock(std::vector<Location>& locations, \
 
 	// Elements included in one line.
 	do { // while (elements.size() > 1);
-		if (ConfigParser::getLineElements(elements))
+		if (this->getLineElements(elements))
 			return ERROR;
-		if ((ConfigParser::location_config.find(elements[0]) \
-			== ConfigParser::location_config.end())) {
+		if ((this->location_config.find(elements[0]) \
+			== this->location_config.end())) {
 			std::cerr << "ConfigParser: " << "locationBlock: " \
 				<< NAME_MATCH_ERR << std::endl;
 			return ERROR;
@@ -513,20 +485,48 @@ int	ConfigParser::locationBlock(std::vector<Location>& locations, \
 	return OK;
 }
 
+//------------------------------------------------------------------------------
+// Public Functions
+//------------------------------------------------------------------------------
+
+ConfigParser::ConfigParser(const char* config_path)
+	: server_config_arr({
+		"listen",
+		"server_name",
+		"root",
+		"error_page",
+		"client_body_limit",
+		"return"}),
+	  location_config_arr({
+		"listen",
+		"server_name",
+		"root",
+		"error_page",
+		"client_body_limit",
+		"return"}),
+	  server_config(server_config_arr, server_config_arr \
+			+ sizeof(server_config_arr) / sizeof(std::string)),
+	  location_config(location_config_arr, location_config_arr \
+			+ sizeof(location_config_arr) / sizeof(std::string)),
+	  config_file(config_path) {}
+
+ConfigParser::~ConfigParser() {}
+
 // the only public function of the class. initilized server_manager.
-int ConfigParser::readConfigFile(ServerManager& server_manager, \
-	const char* config_path) {
-	// Open config file
-	ConfigParser::config_file.open(config_path);
-	if (!ConfigParser::config_file.is_open()) {
+int ConfigParser::setServerManager(ServerManager& server_manager) {
+	if (is_used)
+		return ERROR;
+	is_used = true;
+	// Check if configfile is properly opened.
+	if (!this->config_file.is_open()) {
 		std::cerr << std::string("") + "ConfigParser: " \
 			+ "ReadFile: " + OPEN_FILE_ERR;
 		return ERROR;
 	}
 
 	std::vector<Server>	servers;
-	ConfigParser::httpBlock(servers);
-	ConfigParser::config_file.close();
+	this->httpBlock(servers);
+	this->config_file.close();
 	return server_manager.initServerManager(servers);
 }
 

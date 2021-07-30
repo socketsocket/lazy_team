@@ -14,38 +14,35 @@
 
 #define WHITE_SPACES " \v\n\r\t"
 
-// static class. all member functions and variables are static.
+// This class can be used twice.
 class ConfigParser {
 	private:
-		// no instance will be created.
 		ConfigParser();
 		ConfigParser(const ConfigParser& ref);
 		ConfigParser&	operator=(const ConfigParser& ref);
-		~ConfigParser();
 
-		static const std::string			server_config_arr[6];
-		static const std::string			location_config_arr[7];
-		static const std::set<std::string>	server_config;
-		static const std::set<std::string>	location_config;
-		static std::ifstream				config_file;
+		static bool				is_used; // check for duplicated use.
+		std::string				server_config_arr[6];
+		std::string				location_config_arr[7];
+		std::set<std::string>	server_config;
+		std::set<std::string>	location_config;
+		std::ifstream			config_file;
 
-
-		static void	initStatusCodeMap();
-
-		static int	getSemanticLine(std::string& line);
-		static int	getIntoBlock(std::string block_name, std::string line = "");
-		static int	getPath(std::string& path, \
+		int		getSemanticLine(std::string& line);
+		int		getIntoBlock(std::string block_name, std::string line = "");
+		int		getPath(std::string& path, \
 			std::vector<std::string>& elements);
-		static int	getLineElements(std::vector<std::string>& elements);
+		int		getLineElements(std::vector<std::string>& elements);
 
-		static int	httpBlock(std::vector<Server>& servers);
-		static int	serverBlock(std::vector<Server>& server);
-		static int	locationBlock(std::vector<Location>& location, \
+		int		httpBlock(std::vector<Server>& servers);
+		int		serverBlock(std::vector<Server>& server);
+		int		locationBlock(std::vector<Location>& location, \
 			std::vector<std::string>& elements);
 
 	public:
-		static int	readConfigFile(ServerManager& server_manager, \
-			const char* config_path);
+		ConfigParser(const char* config_path);
+		~ConfigParser();
+		int	setServerManager(ServerManager& server_manager);
 };
 
 std::string	trimWhitespace(std::string str);
