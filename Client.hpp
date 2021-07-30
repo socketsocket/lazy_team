@@ -2,7 +2,7 @@
 #define WEBSERV_CLIENT_HPP_
 
 #include "Webserv.hpp"
-#include "Server.hpp"
+#include "PortManager.hpp"
 #include "Request.hpp"
 #include "Response.hpp"
 #include <queue>
@@ -31,7 +31,7 @@ class Client {
 	private:
 		// Client();
 		const int		client_fd;
-		Server&			linked_server;
+		PortManager&	port_manager;
 
 		int				status;
 
@@ -48,7 +48,7 @@ class Client {
 		int	Parser(void);
 
 	public:
-		Client(int client_fd, Server& linked_server);
+		Client(int client_fd, PortManager& port_manager);
 		Client(const Client& ref);
 		~Client();
 		Client& operator=(const Client& ref);
@@ -60,6 +60,13 @@ class Client {
 
 		std::queue<Request>&	getRequests();
 		std::queue<Response>&	getResponses();
+
+		// resourceFd openResource() {
+		// 		return this->port_manager.openResource(*this);
+		// }
+		// result   makeResponse(resource){
+//				this->port_manager.makeresponse(*this, resource);
+		// }
 };
 
 #endif

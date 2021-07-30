@@ -1,23 +1,19 @@
 #include "Client.hpp"
 
-Client::Client(int client_fd, Server& linked_server)
-	: client_fd(client_fd), linked_server(linked_server) {
-	this->status = nothing;
+Client::Client(int client_fd, PortManager& port_manager)
+	: client_fd(client_fd), port_manager(port_manager) {
+	this->status = Nothing;
 	// last_request_time = 0;
 	// last_response_time = 0;
 	this->read_buff = "";
 }
 
 Client::Client(const Client& ref)
-	: client_fd(ref.client_fd), linked_server(ref.linked_server) {
+	: client_fd(ref.client_fd), port_manager(ref.port_manager) {
 	*this = ref;
 }
 
 Client::~Client() {
-}
-
-Client& Client::operator=(const Client& ref) {
-	return *this;
 }
 
 int	Client::chunkedParser(Request& request) {
@@ -40,7 +36,7 @@ int	Client::chunkedParser(Request& request) {
 		request.appendBody(tmp);
 	}
 	if (len == 0) {
-		request.setStatus(finished);
+		request.setStatus(Finished);
 		return 1; //one_more_times;
 	}
 	return OK;
@@ -55,7 +51,7 @@ int	Client::lengthParser(Request& request) {
 		tmp = this->read_buff.substr(0, len);
 		this->read_buff.erase(0, len);
 		request.appendBody(tmp);
-		request.setStatus(finished);
+		request.setStatus(Finished);
 		return 1; // one_more_times;
 	} else {
 		return OK;//next_time; // return
@@ -67,7 +63,7 @@ int	Client::headerParser(Request& request) {
 	std::string	tmp;
 	size_t		pos;
 
-	request.setStatus(header);
+	request.setStatus(Header);
 	if (request.getMethod() == 0) {
 		std::stringstream ss(tmp);
 		pos = this->read_buff.find("\r\n");
@@ -100,16 +96,16 @@ int	Client::headerParser(Request& request) {
 		request.insertHeader(key, value);
 	}
 	if (pos == 0)
-		request.setStatus(body);
+		request.setStatus(Body);
 }
 
 int	Client::Parser(void) {
-	if (this->requests.empty() || this->requests.back().getStatus() == finished)
+	if (this->requests.empty() || this->requests.back().getStatus() == Finished)
 		this->requests.push(Request());
 	Request& request = requests.back();
-	if (request.getStatus() == nothing || request.getStatus() == header)
+	if (request.getStatus() == Nothing || request.getStatus() == Header)
 		this->headerParser(request);
-	if (request.getStatus() == body) {
+	if (request.getStatus() == Body) {
 		if (request.getHeader().find("Transfer-Encoding") != request.getHeader().end()
 		&& request.getHeader()["Transfer-Encoding"] == "chunked")
 			return (this->chunkedParser(request));
@@ -140,9 +136,11 @@ int	Client::readRequest() {
 }
 
 int	Client::writeResponse() {
+	// multiflex을 위해서 쪼개서 써주기 고민.
 	while (!this->responses.empty()\
-	&& this->responses.front().getStatus() == finished) {
+	&& this->responses.front().getStatus() == Finished) {
 		std::string tmp = this->responses.front().getResponseMessage();
+		//write error check
 		write(client_fd, tmp.c_str(), tmp.size());
 		this->responses.pop();
 	}

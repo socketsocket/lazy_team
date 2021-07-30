@@ -42,7 +42,9 @@ Location& Server::CurrLocation(std::string request_uri) {
 	return res;
 }
 
+// camelcase
 void Server::MakeResponse(Client& client) {
+// using reference ??
 	Location curr_location = client.GetRequest().GetLocation();
 	std::string resource_path = client.GetRequest().GetUri();
 	size_t path_pos = resource_path.find_first_of(curr_location.GetPath());
@@ -137,7 +139,14 @@ void Server::MakeGetResponse(Client& client, std::string resource_path) {
 	header["Content-Length"] = length.str();
 	header["Last-Modified"] = LastModifiedHeaderInfo(sb);
 
-	setResource(working, client, fd);
+/*
+** pseudo code;
+*/
+	// return fd;
+
+
+
+	// setResource(working, client, fd);
 }
 
 std::string Server::ContentTypeHeaderInfo(std::string extension) {

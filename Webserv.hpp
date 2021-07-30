@@ -73,7 +73,7 @@ enum	FdType {
 	ServerFd,
 	ClientFd,
 	ResourceFd,
-  StderrFd
+	StderrFd
 };
 
 

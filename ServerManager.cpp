@@ -4,7 +4,7 @@ ServerManager*	ServerManager::instance = NULL;
 
 ServerManager::ServerManager()
 	: types(0),
-	  servers(0),
+	  managers(0),
 	  clients(0),
 	  resources(0),
 	  send_time_out(0),
