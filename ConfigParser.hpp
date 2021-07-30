@@ -22,8 +22,8 @@ class ConfigParser {
 		ConfigParser&	operator=(const ConfigParser& ref);
 
 		static bool				is_used; // check for duplicated use.
-		std::string				server_config_arr[6];
-		std::string				location_config_arr[7];
+		static std::string		server_config_arr[6];
+		static std::string		location_config_arr[7];
 		std::set<std::string>	server_config;
 		std::set<std::string>	location_config;
 		std::ifstream			config_file;
@@ -42,7 +42,7 @@ class ConfigParser {
 	public:
 		ConfigParser(const char* config_path);
 		~ConfigParser();
-		int	setServerManager(ServerManager& server_manager);
+		int	setServers(std::vector<Server>& servers);
 };
 
 std::string	trimWhitespace(std::string str);

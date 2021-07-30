@@ -3,9 +3,28 @@
 
 bool	ConfigParser::is_used = false;
 
-//-----------------------------------------------------------------------------
+std::string	ConfigParser::server_config_arr[6] = {
+		"listen",
+		"server_name",
+		"root",
+		"error_page",
+		"client_body_limit",
+		"return"
+};
+
+std::string	ConfigParser::location_config_arr[7] = {
+		"root",
+		"index",
+		"auto_index",
+		"error_page",
+		"method_allowed",
+		"cgi_info",
+		"return"
+};
+
+//------------------------------------------------------------------------------
 // Private Functions
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 
 // get a line from config file which does not contain comment and is not blank.
 int	ConfigParser::getSemanticLine(std::string& line) {
@@ -490,30 +509,16 @@ int	ConfigParser::locationBlock(std::vector<Location>& locations, \
 //------------------------------------------------------------------------------
 
 ConfigParser::ConfigParser(const char* config_path)
-	: server_config_arr({
-		"listen",
-		"server_name",
-		"root",
-		"error_page",
-		"client_body_limit",
-		"return"}),
-	  location_config_arr({
-		"listen",
-		"server_name",
-		"root",
-		"error_page",
-		"client_body_limit",
-		"return"}),
-	  server_config(server_config_arr, server_config_arr \
-			+ sizeof(server_config_arr) / sizeof(std::string)),
-	  location_config(location_config_arr, location_config_arr \
-			+ sizeof(location_config_arr) / sizeof(std::string)),
+	: server_config(ConfigParser::server_config_arr, ConfigParser::server_config_arr \
+			+ sizeof(ConfigParser::server_config_arr) / sizeof(std::string)),
+	  location_config(ConfigParser::location_config_arr, ConfigParser::location_config_arr \
+			+ sizeof(ConfigParser::location_config_arr) / sizeof(std::string)),
 	  config_file(config_path) {}
 
 ConfigParser::~ConfigParser() {}
 
 // the only public function of the class. initilized server_manager.
-int ConfigParser::setServerManager(ServerManager& server_manager) {
+int ConfigParser::setServers(std::vector<Server>& servers) {
 	if (is_used)
 		return ERROR;
 	is_used = true;
@@ -523,11 +528,9 @@ int ConfigParser::setServerManager(ServerManager& server_manager) {
 			+ "ReadFile: " + OPEN_FILE_ERR;
 		return ERROR;
 	}
-
-	std::vector<Server>	servers;
 	this->httpBlock(servers);
 	this->config_file.close();
-	return server_manager.initServerManager(servers);
+	return OK;
 }
 
 std::string	trimWhitespace(std::string str) {
