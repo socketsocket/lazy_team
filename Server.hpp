@@ -1,6 +1,7 @@
 #ifndef WEBSERV_SERVER_HPP_
 #define WEBSERV_SERVER_HPP_
 
+#include "Webserv.hpp"
 #include "Location.hpp"
 #include "Client.hpp"
 #include <iostream>
@@ -13,13 +14,14 @@
 class Server
 {
 	private:
-		int								server_fd;
-		int								port;
-		std::string						server_name;
-		std::string						default_root;
-		std::map<int, std::string>		default_error_page;
-		unsigned long					client_body_limit;
-		std::vector<Location>			locations;
+		int									server_fd;
+		unsigned int						port;
+		std::string							server_name;
+		std::string							default_root;
+		std::map<stat_type, std::string>	default_error_pages;
+		unsigned long						client_body_limit;
+		std::vector<Location>				locations;
+		std::pair<stat_type, std::string>	return_to;
 
 		Location&	CurrLocation(std::string request_uri);
 		int			RequestValidCheck(Client& client);
@@ -33,11 +35,22 @@ class Server
 		std::string	MakeAutoIndexPage(Request& request, std::string resource_path);
 		void ErrorResponse(int http_status_code);
 
+		Server();
+		Server&	operator=(const Server &ref);
+
 	public:
-		Server(/* args*/);
 		Server(const Server &ref);
+		Server(
+			unsigned int port,
+			std::string server_name,
+			std::string default_root,
+			std::map<stat_type, std::string> default_error_pages,
+			unsigned long client_body_limit,
+			std::vector<Location> locations,
+			std::pair<stat_type, std::string> return_to);
 		~Server();
-		Server& operator=(const Server &ref);
+
+		void	setServerFd(const int fd);
 };
 
 #endif

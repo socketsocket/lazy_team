@@ -12,14 +12,15 @@
 #include <string>
 #include <iostream>
 #include <vector>
+#include <fstream>
 
 #include "Webserv.hpp"
+#include "PortManager.hpp"
 #include "Server.hpp"
 #include "Client.hpp"
 #include "Resource.hpp"
 
 #define EVENT_SIZE	1024
-
 
 // ServerManager is a singleton class which manages I/O of servers, clients, resources.
 class ServerManager {
@@ -29,14 +30,14 @@ class ServerManager {
 
 // Variable types stores the type of fd, which can be connected to a server, a client or a resource.
 // These connection can be reached by variables servers, clients, resources.
-		std::vector<FdType>		types;
-		std::vector<Server>		servers;
-		std::vector<Client>		clients;
-		std::vector<Resource>	resources;
+		std::vector<FdType>			types;
+		std::vector<PortManager>	managers;
+		std::vector<Client>			clients;
+		std::vector<Resource>		resources;
 
 // Send_time_out and recv_time_out is determined by configuration file.
-		unsigned long			send_time_out;
-		unsigned long			recv_time_out;
+		unsigned long				send_time_out;
+		unsigned long				recv_time_out;
 
 // These variables are needed for using kqueue
 		int							kq;
@@ -47,14 +48,14 @@ class ServerManager {
 
 // Base constructor, copy constructor, and assignation operator are disabled.
 		ServerManager();
-		ServerManager(const ServerManager &ref);
-		ServerManager& operator=(const ServerManager &ref);
+		ServerManager(const ServerManager& ref);
+		ServerManager&	operator=(const ServerManager& ref);
+		~ServerManager();
 
 	public:
-		~ServerManager();
 		static ServerManager&	getServerManager();
 
-		int	parseConfig(const char* config_path);
+		int	setServerManager(std::vector<Server>& servers);
 		int	initWebserv();
 		int	initKqueue();
 		int	callKevent();
