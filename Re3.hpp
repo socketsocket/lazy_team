@@ -7,28 +7,28 @@
 
 class Re3
 {
-private:
-	Request*	req_ptr;
-	Response*	rsp_ptr;
-	Resource*	rsc_ptr;
-	int			client_fd;
-	int			port_manager_fd;
+	private:
+		Request*	req_ptr;
+		Response*	rsp_ptr;
+		Resource*	rsc_ptr;
+		int			client_fd;
+		int			port_manager_fd;
 
-public:
-	Re3();
-	Re3(Request* req);
-	~Re3();
+	public:
+		Re3();
+		Re3(Request* req);
+		~Re3();
 
-	int	setReqPtr(Request* req);
-	int	setRspPtr(Response* rsp);
-	int	setRscPtr(Resource* rsc);
+		int	setReqPtr(Request* req);
+		int	setRspPtr(Response* rsp);
+		int	setRscPtr(Resource* rsc);
 
-	Request*	getReqPtr();
-	Response*	getRspPtr();
-	Resource*	getRscPtr();
+		Request*	getReqPtr();
+		Response*	getRspPtr();
+		Resource*	getRscPtr();
 
-	int	getClientId();
-	int	getPortId();
+		int	getClientId();
+		int	getPortId();
 };
 
 
