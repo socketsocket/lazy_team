@@ -12,17 +12,17 @@ ErrorMsgHandler&	ErrorMsgHandler::getInstance() {
 
 void	ErrorMsgHandler::outError() {
 	const char* out_string;
-	int			strlen;
+	int			string_len;
 	if (this->error_msgs.length() > IO_BUFF_SIZE) {
-		strlen = IO_BUFF_SIZE;
+		string_len = IO_BUFF_SIZE;
 		out_string = this->error_msgs.substr(0, IO_BUFF_SIZE).c_str();
 		error_msgs = error_msgs.substr(IO_BUFF_SIZE);
 	} else {
-		strlen = error_msgs.length();
+		string_len = error_msgs.length();
 		out_string = this->error_msgs.c_str();
 		error_msgs = "";
 	}
-	send(STDERR, out_string, strlen, 0);
+	send(STDERR, out_string, string_len, 0);
 }
 
 void	ErrorMsgHandler::addError(std::string err_msg) {
