@@ -16,6 +16,7 @@
 #define NO_ENTITY_ERR	"There is no entity."
 
 #define LINE_BUFF_SIZE 1024
+#define	IO_BUFF_SIZE 65536
 
 #define C100 "100 Continue"
 #define C101 "101 Switching Protocols"
@@ -68,6 +69,8 @@ static stat_type	status_code_arr[] = {C100, C101, C200, C201, C202,
 #include <map>
 #include <string>
 static std::map<std::string, stat_type>	status_code_map;
+
+#define RE3 triplet<Request, Response, Resource>
 
 enum	FdType {
 	ServerFd,
