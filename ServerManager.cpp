@@ -26,7 +26,7 @@ ServerManager::ServerManager(const std::vector<Server> servers) {
 		memset(&server_addr, 0, sizeof(server_addr));
 		server_addr.sin_family = AF_INET;
 		server_addr.sin_addr.s_addr = htonl(INADDR_ANY);
-		server_addr.sin_port = htons((*it).first));
+		server_addr.sin_port = htons((*it).first);
 
 		if (bind(server_socket, (struct sockaddr*)&server_addr, sizeof(server_addr)) == -1) {
 			putError("bind error\n");
@@ -42,18 +42,51 @@ ServerManager::ServerManager(const std::vector<Server> servers) {
 
 		fcntl(server_socket, F_SETFL, O_NONBLOCK);
 
-		if (managers.size() < server_socket) {
-			managers.resize(server_socket, NULL);
-		}
-		managers[server_socket] = new PortManager(server_socket, (*it).second);
+		if (this->types.size() < server_socket)
+			this->types.resize(server_socket, Blank);
+		if (this->managers.size() < server_socket)
+			this->managers.resize(server_socket, NULL);
+		this->managers[server_socket] = new PortManager(server_socket, (*it).second);
+	}
+}
+
+int	ServerManager::makeClient(int port_fd, PortManager& port_manager) {
+	int	client_fd;
+	if (client_fd = accept(port_fd, NULL, NULL) < 0) {
+		putError("accept error");
+		return ERROR;
 	}
 
+	fcntl(client_fd, F_SETFL, O_NONBLOCK);
+
+	EV_SET(&event_current, client_fd, EVFILT_READ, EV_ADD, 0, 0, NULL);
+	this->event_changes.push_back(event_current);
+	EV_SET(&event_current, client_fd, EVFILT_WRITE, EV_ADD, 0, 0, NULL);
+	this->event_changes.push_back(event_current);
+
+	if (this->types.size() < client_fd)
+		this->types.resize(client_fd, Blank);
+	if (this->clients.size() < client_fd)
+		this->clients.resize(client_fd, NULL);
+	types[client_fd] = ClientFd;
+	clients[client_fd] = new Client(client_fd, port_manager);
+	return OK;
 }
 
 int	ServerManager::callKevent() {
 	int	num_events = kevent(this->kq, &this->event_changes[0], event_changes.size(), event_list, EVENT_SIZE, NULL);
 	event_changes.clear();
 	return num_events;
+}
+
+ServerManager::~ServerManager() {
+	for (size_t i = 0; i < this->types.size(); ++i) {
+		if (types[i] == PortFd) {
+			delete managers[i];
+		} else if (types[i] == ClientFd) {
+			delete clients[i];
+		}
+	}
 }
 
 // Returns an instance of singleton class, ServerManager.
@@ -80,6 +113,11 @@ int	ServerManager::processEvent() {
 				break;
 			}
 			case ClientFd: {
+				if (event_list[i].filter == EVFILT_READ) {
+					//
+				} else if (event_list[i].filter == EVFILT_WRITE) {
+					//
+				}
 				// clients[i].callClient;
 				break;
 			}

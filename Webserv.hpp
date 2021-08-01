@@ -1,12 +1,15 @@
 #ifndef WEBSERV_WEBSERV_HPP_
 #define WEBSERV_WEBSERV_HPP_
 
+#include <csignal>
+
 #define ERROR -1
 #define OK     0
 
 #define STDERR 2
 
 #define BLOCK_END 101
+#define	QUIT 24
 
 #define OPEN_FILE_ERR	"Failed to open file."
 #define READ_LINE_ERR	"Failed to read a line."
@@ -74,6 +77,7 @@ static std::map<std::string, stat_type>	status_code_map;
 #define RE3 triplet<Request, Response, Resource>
 
 enum	FdType {
+	Blank,
 	PortFd,
 	ClientFd,
 	ResourceFd,

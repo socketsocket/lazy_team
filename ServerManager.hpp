@@ -55,6 +55,7 @@ class ServerManager {
 		ServerManager(const std::vector<Server> servers);
 
 		int	callKevent();
+		int	makeClient(int port_fd, PortManager& port_manager);
 
 	public:
 		~ServerManager();
