@@ -17,6 +17,7 @@
 
 #define LINE_BUFF_SIZE 1024
 #define	IO_BUFF_SIZE 65536
+#define MAX_CLIENT 5
 
 #define C100 "100 Continue"
 #define C101 "101 Switching Protocols"
@@ -73,10 +74,10 @@ static std::map<std::string, stat_type>	status_code_map;
 #define RE3 triplet<Request, Response, Resource>
 
 enum	FdType {
-	ServerFd,
+	PortFd,
 	ClientFd,
 	ResourceFd,
-  StderrFd
+	StderrFd
 };
 
 
