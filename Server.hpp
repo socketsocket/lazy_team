@@ -4,6 +4,7 @@
 #include "Webserv.hpp"
 #include "Location.hpp"
 #include "Client.hpp"
+#include "Re3.hpp"
 #include <iostream>
 #include <sstream>
 #include <sys/stat.h>
@@ -22,10 +23,12 @@ class Server
 		std::vector<Location>				locations;
 		std::pair<stat_type, std::string>	return_to;
 
-		Location&	currLocation(std::string request_uri);
-		int			requestValidCheck(Request& request);
-		Response		makeResponse(Request& request, Resource& resource_queue);
-		Response 		makeGetResponse(Request& request, std::string resource_path, Resource& resource_queue);
+		int 		makeResponse(Re3_iter re3);
+		int 		makeGetResponse(Re3_iter re3, Location* curr_location, std::string resource_path);
+		int			errorResponse(Re3_iter re3, Location* curr_location, std::string http_status_code);
+		
+		std::string	requestValidCheck(Request& request, Location* curr_location);
+		Location*	currLocation(std::string request_uri);
 		int			checkPath(std::string path);
 		std::string	dateHeaderInfo();
 		std::string	lastModifiedHeaderInfo(struct stat sb);
@@ -33,7 +36,6 @@ class Server
 		std::string fileExtension(std::string resource_path);
 		std::string	makeAutoIndexPage(Request& request, std::string resource_path);
 		std::string makeHTMLPage(std::string str);
-		Response	errorResponse(Request& request, std::string http_status_code);
 
 		Server();
 		Server&	operator=(const Server &ref);

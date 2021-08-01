@@ -1,6 +1,7 @@
 #ifndef WEBSERV_RE3_HPP
 #define WEBSERV_RE3_HPP
 
+#include <deque>
 #include "Request.hpp"
 #include "Response.hpp"
 #include "Resource.hpp"
@@ -31,5 +32,6 @@ class Re3
 		int	getPortId();
 };
 
+typedef std::deque<Re3>::iterator   Re3_iter;
 
 #endif

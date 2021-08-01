@@ -30,3 +30,23 @@ Location::Location(
 	  return_to(return_to) {}
 
 Location::~Location() {}
+
+std::string Location::getPath() {
+	return this->path;
+}
+
+std::string Location::getRoot() {
+	return this->root;
+}
+
+Method Location::getMethodsAllowed() {
+	return this->methods_allowed;
+}
+
+std::vector<std::string> Location::getIndexes() {
+	return this->indexes;
+}
+
+bool Location::isAutoIndex() {
+	return this->auto_index;
+}

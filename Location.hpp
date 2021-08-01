@@ -34,6 +34,12 @@ class Location {
 			std::pair<stat_type, std::string> return_to
 		);
 		~Location();
+		std::string getPath();
+		std::string getRoot();
+		Method getMethodsAllowed();
+		std::vector<std::string> getIndexes();
+		bool isAutoIndex();
+
 };
 
 #endif

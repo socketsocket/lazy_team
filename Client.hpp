@@ -5,6 +5,7 @@
 #include "Server.hpp"
 #include "Request.hpp"
 #include "Response.hpp"
+#include "Re3.hpp"
 #include <queue>
 #include <string>
 #include <iostream>

@@ -80,19 +80,23 @@ enum	FdType {
 	StderrFd
 };
 
-
 enum	Status {
 	Nothing,
 	Header,
 	Body,
+	Reading,
 	Finished,
-};
-
-enum	ReadError {
-	Good,
+	//ReadError Enum에 있던 것인데, 에러 Status일 경우 Enum 두 개를 혼용할 수 없어 이리로 이동
 	Disconnect,
 	ReadFail,
 };
+
+enum	ServerStatus {
+	ResourceWriteWaiting,
+	ResourceReadWaiting,
+	ResponseMakingDone,
+};
+
 
 enum	FileType {
 	File,
