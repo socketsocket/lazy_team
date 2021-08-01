@@ -1,5 +1,6 @@
 #include "Webserv.hpp"
 #include "ConfigParser.hpp"
+#include "ServerManager.hpp"
 #include "Server.hpp"
 
 void	initStatusCodeMap() {
@@ -7,6 +8,11 @@ void	initStatusCodeMap() {
 		status_code_map[std::string(status_code_arr[i]).substr(0, 3)]
 			= status_code_arr[i];
 }
+
+void	sigIntHandler(int param) {
+	ServerManager& server_manager = ServerManager::getServerManager(std::vector<Server>(0));
+	server_manager.setStatus(ERROR);
+};
 
 int	main(int argc, char* argv[]) {
 	initStatusCodeMap();
@@ -17,9 +23,14 @@ int	main(int argc, char* argv[]) {
 		config_parser.setServers(servers);
 	}
 
-	ServerManager& ServerManager = ServerManager::getServerManager(servers);
-	while (true) {
+	// When CTRL-C is pressed, deallocate everything and end the server.
+	signal(SIGINT, sigIntHandler);
 
+	ServerManager& server_manager = ServerManager::getServerManager(servers);
+	while (true) {
+		if (server_manager.getStatus() == ERROR)
+			break;
+		server_manager.processEvent();
 	}
-	return (OK);
+	return OK;
 }
