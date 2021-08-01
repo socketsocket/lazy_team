@@ -268,8 +268,7 @@ std::string Server::fileExtension(std::string resource_path)
 }
 
 Server::Server(const Server &ref)
-	: server_fd(ref.server_fd),
-	  port(ref.port),
+	: port(ref.port),
 	  server_name(ref.server_name),
 	  default_root(ref.default_root),
 	  default_error_pages(ref.default_error_pages),
@@ -295,6 +294,7 @@ Server::Server(
 
 Server::~Server() {}
 
-void	Server::setServerFd(const int fd) {
-	this->server_fd = fd;
+unsigned int	Server::getPortNum() const {
+	return (this->port);
 }
+

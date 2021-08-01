@@ -11,29 +11,30 @@
 
 #include <string>
 #include <iostream>
-#include <vector>
 #include <fstream>
+#include <vector>
+#include <map>
 
 #include "Webserv.hpp"
+#include "ErrorMsgHandler.hpp"
 #include "PortManager.hpp"
 #include "Server.hpp"
 #include "Client.hpp"
-#include "Resource.hpp"
+#include "Re3.hpp"
 
 #define EVENT_SIZE	1024
 
 // ServerManager is a singleton class which manages I/O of servers, clients, resources.
 class ServerManager {
 	private:
-// instnace is the single instance of the class.
-		static ServerManager*	instance;
+		int							status;
 
 // Variable types stores the type of fd, which can be connected to a server, a client or a resource.
 // These connection can be reached by variables servers, clients, resources.
 		std::vector<FdType>			types;
-		std::vector<PortManager>	managers;
-		std::vector<Client>			clients;
-		std::vector<Resource>		resources;
+		std::vector<PortManager*>	managers;
+		std::vector<Client*>		clients;
+		std::vector<Re3*>			Re3s;
 
 // Send_time_out and recv_time_out is determined by configuration file.
 		unsigned long				send_time_out;
@@ -50,16 +51,17 @@ class ServerManager {
 		ServerManager();
 		ServerManager(const ServerManager& ref);
 		ServerManager&	operator=(const ServerManager& ref);
-		~ServerManager();
+
+		ServerManager(const std::vector<Server> servers);
+
+		int	callKevent();
+		int	makeClient(int port_fd, PortManager& port_manager);
 
 	public:
-		static ServerManager&	getServerManager();
-
-		int	setServerManager(std::vector<Server>& servers);
-		int	initWebserv();
-		int	initKqueue();
-		int	callKevent();
-		int	reactEvent(int event_num);
+		~ServerManager();
+		static ServerManager&	getServerManager(const std::vector<Server> servers);
+		int	getStatus();
+		int	processEvent();
 };
 
 
