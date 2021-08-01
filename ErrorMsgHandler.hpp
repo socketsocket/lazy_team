@@ -25,5 +25,7 @@ class ErrorMsgHandler
 		friend void				putError(std::string err_msg);
 };
 
+void	sendError();
+void	putError(std::string err_msg);
 
 #endif

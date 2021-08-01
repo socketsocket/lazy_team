@@ -14,7 +14,6 @@
 class Server
 {
 	private:
-		int									server_fd;
 		unsigned int						port;
 		std::string							server_name;
 		std::string							default_root;
@@ -51,7 +50,7 @@ class Server
 			std::pair<stat_type, std::string> return_to);
 		~Server();
 
-		void	setServerFd(const int fd);
+		unsigned int	getPortNum() const;
 };
 
 #endif
