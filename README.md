@@ -1,3 +1,10 @@
+### 구조
+1. ServerFd ReadEvent 발생 -> Client 생성
+2. ClientFd ReadEvent 발생 -> RawRequest 생성하여 Client에게 넘김 -> Client가 RawRequest 파싱하여 Re3 Deque에 push Re3 -> Re3_iter를 PortManager 통하여 Server에 넘김 -> Server는 vector(resourceFd)로 Re3_iter 관리 -> resource 필요하다면 해당 Re3에 resource 등록, return. -> Client는 return하기 전에 새로 만든 Re3들을 살펴보고 read 필요한 Resource 있다면 vector에 넣어 return. -> ServerManager는 return 받은 vector의 Re3를 살펴서 등록이 필요한 것이 있다면 kq에 등록
+3. ResourceFd ReadEvent 발생 -> Resource 자체 메소드에서 Read -> read 끝나지 않은 경우 내버려두고, 끝난 경우에만 Server 호출. Server는 가지고 있는 vector에서 해당 Resource 찾아서 Response 완료. Client 호출할 필요 없음
+4. Client WriteEvent 발생 -> Client는 가지고 있는 Re3 Queue를 확인하여 가장 앞의 Response가 완성되어있는지 확인. -> 된 경우 pop(delete)하면서 본문을 버퍼 크기까지 이어붙임. -> write.
+5. Stderr WriteEvent 발생 -> ErrQueue에서 버퍼크기만큼 이어붙여서 stderr에 출력.
+
 ### 코드 컨벤션
 - 최대한 노미넷을 위배하는 방향으로
 
@@ -43,17 +50,27 @@ std::cerr << "ConfigParser: " << "getIntoBlock: " << NAME_MATCH_ERR << std::endl
 		- Location 생성
 		- Server 생성
 		- config파일의 path는 반드시 /로 끝날 것
-	- Server
+	- ErrorMsgHandler
+	- Re3
+
 
 - read/write event/request 파싱 : jinbekim
 	- Client
 		- Request를 읽고 파싱
 		- Request / Response -> 요청 리퀘스트/리스폰스 스트링을 '담아두는' 클래스
+	- PortManager
+		- 클라이언트의 Request를 받아 올바른 Server로 데이터를 넘겨주는 클래스
+
 
 - response 클래스 제작/response 처리/resource : seohchoi
 	- Server
-		- Response 제작 및 Client->Response에 입력
+		- 파싱된 Request 받아 까보기
+		- Request에 따라 Response 제작 / Response가 필요하다면 Response open
+		- Response가 완성되면 Client->Response에 입력
 	- Response
+		- 완성된 응답저장 및 반환
 	- Resource
+		- 리소스 read하고 저장
+		- 리소스를 다 읽었는지/아닌지 상태 저장
 
-- cgi :
+- cgi : 이것은 우리 모두의 책임입니다.
