@@ -2,6 +2,8 @@
 
 Response::Response() {}
 
+Response::Response(int status) {}
+
 Response::Response(int status, std::string http_status_code, 
 std::map<std::string, std::string> headers, std::string body, std::string version)
 :status(status), http_status_code(http_status_code), headers(headers), body(body), version(version) {}

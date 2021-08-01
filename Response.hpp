@@ -18,6 +18,7 @@ class Response {
 
 	public:
 		Response();
+		Response(int status);
 		Response(int status, std::string http_status_code, std::map<std::string, std::string> headers, std::string body, std::string version);
 		Response(const Response& ref);
 		~Response();

@@ -51,11 +51,13 @@ enum	FdType {
 	resource
 };
 
-enum	Status{
-	nothing,
-	working,
-	finished,
-	error
+enum	Status {
+	Nothing,
+	Header,
+	Body,
+	Reading, 
+	Finished,
+	Error
 };
 
 enum	FileType{

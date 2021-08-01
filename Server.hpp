@@ -22,9 +22,9 @@ class Server
 		std::vector<Location>			locations;
 
 		Location&	currLocation(std::string request_uri);
-		int			requestValidCheck(Client& client);
-		void		makeResponse(Client& client);
-		void 		makeGetResponse(Client& client, std::string resource_path);
+		int			requestValidCheck(Request& request);
+		Response		makeResponse(Request& request, Resource& resource_queue);
+		Response 		makeGetResponse(Request& request, std::string resource_path, Resource& resource_queue);
 		int			checkPath(std::string path);
 		std::string	dateHeaderInfo();
 		std::string	lastModifiedHeaderInfo(struct stat sb);
@@ -32,7 +32,7 @@ class Server
 		std::string fileExtension(std::string resource_path);
 		std::string	makeAutoIndexPage(Request& request, std::string resource_path);
 		std::string makeHTMLPage(std::string str);
-		Response	errorResponse(Client& client, std::string http_status_code);
+		Response	errorResponse(Request& request, std::string http_status_code);
 
 	public:
 		Server(/* args*/);

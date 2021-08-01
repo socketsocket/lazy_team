@@ -1,29 +1,29 @@
 #include "Server.hpp"
 
 /*
-if (client Request message read done)
+Response (Request& request, Resource& resource)
+if (request Request message read done)
 {
-	Request curr_request = client->getRequest();
-	curr_request.setLocation = this->currLocation(curr_request.getUri());
+	request.setLocation = this->currLocation(request.getUri());
 	
 	
 	stat = requestValidCheck();
 	if (stat == OK)
-		makeResponse(Client)
+		makeResponse(request)
 	else
 		errorResponse(status)
 }
 */
 
-int Server::requestValidCheck(Client& client) {
-	Location curr_location = client.getRequest().getLocation();
-	if (client.getRequest().getMethod() & GET == false)
-		if (client.getRequest().getMethod() & curr_location.getMethodsAllowed() == 0)
+int Server::requestValidCheck(Request& request) {
+	Location curr_location = request.getLocation();
+	if (request.getMethod() & GET == false)
+		if (request.getMethod() & curr_location.getMethodsAllowed() == 0)
 			return 405;
 	if (this->client_body_limit != 0)
-		if (client.getRequest().getHeader().count("Content-Length")) {
+		if (request.getHeader().count("Content-Length")) {
 			int content_length;
-			std::stringstream temp(client.getRequest().getHeader()["Content-Length"]);
+			std::stringstream temp(request.getHeader()["Content-Length"]);
 			temp >> content_length;
 			if (content_length > this->client_body_limit)
 				return 413;
@@ -42,18 +42,17 @@ Location& Server::currLocation(std::string request_uri) {
 	return res;
 }
 
-void Server::makeResponse(Client& client) {
-	Request curr_request = client.getRequest();
-	Location curr_location = curr_request.getLocation();
-	std::string resource_path = curr_request.getUri();
+Response Server::makeResponse(Request& request, Resource& resource) {
+	Location curr_location = request.getLocation();
+	std::string resource_path = request.getUri();
 	size_t path_pos = resource_path.find_first_of(curr_location.getPath());
 	resource_path.replace(path_pos, curr_location.getPath().length(), curr_location.getRoot());
 
-	if (curr_request.getMethod() == "GET")
-		client.pushResponse(makeGetResponse(client, resource_path));
-	/*if (curr_request->getMethod() == "POST")
+	if (request.getMethod() == "GET")
+		return(makeGetResponse(request, resource_path, resource));
+	/*if (request->getMethod() == "POST")
 	{};
-	if (curr_request->getMethod() == "DELETE")
+	if (request->getMethod() == "DELETE")
 	{};*/
 }
 
@@ -88,15 +87,21 @@ std::string Server::lastModifiedHeaderInfo(struct stat sb) {
 	return buffer;
 }
 
-Response Server::makeGetResponse(Client& client, std::string resource_path) {
+Response Server::makeGetResponse(Request& request, std::string resource_path, Resource& resource) {
 	struct stat	sb;
 	int fd;
 	std::map<std::string, std::string> headers;
-	Request request = client.getRequest();
 
 	headers["Date"] = dateHeaderInfo();
 	headers["Server"] = "Passive Server";
 
+	//리소스.스테이터스 는 empty로 들어오거나
+	//읽는 중
+	//읽음 완료
+	
+	// 세가지로 나뉨
+
+	//만약 리소스.스테이터스 == Nothing
 	if (checkPath(resource_path) == Directory) {
 		if (resource_path[resource_path.length() - 1] != '/')
 			resource_path += '/';
@@ -117,21 +122,22 @@ Response Server::makeGetResponse(Client& client, std::string resource_path) {
 			headers["Content-Type"] = contentTypeHeaderInfo(".html");
 			std::string autoindex_body = makeAutoIndexPage(request, resource_path);
 			if (autoindex_body.empty())
-				return errorResponse(client, "500");
+				return errorResponse(request, "500");
 			std::stringstream length;
 			length << (int)sb.st_size;
 			headers["Content-Length"] = length.str();
 			return Response(finished, "200 OK", headers, autoindex_body, request.getHttpVersion());
 		}
 		if (checkPath(resource_path) == NotFound || checkPath(resource_path) == Directory)
-			return errorResponse(client, "404");
+			return errorResponse(request, "404");
 	}
 	if ((fd = open(resource_path.c_str(), O_RDONLY)) < 0)
-		return errorResponse(client, "404");
+		return errorResponse(request, "404");
 	if (fstat(fd, &sb) < 0) {
 		close(fd);
-		return errorResponse(client, "500");
+		return errorResponse(request, "500");
 	}
+
 	headers["Content-Type"] = contentTypeHeaderInfo(fileExtension(resource_path.substr(1)));
 	headers["Content-Language"] = "ko-KR";
 	headers["Content-Location"] = resource_path.substr(1);
@@ -139,8 +145,13 @@ Response Server::makeGetResponse(Client& client, std::string resource_path) {
 	length << (int)sb.st_size;
 	headers["Content-Length"] = length.str();
 	headers["Last-Modified"] = lastModifiedHeaderInfo(sb);
+	
+	resource.push(working, request, fd);
 
-	setResource(working, client, fd);
+	//만약 리소스.스테이터스 == Reading
+
+	//만약 리소스.스테이터스 == Finished
+
 }
 
 std::string Server::contentTypeHeaderInfo(std::string extension) {
@@ -255,9 +266,9 @@ std::string Server::makeHTMLPage(std::string str) {
 	return (body);
 }
 
-Response Server::errorResponse(Client& client, std::string http_status_code) {
+Response Server::errorResponse(Request& request, std::string http_status_code) {
 	std::map<std::string, std::string> headers;
-	Location& location = client.getRequest().getLocation();
+	Location& location = request.getLocation();
 
 	headers["Date"] = dateHeaderInfo();
 	headers["Server"] = "Passive Server";
@@ -269,7 +280,7 @@ Response Server::errorResponse(Client& client, std::string http_status_code) {
 		std::stringstream length;
 		length << error_page_body.length();
 		headers["Content-Length"] = length.str();
-		return Response(error, status_code_map[http_status_code], headers, error_page_body, client.getRequest().getHttpVersion());
+		return Response(error, status_code_map[http_status_code], headers, error_page_body, request.getHttpVersion());
 	}
 	else {
 		int fd = open(location.getDefaultErrorPages(http_status_code).c_str(), O_RDONLY);
@@ -279,7 +290,7 @@ Response Server::errorResponse(Client& client, std::string http_status_code) {
 			std::stringstream length;
 			length << error_page_body.length();
 			headers["Content-Length"] = length.str();
-			return Response(error, status_code_map[http_status_code], headers, error_page_body, client.getRequest().getHttpVersion());
+			return Response(error, status_code_map[http_status_code], headers, error_page_body, request.getHttpVersion());
 		}
 		else {
 			struct stat sb;
@@ -287,7 +298,7 @@ Response Server::errorResponse(Client& client, std::string http_status_code) {
 			std::stringstream length;
 			length << (int)sb.st_size;
 			headers["Content-Length"] = length.str();
-			setResource(working, fd, client);
+			resource.push(working, fd, request);
 		}
 	}
 }
