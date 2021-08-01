@@ -309,3 +309,35 @@ std::string Server::fileExtension(std::string resource_path)
 		return (resource_path.substr(resource_path.find('.')));
 	return resource_path;
 }
+
+Server::Server(const Server &ref)
+	: server_fd(ref.server_fd),
+	  port(ref.port),
+	  server_name(ref.server_name),
+	  default_root(ref.default_root),
+	  default_error_pages(ref.default_error_pages),
+	  client_body_limit(ref.client_body_limit),
+	  locations(ref.locations),
+	  return_to(ref.return_to) {}
+
+Server::Server(
+	unsigned int port,
+	std::string server_name,
+	std::string default_root,
+	std::map<stat_type, std::string> default_error_pages,
+	unsigned long client_body_limit,
+	std::vector<Location> locations,
+	std::pair<stat_type, std::string> return_to)
+	: port(port),
+	  server_name(server_name),
+	  default_root(default_root),
+	  default_error_pages(default_error_pages),
+	  client_body_limit(client_body_limit),
+	  locations(locations),
+	  return_to(return_to) {}
+
+Server::~Server() {}
+
+void	Server::setServerFd(const int fd) {
+	this->server_fd = fd;
+}

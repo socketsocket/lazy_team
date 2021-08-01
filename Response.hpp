@@ -9,12 +9,12 @@
 class Response {
 	private:
 		//response를 쓰고있는 상태
-		int		status;
+		Method								status;
 		//예시:200 OK
-		std::string	http_status_code;
-		std::map<std::string, std::string> headers;
-		std::string	body;
-		std::string	version;
+		std::string							http_status_code;
+		std::map<std::string, std::string>	headers;
+		std::string							body;
+		std::string							version;
 
 	public:
 		Response();
@@ -24,6 +24,7 @@ class Response {
 		~Response();
 		Response& operator=(const Response& ref);
 
+		Method		getStatus();
 		std::string getResponseMessage();
 		void appendBody(std::string buffer);
 		void addHeader(std::string key, std::string value);
