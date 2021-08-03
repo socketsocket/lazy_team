@@ -220,6 +220,25 @@ int Server::makePostResponse(Re3_iter re3, Location* curr_location, std::string 
 	return ;
 }
 
+int Server::makeDeleteResponse(Re3_iter re3, Location* curr_location, std::string resource_path) {
+	int fd;
+	std::map<std::string, std::string> headers;
+	Resource* resource = re3->getRscPtr();
+
+	headers["Date"] = dateHeaderInfo();
+	headers["Server"] = "Passive Server";
+	if (checkPath(resource_path) == File)
+	{
+		unlink(resource_path.c_str());
+		if (re3->getRspPtr() == NULL)
+			re3->setRspPtr(new Response(Nothing, std::string(C200), headers, makeHTMLPage("File deleted"), request->getVersion()));
+		else
+			return Re3ObjectError;
+		return ResponseMakingDone;
+	}
+	return errorResponse(re3, curr_location, C404);
+}
+
 Location* Server::currLocation(std::string request_uri) {
 	std::vector<Location>::iterator res;
 
