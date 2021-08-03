@@ -3,13 +3,14 @@
 
 #include "Webserv.hpp"
 #include "Server.hpp"
+#include <sys/socket.h>
 #include <string>
 #include <iostream>
 #include <map>
 
 class Request {
 	private:
-		/* data */
+		// parsing status or error_code
 		int									status;
 		Method								method;
 		std::string							uri;

@@ -1,15 +1,24 @@
 #include "Client.hpp"
 
 Client::Client(int client_fd, PortManager& port_manager)
-	: client_fd(client_fd), port_manager(port_manager) {
-	this->status = Nothing;
-	// last_request_time = 0;
-	// last_response_time = 0;
-	this->read_buff = "";
+	: status(0),
+	client_fd(client_fd),
+	port_manager(port_manager),
+	last_request_time(0),
+	last_response_time(0),
+	read_buff("") {
+	this->re3.push_back(Re3());
+	this->re3.back().setReqPtr(new Request);
 }
 
 Client::Client(const Client& ref)
-	: client_fd(ref.client_fd), port_manager(ref.port_manager) {
+	: status(ref.status),
+	client_fd(ref.client_fd),
+	port_manager(ref.port_manager),
+	last_request_time(ref.last_request_time),
+	last_response_time(ref.last_response_time),
+	read_buff(ref.read_buff),
+	re3(ref.re3) {
 	*this = ref;
 }
 
@@ -17,133 +26,159 @@ Client::~Client() {
 }
 
 Client& Client::operator=(const Client& ref) {
+	// const clinet_fd, refence port_manager
+	this->status = ref.status;
+	this->last_request_time = ref.last_request_time;
+	this->last_response_time = ref.last_response_time;
+	this->read_buff = ref.read_buff;
+	this->re3 = ref.re3;
 	return *this;
 }
 
-int	Client::chunkedParser(Request& request) {
+int	Client::chunkedParser(Request* request) {
 	std::string tmp;
-	size_t		len;
-	size_t		len_end;
-	size_t		contents_end;
+	size_t		len_end, contents_end;
+	size_t		len = 1;
 
-	for(;;) {
+	while (len) {
 		len_end = this->read_buff.find("\r\n");
 		contents_end = this->read_buff.find("\r\n", len_end + 2);
 		if (len_end == std::string::npos || contents_end == std::string::npos)
-			break ; // return;
-		tmp = this->read_buff.substr(0, len_end);
-		len = strtol(tmp.c_str(), NULL, 16);
-		tmp = this->read_buff.substr(len_end + 2, contents_end - len_end - 2);
-		this->read_buff.erase(0, contents_end + 2);
-		if (len == 0)
 			break ;
-		request.appendBody(tmp);
+		tmp = this->read_buff.substr(0, len_end);
+		this->read_buff.erase(0, contents_end + 2);
+		len = strtol(tmp.c_str(), NULL, 16);
+		tmp = this->read_buff.substr(len_end + 2, len);
+		request->appendBody(tmp);
 	}
-	if (len == 0) {
-		request.setStatus(Finished);
-		return 1; //one_more_times;
-	}
+	if (len == 0)
+		request->setStatus(Finished);
 	return OK;
 }
 
-int	Client::lengthParser(Request& request) {
+int	Client::lengthParser(Request* request) {
 	std::string	tmp;
 	size_t		len;
 
-	len = atoi(request.getHeader()["Content-Length"].c_str());
+	len = atoi(request->getHeader()["Content-Length"].c_str());
 	if (this->read_buff.size() >= len) {
 		tmp = this->read_buff.substr(0, len);
 		this->read_buff.erase(0, len);
-		request.appendBody(tmp);
-		request.setStatus(Finished);
-		return 1; // one_more_times;
-	} else {
-		return OK;//next_time; // return
+		request->appendBody(tmp);
+		request->setStatus(Finished);
 	}
 	return OK;
 }
 
-int	Client::headerParser(Request& request) {
-	std::string	tmp;
+int	Client::reqLineParser(Request* request) {
+	size_t				pos;
+	std::string			tmp;
+	std::stringstream	ss;
+
+	request->setStatus(Header);
+	pos = this->read_buff.find("\r\n");
+	if (pos == std::string::npos)
+		return ERROR; // 개행이 없음. 버퍼가 중간에 끊김.
+	tmp = this->read_buff.substr(0, pos);
+	read_buff.erase(0, pos + 2);
+	ss.str(tmp);
+	ss >> tmp;
+	if (tmp == "GET")
+		request->setMethod(GET);
+	else if (tmp == "POST")
+		request->setMethod(POST);
+	else if (tmp == "DELETE")
+		request->setMethod(DELETE);
+	else
+		request->setMethod(OTHER);
+	ss >> tmp;
+	request->setUri(tmp);
+	ss >> tmp;
+	request->setVersion(tmp);
+	return OK;
+}
+
+int	Client::headerParser(Request* request) {
+	std::string tmp, key, value;
 	size_t		pos;
 
-	request.setStatus(Header);
-	if (request.getMethod() == 0) {
-		std::stringstream ss(tmp);
-		pos = this->read_buff.find("\r\n");
-		if (pos == std::string::npos)
-			return 0; // 개행이 없음.
-		tmp = this->read_buff.substr(0, pos);
-		read_buff.erase(0, pos + 2);
-		ss >> tmp;
-		if (tmp == "GET")
-			request.setMethod(GET);
-		else if (tmp == "POST")
-			request.setMethod(POST);
-		else if (tmp == "DELETE")
-			request.setMethod(DELETE);
-		ss >> tmp;
-		request.setUri(tmp);
-		ss >> tmp;
-		request.setVersion(tmp);
-	}
-	for (;;) {
-		std::string key, value;
-		pos = this->read_buff.find("\r\n");
-		if (pos == std::string::npos || pos == 0)
-			break ;
+	pos = this->read_buff.find("\r\n");
+	while (pos != std::string::npos && pos != 0) {
 		tmp = this->read_buff.substr(0, pos);
 		read_buff.erase(0, pos + 2);
 		pos = tmp.find(":");
 		key = tmp.substr(0, pos);
 		value = tmp.substr(pos + 2);
-		request.insertHeader(key, value);
+		request->insertHeader(key, value);
+		pos = this->read_buff.find("\r\n");
 	}
 	if (pos == 0)
-		request.setStatus(Body);
+		request->setStatus(Body);
 }
 
-int	Client::Parser(void) {
-	if (this->requests.empty() || this->requests.back().getStatus() == Finished)
-		this->requests.push(Request());
-	Request& request = requests.back();
-	if (request.getStatus() == Nothing || request.getStatus() == Header)
+int	Client::initParser(Request* request) {
+	if (request->getStatus() == Nothing\
+	|| request->getStatus() == Header) {
+		if (request->getMethod() == NOT)
+			this->reqLineParser(request);
 		this->headerParser(request);
-	if (request.getStatus() == Body) {
-		if (request.getHeader().find("Transfer-Encoding") != request.getHeader().end()
-		&& request.getHeader()["Transfer-Encoding"] == "chunked")
-			return (this->chunkedParser(request));
-		else if (request.getHeader().find("Content-Length") != request.getHeader().end())
-			return (this->lengthParser(request));
-		else if (request.getMethod() == POST)
-			return 411; //Length Required code
+	}
+	if (request->getStatus() == Body) {
+		if (request->getHeader().find("Transfer-Encoding") != request->getHeader().end()\
+		&& request->getHeader()["Transfer-Encoding"] == "chunked")
+			this->chunkedParser(request);
+		else if (request->getHeader().find("Content-Length") != request->getHeader().end())
+			this->lengthParser(request);
+		else if (request->getMethod() == POST)
+			// can be changed.
+			this->re3.back().getRscPtr()->setStatus(411);
 	}
 	return OK;
 }
 
-int	Client::readRequest() {
-	char	tmp_buff[READSIZE];
-	int		read_size = read(client_fd, tmp_buff, READSIZE);
-	int		one_more_times;
-
-	if (read_size == 0)
-		return ERROR; // disconnect
-	else if (read_size == -1) {
-		std::cerr << "Read failed: " << this->client_fd << " client!!" << std::endl;
-		return ERROR; // read fail
+std::vector<Re3_iter>	Client::rscToEnroll(void) {
+	std::vector<Re3_iter> ret;
+	for (Re3_iter it = re3.begin(); it != re3.end(); ++it) {
+		//to be enroll
+		if (it->getRscPtr()->getStatus() == to_be_enroll)
+			ret.push_back(it);
 	}
-	tmp_buff[read_size] = '\0';
-	this->read_buff += tmp_buff;
-	while (this->read_buff.size() && one_more_times)
-		one_more_times = this->Parser();
-	return OK;
+	return ret;
 }
 
-int	Client::writeResponse() {
-	while (!this->responses.empty()\
-	&& this->responses.front().getStatus() == Finished) {
-		std::string tmp = this->responses.front().getResponseMessage();
-		write(client_fd, tmp.c_str(), tmp.size());
-		this->responses.pop();
+std::vector<Re3_iter>	Client::recvRequest(std::string& rawRequest) {
+	this->read_buff += rawRequest;
+	do {
+		if (this->re3.back().getReqPtr()->getStatus() == Finished) {
+			this->port_manager.sendRequest(--this->re3.end());
+			this->re3.push_back(Re3());;
+			this->re3.back().setReqPtr(new Request);
+		}
+		this->initParser(this->re3.back().getReqPtr());
+	} while (this->re3.back().getReqPtr()->getStatus() == Finished);
+	return this->rscToEnroll();
+}
+
+int	Client::sendResponse(void) {
+	ssize_t	sended;
+
+	while (true) {
+		Re3_iter it = re3.begin();
+		if (it->getRspPtr()->getStatus() == Finished\
+		&& it->getRspPtr()->getSize()) {
+			sended = send(it->getClientId(),\
+			it->getRspPtr()->getResponseMessage().c_str(),\
+			it->getRspPtr()->getSize(), 0);
+			if (sended == ERROR) {
+				// putError();
+				// sendError();
+			}
+			else {
+				it->getRspPtr()->deductSize(sended);
+				if (it->getRspPtr()->getSize() == 0)
+					this->re3.pop_front();
+			}
+		} else
+			break ;
 	}
 }

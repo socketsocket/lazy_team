@@ -104,9 +104,11 @@ enum	FileType {
 	Notfound
 };
 
+#define NOT    0b000
 #define GET    0b001
 #define POST   0b010
 #define DELETE 0b100
+#define OTHER  0b1000
 
 typedef	unsigned char	Method;
 

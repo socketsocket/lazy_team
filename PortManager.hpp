@@ -7,16 +7,17 @@
 
 class PortManager {
 	private:
+		PortManager();
 		const int							port_fd;
 		const std::vector<Server>			servers;
-
-		PortManager();
-		PortManager(const PortManager& ref);
 		PortManager&	operator=(const PortManager& ref);
+		std::vector<const Server>::iterator	findServer(std::string&);
 
 	public:
 		PortManager(const int port_fd, const std::vector<Server> servers);
+		PortManager(const PortManager& ref);
 		~PortManager();
+		void	sendRequest(std::deque<Re3>::iterator);
 };
 
 #endif

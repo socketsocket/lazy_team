@@ -12,9 +12,10 @@ class Response {
 		Method								status;
 		//예시:200 OK
 		std::string							http_status_code;
+		std::string							version;
 		std::map<std::string, std::string>	header;
 		std::string							body;
-		std::string							version;
+		size_t								size;
 
 	public:
 		Response();
@@ -25,8 +26,10 @@ class Response {
 
 		Method		getStatus();
 		std::string getResponseMessage();
-		void appendBody(std::string buffer);
-		void addHeader(std::string key, std::string value);
+		size_t		getSize() const;
+		void		deductSize(size_t send);
+		void	appendBody(std::string buffer);
+		void	addHeader(std::string key, std::string value);
 };
 
 #endif
