@@ -4,20 +4,23 @@
 #include <map>
 #include "Webserv.hpp"
 #include "Server.hpp"
+#include "Re3.hpp"
 
 class PortManager {
 	private:
-		PortManager();
 		const int							port_fd;
 		const std::vector<Server>			servers;
-		PortManager&	operator=(const PortManager& ref);
-		std::vector<const Server>::iterator	findServer(std::string&);
 
+		PortManager();
+		PortManager(const PortManager& ref);
+		PortManager&	operator=(const PortManager& ref);
+
+		std::vector<const Server>::iterator		findServer(std::string& host_name);
 	public:
 		PortManager(const int port_fd, const std::vector<Server> servers);
-		PortManager(const PortManager& ref);
 		~PortManager();
-		void	sendRequest(std::deque<Re3>::iterator);
+
+		int	passRequest(Re3_iter it);
 };
 
 #endif

@@ -7,8 +7,8 @@ Client::Client(int client_fd, PortManager& port_manager)
 	last_request_time(0),
 	last_response_time(0),
 	read_buff("") {
-	this->re3.push_back(Re3());
-	this->re3.back().setReqPtr(new Request);
+	this->re3_deque.push_back(Re3());
+	this->re3_deque.back().setReqPtr(new Request);
 }
 
 Client::Client(const Client& ref)
@@ -18,7 +18,7 @@ Client::Client(const Client& ref)
 	last_request_time(ref.last_request_time),
 	last_response_time(ref.last_response_time),
 	read_buff(ref.read_buff),
-	re3(ref.re3) {
+	re3_deque(ref.re3_deque) {
 	*this = ref;
 }
 
@@ -31,7 +31,7 @@ Client& Client::operator=(const Client& ref) {
 	this->last_request_time = ref.last_request_time;
 	this->last_response_time = ref.last_response_time;
 	this->read_buff = ref.read_buff;
-	this->re3 = ref.re3;
+	this->re3_deque = ref.re3_deque;
 	return *this;
 }
 
@@ -44,7 +44,7 @@ int	Client::chunkedParser(Request* request) {
 		len_end = this->read_buff.find("\r\n");
 		contents_end = this->read_buff.find("\r\n", len_end + 2);
 		if (len_end == std::string::npos || contents_end == std::string::npos)
-			break ;
+			break;
 		tmp = this->read_buff.substr(0, len_end);
 		this->read_buff.erase(0, contents_end + 2);
 		len = strtol(tmp.c_str(), NULL, 16);
@@ -131,14 +131,14 @@ int	Client::initParser(Request* request) {
 			this->lengthParser(request);
 		else if (request->getMethod() == POST)
 			// can be changed.
-			this->re3.back().getRscPtr()->setStatus(411);
+			this->re3_deque.back().getRscPtr()->setStatus(411);
 	}
 	return OK;
 }
 
 std::vector<Re3_iter>	Client::rscToEnroll(void) {
 	std::vector<Re3_iter> ret;
-	for (Re3_iter it = re3.begin(); it != re3.end(); ++it) {
+	for (Re3_iter it = re3_deque.begin(); it != re3_deque.end(); ++it) {
 		//to be enroll
 		if (it->getRscPtr()->getStatus() == to_be_enroll)
 			ret.push_back(it);
@@ -149,36 +149,36 @@ std::vector<Re3_iter>	Client::rscToEnroll(void) {
 std::vector<Re3_iter>	Client::recvRequest(std::string& rawRequest) {
 	this->read_buff += rawRequest;
 	do {
-		if (this->re3.back().getReqPtr()->getStatus() == Finished) {
-			this->port_manager.sendRequest(--this->re3.end());
-			this->re3.push_back(Re3());;
-			this->re3.back().setReqPtr(new Request);
+		if (this->re3_deque.back().getReqPtr()->getStatus() == Finished) {
+			this->port_manager.passRequest(--this->re3_deque.end());
+			this->re3_deque.push_back(Re3());;
+			this->re3_deque.back().setReqPtr(new Request);
 		}
-		this->initParser(this->re3.back().getReqPtr());
-	} while (this->re3.back().getReqPtr()->getStatus() == Finished);
+		this->initParser(this->re3_deque.back().getReqPtr());
+	} while (this->re3_deque.back().getReqPtr()->getStatus() == Finished);
 	return this->rscToEnroll();
 }
 
 int	Client::sendResponse(void) {
-	ssize_t	sended;
+	ssize_t	sent;
 
 	while (true) {
-		Re3_iter it = re3.begin();
+		Re3_iter it = re3_deque.begin();
 		if (it->getRspPtr()->getStatus() == Finished\
 		&& it->getRspPtr()->getSize()) {
-			sended = send(it->getClientId(),\
+			sent = send(it->getClientId(),\
 			it->getRspPtr()->getResponseMessage().c_str(),\
 			it->getRspPtr()->getSize(), 0);
-			if (sended == ERROR) {
+			if (sent == ERROR) {
 				// putError();
 				// sendError();
 			}
 			else {
-				it->getRspPtr()->deductSize(sended);
+				it->getRspPtr()->deductSize(sent);
 				if (it->getRspPtr()->getSize() == 0)
-					this->re3.pop_front();
+					this->re3_deque.pop_front();
 			}
 		} else
-			break ;
+			break;
 	}
 }

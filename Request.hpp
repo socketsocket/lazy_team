@@ -10,7 +10,6 @@
 
 class Request {
 	private:
-		// parsing status or error_code
 		int									status;
 		Method								method;
 		std::string							uri;

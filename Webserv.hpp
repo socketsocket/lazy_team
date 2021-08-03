@@ -113,5 +113,7 @@ enum	FileType {
 typedef	unsigned char	Method;
 
 void	initStatusCodeMap();
+void	sigIntHandler(int param);
+
 
 #endif

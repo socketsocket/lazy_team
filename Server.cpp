@@ -108,7 +108,7 @@ void Server::MakeGetResponse(Client& client, std::string resource_path) {
 				if (stat((resource_path + *iter).c_str(), &buffer) == 0) {
 					resource_path = resource_path + *iter;
 					indexFileFlag = true;
-					break ;
+					break;
 				}
 			}
 		}

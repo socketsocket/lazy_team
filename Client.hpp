@@ -13,7 +13,6 @@
 
 #define READSIZE 1024
 
-
 // class	Client
 // {
 // 	int				status
@@ -36,7 +35,7 @@ class Client {
 		unsigned long	last_request_time;
 		unsigned long	last_response_time;
 		std::string				read_buff;
-		std::deque<Re3>			re3;
+		std::deque<Re3>			re3_deque;
 
 		int	reqLineParser(Request* request);
 		int	chunkedParser(Request* request);
