@@ -34,7 +34,8 @@ void	sendError() {
 	err_msg_handler.outError();
 }
 
-void	putError(std::string err_msg) {
+int	putError(std::string err_msg) {
 	ErrorMsgHandler err_msg_handler = ErrorMsgHandler::getInstance();
 	err_msg_handler.addError(err_msg);
+	return ERROR;
 }

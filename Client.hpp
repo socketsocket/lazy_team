@@ -38,9 +38,6 @@ class Client {
 		unsigned long	last_request_time;
 		unsigned long	last_response_time;
 
-		static unsigned long	recv_time_out;
-		static unsigned long	send_time_out;
-
 		std::string				read_buff;
 		std::queue<Request>		requests;
 		std::queue<Response>	responses;

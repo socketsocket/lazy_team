@@ -10,6 +10,7 @@
 
 #define BLOCK_END 101
 #define	QUIT 24
+#define INITIATED 48
 
 #define OPEN_FILE_ERR	"Failed to open file."
 #define READ_LINE_ERR	"Failed to read a line."

@@ -15,7 +15,7 @@ class PortManager {
 		PortManager&	operator=(const PortManager& ref);
 
 	public:
-		PortManager(const int port_fd, const std::vector<Server> servers);
+		PortManager(const int port_fd, const std::vector<Server&> servers);
 		~PortManager();
 };
 

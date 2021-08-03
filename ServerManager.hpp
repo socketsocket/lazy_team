@@ -47,19 +47,18 @@ class ServerManager {
 		struct kevent				event_list[EVENT_SIZE];
 		struct kevent				event_current;
 
-// Base constructor, copy constructor, and assignation operator are disabled.
 		ServerManager();
+// copy constructor, and assignation operator are disabled.
 		ServerManager(const ServerManager& ref);
 		ServerManager&	operator=(const ServerManager& ref);
-
-		ServerManager(const std::vector<Server> servers);
 
 		int	callKevent();
 		int	makeClient(int port_fd, PortManager& port_manager);
 
 	public:
 		~ServerManager();
-		static ServerManager&	getServerManager(const std::vector<Server> servers);
+		static ServerManager&	getServerManager();
+		int		initServerManager(const std::vector<std::pair<Server, std::vector<unsigned int> > > configs);
 		void	setStatus(int status);
 		void	setSendTimeOut(unsigned long send_time_out);
 		void	setRecvTimeOut(unsigned long recv_time_out);

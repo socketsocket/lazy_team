@@ -14,7 +14,6 @@
 class Server
 {
 	private:
-		unsigned int						port;
 		std::string							server_name;
 		std::string							default_root;
 		std::map<stat_type, std::string>	default_error_pages;
@@ -40,7 +39,6 @@ class Server
 	public:
 		Server(const Server &ref);
 		Server(
-			unsigned int port,
 			std::string server_name,
 			std::string default_root,
 			std::map<stat_type, std::string> default_error_pages,

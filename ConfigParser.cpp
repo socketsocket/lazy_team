@@ -139,6 +139,10 @@ int	ConfigParser::httpBlock(ServerManager& server_manager) {
 	if (getIntoBlock("http"))
 		return ERROR;
 
+	std::vector<std::pair<Server, std::vector<unsigned int> > > configs;
+	std::set<std::string>		server_name_set;
+	std::vector<std::string>	server_name_vec;
+
 	std::vector<std::string>	elements;
 	unsigned long				send_timeout = 0;
 	bool						send_timeout_check = false;
@@ -159,6 +163,7 @@ int	ConfigParser::httpBlock(ServerManager& server_manager) {
 				iss >> send_timeout;
 				if (iss.fail())
 					return putError(SEMANTIC_ERR, "send_timeout");
+				server_manager.setSendTimeOut(send_timeout);
 				send_timeout_check = true;
 			} else if (elements[0].compare("recv_timeout")) {
 				if (recv_timeout_check)
@@ -167,6 +172,7 @@ int	ConfigParser::httpBlock(ServerManager& server_manager) {
 				iss >> recv_timeout;
 				if (iss.fail())
 					return putError(SEMANTIC_ERR, "recv_timeout");
+				server_manager.setRecvTimeOut(send_timeout);
 				recv_timeout_check = true;
 			}
 		}
@@ -174,21 +180,32 @@ int	ConfigParser::httpBlock(ServerManager& server_manager) {
 			line += elements[i] + " ";
 		if ((ret = getIntoBlock("server", line)))
 			return ret;
-		ret = this->serverBlock(server_manager.getServersRef());
+		ret = this->serverBlock(configs);
+
+		// Check server_name duplication by comparing set and vector.
+		std::string	server_name = configs.back().first.getServerName();
+		if (server_name.length()) {
+			server_name_set.insert(server_name);
+			server_name_vec.push_back(server_name);
+		}
 	}
-	if (server_manager.getServersRef().size() == 0) {
+	if (configs.size() == 0) {
 		return this->putError(NO_ENTITY_ERR);
 	} else if (ret == BLOCK_END) {
+		// compare here
+		if (server_name_set.size() != server_name_vec.size())
+			return putError(NAME_DUP_ERR, "server_name");
+		server_manager.initServerManager(configs);
 		return OK;
 	}
 	return ret;
 }
 
-int	ConfigParser::serverBlock(std::vector<Server>& servers) {
+int	ConfigParser::serverBlock(std::vector<std::pair<Server, std::vector<unsigned int> > >& configs) {
 	this->method_name = "serverBlock";
 
-	unsigned int						port = 80;
-	bool								port_check = false;
+	std::vector<unsigned long>			ports;
+	unsigned int						port;
 	std::string							server_name = "localhost";
 	bool								server_name_check = false;
 	std::string							default_root;
@@ -211,8 +228,6 @@ int	ConfigParser::serverBlock(std::vector<Server>& servers) {
 			}
 		// listen directive
 		} else if (!elements[0].compare("listen")) {
-			if (port_check)
-				return this->putError(NAME_DUP_ERR, "listen");
 			if (elements.size() != 2)
 				return this->putError(SEMANTIC_ERR, "listen");
 			// input port number and also check if it only contains digits.
@@ -220,7 +235,7 @@ int	ConfigParser::serverBlock(std::vector<Server>& servers) {
 			iss >> port;
 			if (iss.fail())
 				return this->putError(SEMANTIC_ERR, "listen");
-			port_check = true;
+			ports.push_back(port);
 		// server_name directive
 		} else if (!elements[0].compare("server_name")) {
 			if (server_name_check)
@@ -282,8 +297,8 @@ int	ConfigParser::serverBlock(std::vector<Server>& servers) {
 	// if there is no root directive and location or no return directive
 	if ((!default_root.length() && !locations.size()) || !return_to.first)
 		return this->putError(NO_ENTITY_ERR, "root");
-	servers.push_back(Server(port, server_name, default_root, \
-		default_error_pages, client_body_limit, locations, return_to));
+	configs.push_back(std::make_pair(Server(server_name, default_root, \
+		default_error_pages, client_body_limit, locations, return_to), ports));
 	return OK;
 }
 
@@ -435,12 +450,12 @@ ConfigParser::ConfigParser(const char* config_path)
 ConfigParser::~ConfigParser() {}
 
 // the only public function of the class. initilized server_manager.
-int ConfigParser::setServerManager(ServerManager& server_manager) {
-	this->method_name = "setServers";
+int	ConfigParser::setData(ServerManager& server_manager) {
+	this->method_name = "getData";
 
-	if (is_used)
+	if (ConfigParser::is_used)
 		return ERROR;
-	is_used = true;
+	ConfigParser::is_used = true;
 	// Check if configfile is properly opened.
 	if (!this->config_file.is_open())
 		return this->putError(OPEN_FILE_ERR, "readFile");
