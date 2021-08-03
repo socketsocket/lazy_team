@@ -42,12 +42,35 @@ ServerManager::ServerManager(const std::vector<Server> servers) {
 
 		fcntl(server_socket, F_SETFL, O_NONBLOCK);
 
-		if (managers.size() < server_socket) {
-			managers.resize(server_socket, NULL);
-		}
-		managers[server_socket] = new PortManager(server_socket, (*it).second);
+		if (this->types.size() < server_socket)
+			this->types.resize(server_socket, Blank);
+		if (this->managers.size() < server_socket)
+			this->managers.resize(server_socket, NULL);
+		this->managers[server_socket] = new PortManager(server_socket, (*it).second);
+	}
+}
+
+int	ServerManager::makeClient(int port_fd, PortManager& port_manager) {
+	int	client_fd;
+	if (client_fd = accept(port_fd, NULL, NULL) < 0) {
+		putError("accept error");
+		return ERROR;
 	}
 
+	fcntl(client_fd, F_SETFL, O_NONBLOCK);
+
+	EV_SET(&event_current, client_fd, EVFILT_READ, EV_ADD, 0, 0, NULL);
+	this->event_changes.push_back(event_current);
+	EV_SET(&event_current, client_fd, EVFILT_WRITE, EV_ADD, 0, 0, NULL);
+	this->event_changes.push_back(event_current);
+
+	if (this->types.size() < client_fd)
+		this->types.resize(client_fd, Blank);
+	if (this->clients.size() < client_fd)
+		this->clients.resize(client_fd, NULL);
+	types[client_fd] = ClientFd;
+	clients[client_fd] = new Client(client_fd, port_manager);
+	return OK;
 }
 
 int	ServerManager::callKevent() {
@@ -56,10 +79,24 @@ int	ServerManager::callKevent() {
 	return num_events;
 }
 
+ServerManager::~ServerManager() {
+	for (size_t i = 0; i < this->types.size(); ++i) {
+		if (types[i] == PortFd) {
+			delete managers[i];
+		} else if (types[i] == ClientFd) {
+			delete clients[i];
+		}
+	}
+}
+
 // Returns an instance of singleton class, ServerManager.
 ServerManager&	ServerManager::getServerManager(const std::vector<Server> servers = std::vector<Server>(0)) {
 	static ServerManager	instance = servers;
 	return instance;
+}
+
+void	ServerManager::setStatus(int status) {
+	this->status = status;
 }
 
 int	ServerManager::getStatus() {
@@ -80,6 +117,11 @@ int	ServerManager::processEvent() {
 				break;
 			}
 			case ClientFd: {
+				if (event_list[i].filter == EVFILT_READ) {
+					//
+				} else if (event_list[i].filter == EVFILT_WRITE) {
+					//
+				}
 				// clients[i].callClient;
 				break;
 			}
