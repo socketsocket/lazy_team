@@ -31,26 +31,26 @@ Location::Location(
 
 Location::~Location() {}
 
-std::string Location::getPath() {
+const std::string& Location::getPath() const {
 	return this->path;
 }
 
-std::string Location::getRoot() {
+const std::string& Location::getRoot() const {
 	return this->root;
 }
 
-Method Location::getMethodsAllowed() {
+const Method& Location::getMethodsAllowed() const {
 	return this->methods_allowed;
 }
 
-std::vector<std::string> Location::getIndexes() {
+const std::vector<std::string>& Location::getIndexes() const {
 	return this->indexes;
 }
 
-bool Location::isAutoIndex() {
+const bool& Location::isAutoIndex() const {
 	return this->auto_index;
 }
 
-std::map<stat_type, std::string> Location::getDefaultErrorPages() {
+std::map<stat_type, std::string> Location::getDefaultErrorPages() const {
 	return this->error_pages;
 }

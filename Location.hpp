@@ -35,12 +35,12 @@ class Location {
 		);
 		~Location();
 
-		std::string							getPath();
-		std::string							getRoot();
-		Method								getMethodsAllowed();
-		std::vector<std::string> 			getIndexes();
-		bool								isAutoIndex();
-		std::map<stat_type, std::string>	getDefaultErrorPages();
+		const std::string&						getPath() const;
+		const std::string&						getRoot() const;
+		const Method&							getMethodsAllowed() const;
+		const std::vector<std::string>&			getIndexes() const;
+		const bool&								isAutoIndex() const;
+		std::map<stat_type, std::string>		getDefaultErrorPages() const;
 };
 
 #endif

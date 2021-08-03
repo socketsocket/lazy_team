@@ -56,6 +56,7 @@ class Server
 		~Server();
 
 		unsigned int	getPortNum() const;
+		std::string&	getServerName() const;
 };
 
 #endif

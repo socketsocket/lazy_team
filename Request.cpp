@@ -1,7 +1,7 @@
 #include "Request.hpp"
 
 Request::Request() {
-	this->status = nothing;
+	this->status = Nothing;
 	this->method = 0;
 	this->uri = "";
 	this->version = "";
@@ -20,15 +20,10 @@ Request& Request::operator=(const Request &ref) {
 }
 
 int	Request::insertHeader(std::string& key, std::string& value) {
-	this->header.insert(std::make_pair(key, value));
+	this->headers.insert(std::make_pair(key, value));
 }
 
 Location	Request::getLocation() const
 {
 	return location;
-}
-
-void	Request::setLocation(const Location& location)
-{
-	this->location = location;
 }

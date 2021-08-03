@@ -25,9 +25,9 @@ struct Resource {
 		~Resource();
 		Resource& operator=(const Resource &ref);
 
-		int getStatus();
-		int getResourceFD();
-		std::string		getContent();
+		const int&				getStatus() const;
+		const int&				getResourceFd() const;
+		const std::string&		getContent() const;
 		void setStatus(int status);
 };
 

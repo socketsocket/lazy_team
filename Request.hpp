@@ -37,10 +37,9 @@ class Request {
 		const Method&								getMethod();
 		const std::string&							getUri();
 		const std::string&							getVersion();
-		std::map<std::string, std::string>&			getHeader();
+		std::map<std::string, std::string>&			getHeaders();
 		const std::string&							getBody();
 		Location									getLocation() const;
-		void										setLocation(const Location& location);
 };
 
 #endif

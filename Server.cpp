@@ -102,7 +102,7 @@ ServerStatus Server::makeGETResponse(Re3Iter re3, Location* curr_location, std::
 			//default indexfile값이 존재한다면
 			if (!request->getLocation().getIndexes().empty())
 			//indexes 이터레이터 돌면서 열리는 인덱스파일이 있는지 확인
-				for (std::vector<std::string>::iterator iter = request->getLocation().getIndexes().begin();
+				for (std::vector<const std::string>::iterator iter = request->getLocation().getIndexes().begin();
 						iter != request->getLocation().getIndexes().end(); ++iter) {
 					struct stat buffer;
 					if (stat((resource_path + *iter).c_str(), &buffer) == 0) {

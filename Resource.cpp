@@ -15,13 +15,18 @@ Resource& Resource::operator=(const Resource &ref) {
 	this->resource_fd = ref.resource_fd;
 }
 
-int Resource::getStatus() {
+const int& Resource::getStatus() const {
 	return this->status;
 }
 
-int Resource::getResourceFD() {
+const int& Resource::getResourceFd() const {
 	return this->resource_fd;
 }
+
+const std::string&	Resource::getContent() const {
+	return this->content;
+}
+
 
 void Resource::setStatus(int status) {
 	this->status = status;
