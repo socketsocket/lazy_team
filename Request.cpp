@@ -1,7 +1,7 @@
 #include "Request.hpp"
 
 Request::Request() {
-	this->status = nothing;
+	this->status = Nothing;
 	this->method = 0;
 	this->uri = "";
 	this->version = "";

@@ -3,16 +3,15 @@
 
 #include "Webserv.hpp"
 #include "PortManager.hpp"
-#include "Request.hpp"
-#include "Response.hpp"
-#include <queue>
+#include "Re3.hpp"
+#include <vector>
+#include <deque>
 #include <string>
 #include <iostream>
 #include <sstream>
 #include <unistd.h>
 
 #define READSIZE 1024
-
 
 // class	Client
 // {
@@ -27,25 +26,23 @@
 // 	queue<Response>	responses;
 // }
 
+typedef std::deque<Re3>::iterator	Re3_iter;
 class Client {
 	private:
-		// Client();
+		int				status;
 		const int		client_fd;
 		PortManager&	port_manager;
-
-		int				status;
-
 		unsigned long	last_request_time;
 		unsigned long	last_response_time;
-
 		std::string				read_buff;
-		std::queue<Request>		requests;
-		std::queue<Response>	responses;
+		std::deque<Re3>			re3_deque;
 
-		int	chunkedParser(Request& request);
-		int	lengthParser(Request& request);
-		int	headerParser(Request& request);
-		int	Parser(void);
+		int	reqLineParser(Request* request);
+		int	chunkedParser(Request* request);
+		int	lengthParser(Request* request);
+		int	headerParser(Request* request);
+		int	initParser(Request* request);
+		// std::vector<Re3_iter>	rscToEnroll(void);
 
 	public:
 		Client(int client_fd, PortManager& port_manager);
@@ -53,13 +50,9 @@ class Client {
 		~Client();
 		Client& operator=(const Client& ref);
 
-		int	readRequest();
-		int	writeResponse();
-
-		int	pushResponse(Response& response);
-
-		std::queue<Request>&	getRequests();
-		std::queue<Response>&	getResponses();
+		// std::vector<Re3_iter>	recvRequest(std::string& rawRequest);
+		int	recvRequest(std::string& rawRequest);
+		int	sendResponse(void);
 };
 
 #endif
