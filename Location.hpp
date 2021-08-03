@@ -37,7 +37,8 @@ class Location {
 		std::string getPath();
 		std::string getRoot();
 		Method getMethodsAllowed();
-		std::vector<std::string> getIndexes();
+		std::map<stat_type, std::string> getDefaultErrorPages() ;
+		std::vector<std::string> getIndexes() const;
 		bool isAutoIndex();
 
 };

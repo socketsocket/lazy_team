@@ -91,10 +91,12 @@ enum	Status {
 	ReadFail,
 };
 
+//Server가 리턴하는 값들
 enum	ServerStatus {
 	ResourceWriteWaiting,
 	ResourceReadWaiting,
 	ResponseMakingDone,
+	Re3ObjectError,
 };
 
 

@@ -50,3 +50,7 @@ std::vector<std::string> Location::getIndexes() {
 bool Location::isAutoIndex() {
 	return this->auto_index;
 }
+
+std::map<stat_type, std::string> Location::getDefaultErrorPages() {
+	return this->error_pages;
+}

@@ -25,16 +25,16 @@ class Server
 
 		int 		makeResponse(Re3_iter re3);
 		int 		makeGetResponse(Re3_iter re3, Location* curr_location, std::string resource_path);
-		int			errorResponse(Re3_iter re3, Location* curr_location, std::string http_status_code);
+		int			errorResponse(Re3_iter re3, Location* curr_location, stat_type http_status_code);
 		
-		std::string	requestValidCheck(Request& request, Location* curr_location);
+		stat_type	requestValidCheck(Request* request, Location* curr_location);
 		Location*	currLocation(std::string request_uri);
 		int			checkPath(std::string path);
 		std::string	dateHeaderInfo();
 		std::string	lastModifiedHeaderInfo(struct stat sb);
 		std::string contentTypeHeaderInfo(std::string extension);
 		std::string fileExtension(std::string resource_path);
-		std::string	makeAutoIndexPage(Request& request, std::string resource_path);
+		std::string	makeAutoIndexPage(Request* request, std::string resource_path);
 		std::string makeHTMLPage(std::string str);
 
 		Server();

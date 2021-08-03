@@ -2,9 +2,9 @@
 
 Response::Response() {}
 
-Response::Response(int status, std::string http_status_code,
+Response::Response(Status status, std::string http_status_code,
 std::map<std::string, std::string> headers, std::string body, std::string version)
-:status(status), http_status_code(http_status_code), header(header), body(body), version(version) {}
+:status(status), http_status_code(http_status_code), headers(headers), body(body), version(version) {}
 
 Response::Response(const Response& ref) {
 	this->status = ref.status;
