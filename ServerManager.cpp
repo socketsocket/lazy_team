@@ -1,6 +1,7 @@
 #include "ServerManager.hpp"
 
-ServerManager::ServerManager(const std::vector<Server> servers) {
+ServerManager::ServerManager(const std::vector<Server> servers)
+	: status(OK) {
 	// get ready to add stderr fd
 	this->kq = kqueue();
 	EV_SET(&this->event_current, STDERR, EVFILT_WRITE, EV_ADD, 0, 0, NULL); // set stderr kevent.
@@ -93,6 +94,10 @@ ServerManager::~ServerManager() {
 ServerManager&	ServerManager::getServerManager(const std::vector<Server> servers = std::vector<Server>(0)) {
 	static ServerManager	instance = servers;
 	return instance;
+}
+
+void	ServerManager::setStatus(int status) {
+	this->status = status;
 }
 
 int	ServerManager::getStatus() {

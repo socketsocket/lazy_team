@@ -45,7 +45,6 @@ class ServerManager {
 		std::vector<struct kevent>	event_changes;
 		struct kevent				event_list[EVENT_SIZE];
 		struct kevent				event_current;
-		FdType						type;
 
 // Base constructor, copy constructor, and assignation operator are disabled.
 		ServerManager();
@@ -61,6 +60,7 @@ class ServerManager {
 		~ServerManager();
 		static ServerManager&	getServerManager(const std::vector<Server> servers);
 		int	getStatus();
+		void setStatus(int status);
 		int	processEvent();
 };
 
