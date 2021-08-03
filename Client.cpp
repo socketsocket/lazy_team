@@ -136,17 +136,18 @@ int	Client::initParser(Request* request) {
 	return OK;
 }
 
-std::vector<Re3_iter>	Client::rscToEnroll(void) {
-	std::vector<Re3_iter> ret;
-	for (Re3_iter it = re3_deque.begin(); it != re3_deque.end(); ++it) {
-		//to be enroll
-		if (it->getRscPtr()->getStatus() == to_be_enroll)
-			ret.push_back(it);
-	}
-	return ret;
-}
+// std::vector<Re3_iter>	Client::rscToEnroll(void) {
+// 	std::vector<Re3_iter> ret;
+// 	for (Re3_iter it = re3_deque.begin(); it != re3_deque.end(); ++it) {
+// 		//to be enroll
+// 		if (it->getRscPtr()->getStatus() == to_be_enroll)
+// 			ret.push_back(it);
+// 	}
+// 	return ret;
+// }
 
-std::vector<Re3_iter>	Client::recvRequest(std::string& rawRequest) {
+// std::vector<Re3_iter>	Client::recvRequest(std::string& rawRequest) {
+int	Client::recvRequest(std::string& rawRequest) {
 	this->read_buff += rawRequest;
 	do {
 		if (this->re3_deque.back().getReqPtr()->getStatus() == Finished) {
@@ -156,7 +157,8 @@ std::vector<Re3_iter>	Client::recvRequest(std::string& rawRequest) {
 		}
 		this->initParser(this->re3_deque.back().getReqPtr());
 	} while (this->re3_deque.back().getReqPtr()->getStatus() == Finished);
-	return this->rscToEnroll();
+	// return this->rscToEnroll();
+	return OK;
 }
 
 int	Client::sendResponse(void) {

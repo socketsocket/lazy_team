@@ -42,7 +42,7 @@ class Client {
 		int	lengthParser(Request* request);
 		int	headerParser(Request* request);
 		int	initParser(Request* request);
-		std::vector<Re3_iter>	rscToEnroll(void);
+		// std::vector<Re3_iter>	rscToEnroll(void);
 
 	public:
 		Client(int client_fd, PortManager& port_manager);
@@ -50,8 +50,9 @@ class Client {
 		~Client();
 		Client& operator=(const Client& ref);
 
-		std::vector<Re3_iter>	recvRequest(std::string& rawRequest);
-		int						sendResponse(void);
+		// std::vector<Re3_iter>	recvRequest(std::string& rawRequest);
+		int	recvRequest(std::string& rawRequest);
+		int	sendResponse(void);
 };
 
 #endif
