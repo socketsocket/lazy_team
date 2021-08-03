@@ -1,12 +1,15 @@
 #ifndef WEBSERV_WEBSERV_HPP_
 #define WEBSERV_WEBSERV_HPP_
 
+#include <csignal>
+
 #define ERROR -1
 #define OK     0
 
 #define STDERR 2
 
 #define BLOCK_END 101
+#define	QUIT 24
 
 #define OPEN_FILE_ERR	"Failed to open file."
 #define READ_LINE_ERR	"Failed to read a line."
@@ -107,12 +110,16 @@ enum	FileType {
 	NotFound
 };
 
+#define NOT    0b000
 #define GET    0b001
 #define POST   0b010
 #define DELETE 0b100
+#define OTHER  0b1000
 
 typedef	unsigned char	Method;
 
 void	initStatusCodeMap();
+void	sigIntHandler(int param);
+
 
 #endif

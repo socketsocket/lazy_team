@@ -3,13 +3,13 @@
 
 #include "Webserv.hpp"
 #include "Server.hpp"
+#include <sys/socket.h>
 #include <string>
 #include <iostream>
 #include <map>
 
 class Request {
 	private:
-		/* data */
 		int									status;
 		Method								method;
 		std::string							uri;

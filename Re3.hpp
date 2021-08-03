@@ -12,7 +12,7 @@ class Re3
 		Request*	req_ptr;
 		Response*	rsp_ptr;
 		Resource*	rsc_ptr;
-		int			client_fd;
+		int			client_id;
 		int			port_manager_fd;
 
 	public:

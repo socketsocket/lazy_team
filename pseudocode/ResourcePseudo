@@ -1,0 +1,66 @@
+
+response	Server::makeResponse(Request& request, Resource& resource) {
+	// ...
+	if (need to open resource) {
+		this->openResource(resource);
+		return response(깡통); // 아무런 내용이 없음
+	}
+	if (resource.status() == reading_is_not_done) {
+		resource.setStatus(not_done);
+		return response(깡통); // 아무런 내용이 없음
+	}
+	// ...
+	return Response(completed);
+}
+
+response PortManager::callServer(Request& request, Resource& resource) {
+	// ...
+	response = this->findServer(request).makeResponse(request, resource);
+	// ...
+}
+
+Client::callClient(Resource& resource = "") {
+	// ...
+	request = this->readRequest();
+	port_manager.callServer(request, resource);
+	// ...
+}
+
+ServerManager::reactEvent(unsigned int n) {
+	Resource	resource;
+	int			fd = event_list[n].ident;
+	FdType type = types[fd];
+	if (type == ServerFd) {
+		this->makeClient() // ClientFd kq에 등록
+	} else if (type == ClientFd && read_event) {
+		clients[fd].callClient(resource)
+		if (resource.status() == need_new_resource) {
+			types[resource.fd] = ResourceFd;
+			resources[resource.fd] = ResourceFd;
+			SET_EV(대충 알아서)
+			event_list.push_back(this->event_tmp);
+		} else {
+			return OK // resource.status() == need_more || done_reading
+		}
+	} else if (type == ClientFd && write_event) {
+		clients[fd].sendResponse();
+	} else if (type == ResourceFd) {
+		int ret = this->readResource(event_list[n].ident);
+		if (ret == read_done)
+			this->callClient(resource)
+	} else { // type == StderrFd
+		int ret = this->putError(STDERR);
+	}
+}
+
+서버가 리소스 오픈
+서버가 포트매니저에 리소스 fd 반환(매개변수 리소스 객체)
+포트매니저가 클라이언트에 리소스 fd 반환
+클라이언트가 서버매니저에 리소스 fd 반환
+서버매니저 리소스 fd kqueue 이벤트에 등록
+서버매니저가 리소스 read
+read한 정보는 리소스 객체에 담김
+서버매니저는 클라이언트를 부름(매개변수 리소스 객체)
+클라이언트는 포트매니저를 부름
+포트매니저는 서버를 부름
+서버가 읽은 리소스로 어쩌꾸저쩌구
