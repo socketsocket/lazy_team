@@ -28,6 +28,7 @@
 class ServerManager {
 	private:
 		int							status;
+		std::vector<Server>			servers; // contains original servers.
 
 // Variable types stores the type of fd, which can be connected to a server, a client or a resource.
 // These connection can be reached by variables servers, clients, resources.
@@ -37,8 +38,8 @@ class ServerManager {
 		std::vector<Re3*>			Re3s;
 
 // Send_time_out and recv_time_out is determined by configuration file.
-		unsigned long				send_time_out;
-		unsigned long				recv_time_out;
+		unsigned long				send_timeout;
+		unsigned long				recv_timeout;
 
 // These variables are needed for using kqueue
 		int							kq;
@@ -59,8 +60,11 @@ class ServerManager {
 	public:
 		~ServerManager();
 		static ServerManager&	getServerManager(const std::vector<Server> servers);
-		int	getStatus();
-		void setStatus(int status);
+		void	setStatus(int status);
+		void	setSendTimeOut(unsigned long send_time_out);
+		void	setRecvTimeOut(unsigned long recv_time_out);
+		int		getStatus();
+		std::vector<Server>&	getServersRef();
 		int	processEvent();
 };
 

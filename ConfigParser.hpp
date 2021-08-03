@@ -37,7 +37,7 @@ class ConfigParser {
 		int		getPath(std::string& path, std::vector<std::string>& elements);
 		int		getLineElements(std::vector<std::string>& elements);
 
-		int		httpBlock(std::vector<Server>& servers);
+		int		httpBlock(ServerManager& server_manager);
 		int		serverBlock(std::vector<Server>& server);
 		int		locationBlock(std::vector<Location>& location, \
 			std::vector<std::string>& elements);
@@ -47,7 +47,7 @@ class ConfigParser {
 	public:
 		ConfigParser(const char* config_path);
 		~ConfigParser();
-		int	setServers(std::vector<Server>& servers);
+		int	setServerManager(ServerManager& server_manager);
 };
 
 std::string	trimWhitespace(std::string str);

@@ -64,12 +64,12 @@ int	ConfigParser::getSemanticLine(std::string& line) {
 int ConfigParser::getIntoBlock(std::string block_name, std::string line = "") {
 	this->method_name = "getIntoBlock";
 
-	if (line.compare("}"))
-		return BLOCK_END;
-
 	if (line.length() == 0)
 		if (this->getSemanticLine(line));
 			return ERROR;
+
+	if (line.compare("}"))
+		return BLOCK_END;
 
 	// Compare block name and leading part of the line
 	std::string candidate = line.substr(0, block_name.length());
@@ -133,17 +133,50 @@ int	ConfigParser::getLineElements(std::vector<std::string>& elements) {
 	return OK;
 }
 
-int	ConfigParser::httpBlock(std::vector<Server>& servers) {
+int	ConfigParser::httpBlock(ServerManager& server_manager) {
 	this->method_name = "httpBlock";
 
 	if (getIntoBlock("http"))
 		return ERROR;
 
-	int	ret = 0;
+	std::vector<std::string>	elements;
+	unsigned long				send_timeout = 0;
+	bool						send_timeout_check = false;
+	unsigned long				recv_timeout = 0;
+	bool						recv_timeout_check = false;
+	int							ret = 0;
+	std::string					line = "";
 
 	while (!ret)
-		ret = this->serverBlock(servers);
-	if (servers.size() == 0) {
+	{
+		if (this->getLineElements(elements))
+			return ERROR;
+		if (elements.size() == 2) {
+			if (elements[0].compare("send_timeout")) {
+				if (send_timeout_check)
+					return putError(NAME_DUP_ERR, "send_timeout");
+				std::istringstream	iss(elements[1]);
+				iss >> send_timeout;
+				if (iss.fail())
+					return putError(SEMANTIC_ERR, "send_timeout");
+				send_timeout_check = true;
+			} else if (elements[0].compare("recv_timeout")) {
+				if (recv_timeout_check)
+					return putError(NAME_DUP_ERR, "recv_timeout");
+				std::istringstream	iss(elements[1]);
+				iss >> recv_timeout;
+				if (iss.fail())
+					return putError(SEMANTIC_ERR, "recv_timeout");
+				recv_timeout_check = true;
+			}
+		}
+		for (size_t i = 0; i < elements.size(); ++i)
+			line += elements[i] + " ";
+		if ((ret = getIntoBlock("server", line)))
+			return ret;
+		ret = this->serverBlock(server_manager.getServersRef());
+	}
+	if (server_manager.getServersRef().size() == 0) {
 		return this->putError(NO_ENTITY_ERR);
 	} else if (ret == BLOCK_END) {
 		return OK;
@@ -153,10 +186,6 @@ int	ConfigParser::httpBlock(std::vector<Server>& servers) {
 
 int	ConfigParser::serverBlock(std::vector<Server>& servers) {
 	this->method_name = "serverBlock";
-
-	int	ret;
-	if ((ret = getIntoBlock("server")))
-		return ret;
 
 	unsigned int						port = 80;
 	bool								port_check = false;
@@ -406,7 +435,7 @@ ConfigParser::ConfigParser(const char* config_path)
 ConfigParser::~ConfigParser() {}
 
 // the only public function of the class. initilized server_manager.
-int ConfigParser::setServers(std::vector<Server>& servers) {
+int ConfigParser::setServerManager(ServerManager& server_manager) {
 	this->method_name = "setServers";
 
 	if (is_used)
@@ -415,7 +444,7 @@ int ConfigParser::setServers(std::vector<Server>& servers) {
 	// Check if configfile is properly opened.
 	if (!this->config_file.is_open())
 		return this->putError(OPEN_FILE_ERR, "readFile");
-	this->httpBlock(servers);
+	this->httpBlock(server_manager);
 	this->config_file.close();
 	return OK;
 }

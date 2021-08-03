@@ -100,8 +100,12 @@ void	ServerManager::setStatus(int status) {
 	this->status = status;
 }
 
-int	ServerManager::getStatus() {
+int		ServerManager::getStatus() {
 	return (this->status);
+}
+
+std::vector<Server>&	ServerManager::getServersRef() {
+	return this->servers;
 }
 
 int	ServerManager::processEvent() {
