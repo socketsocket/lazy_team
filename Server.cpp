@@ -28,10 +28,9 @@ int Server::makeResponse(Re3_iter re3) {
 
 		if (request->getMethod() & GET == true)
 			return makeGetResponse(re3, curr_location, resource_path);
-		/*if (request->getMethod() == "POST")
-		{};
-		if (request->getMethod() == "DELETE")
-		{};*/
+		if (request->getMethod() & POST == true)
+			return makePostResponse(re3, curr_location, resource_path);
+		// if (request->getMethod() & DELETE == true)
 	}
 }
 
@@ -39,9 +38,6 @@ int Server::makeResponse(Re3_iter re3) {
 //@return: 자체 에러페이지를 제작할 때 - ResponseMakingDone
 int Server::errorResponse(Re3_iter re3, Location* location, stat_type http_status_code) {
 	std::map<std::string, std::string> headers;
-	Request* request = re3->getReqPtr();
-	Resource* resource = re3->getRscPtr();
-	Response* response = re3->getRspPtr();
 
 	headers["Date"] = dateHeaderInfo();
 	headers["Server"] = "Passive Server";
@@ -132,7 +128,7 @@ int Server::makeGetResponse(Re3_iter re3, Location* curr_location, std::string r
 				length << (int)sb.st_size;
 				headers["Content-Length"] = length.str();
 				//Re3에 Response 추가
-				if (re3->getRspPtr() == NULL)
+				if (response == NULL)
 					re3->setRspPtr(new Response(Nothing, std::string(C200), headers, autoindex_body, request->getVersion()));
 				else
 					return Re3ObjectError;
@@ -150,7 +146,7 @@ int Server::makeGetResponse(Re3_iter re3, Location* curr_location, std::string r
 			return errorResponse(re3, curr_location, C500);
 		}
 		//Re3에 resource fd 추가 
-		if (re3->getRscPtr() == NULL)
+		if (resource == NULL)
 			re3->setRscPtr(new Resource(Reading, fd));
 		else
 			return Re3ObjectError;
@@ -167,12 +163,61 @@ int Server::makeGetResponse(Re3_iter re3, Location* curr_location, std::string r
 		headers["Last-Modified"] = lastModifiedHeaderInfo(sb);
 
 		//Re3에 Response 추가
-		if (re3->getRspPtr() == NULL)
+		if (response == NULL)
 			re3->setRspPtr(new Response(Nothing, std::string(C200), headers, resource->getContent(), request->getVersion()));
 		else
 			return Re3ObjectError;
 		return ResponseMakingDone;
 	}
+}
+
+int Server::makePostResponse(Re3_iter re3, Location* curr_location, std::string resource_path) {
+	int fd;
+	std::map<std::string, std::string> headers;
+	Resource* resource = re3->getRscPtr();
+
+	if (resource->getStatus() == Nothing) {
+		headers["Content-Location"] = resource_path.substr(1);
+		switch (checkPath(resource_path)) {
+			case Directory :
+			{
+				if ((fd = open(resource_path.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644)) < 0)
+					return errorResponse(re3, curr_location, C500);
+				if (resource == NULL)
+					re3->setRscPtr(new Resource(Writing, fd));
+				else
+					return Re3ObjectError;
+				return ResourceWriteWaiting;
+			}
+			case File :
+			{
+				if ((fd = open(resource_path.c_str(), O_WRONLY | O_APPEND )) < 0)
+					return errorResponse(re3, curr_location, C500);
+				if (resource == NULL)
+					re3->setRscPtr(new Resource(Writing, fd));
+				else
+					return Re3ObjectError;
+				return ResourceWriteWaiting;
+			}
+			default :
+				return errorResponse(re3, curr_location, C403);
+		}
+		return ;
+	}
+	else if (re3->getRscPtr()->getStatus() == Finished) {
+		Request* request = re3->getReqPtr();	
+		if (re3->getRspPtr() == NULL)
+			switch (checkPath(resource_path)) {
+				case Directory :
+					re3->setRspPtr(new Response(Nothing, std::string(C201), headers, resource->getContent(), request->getVersion()));
+				default :
+					re3->setRspPtr(new Response(Nothing, std::string(C200), headers, resource->getContent(), request->getVersion()));
+			}
+		else
+			return Re3ObjectError;
+		return ResponseMakingDone;
+	}
+	return ;
 }
 
 Location* Server::currLocation(std::string request_uri) {

@@ -25,6 +25,7 @@ class Server
 
 		int 		makeResponse(Re3_iter re3);
 		int 		makeGetResponse(Re3_iter re3, Location* curr_location, std::string resource_path);
+		int 		makePostResponse(Re3_iter re3, Location* curr_location, std::string resource_path);
 		int			errorResponse(Re3_iter re3, Location* curr_location, stat_type http_status_code);
 		
 		stat_type	requestValidCheck(Request* request, Location* curr_location);
