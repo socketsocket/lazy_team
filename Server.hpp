@@ -9,6 +9,7 @@
 #include <sstream>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <unistd.h>
 #include <dirent.h>
 
 
@@ -23,11 +24,11 @@ class Server
 		std::vector<Location>				locations;
 		std::pair<stat_type, std::string>	return_to;
 
-		int 		makeResponse(Re3_iter re3);
-		int 		makeGetResponse(Re3_iter re3, Location* curr_location, std::string resource_path);
-		int 		makePostResponse(Re3_iter re3, Location* curr_location, std::string resource_path);
-		int 		makeDeleteResponse(Re3_iter re3, Location* curr_location, std::string resource_path);
-		int			errorResponse(Re3_iter re3, Location* curr_location, stat_type http_status_code);
+		ServerStatus		makeResponse(Re3Iter re3);
+		ServerStatus		makeGETResponse(Re3Iter re3, Location* curr_location, std::string resource_path);
+		ServerStatus		makePOSTResponse(Re3Iter re3, Location* curr_location, std::string resource_path);
+		ServerStatus		makeDELETEResponse(Re3Iter re3, Location* curr_location, std::string resource_path);
+		ServerStatus		makeErrorResponse(Re3Iter re3, Location* curr_location, stat_type http_status_code);
 		
 		stat_type	requestValidCheck(Request* request, Location* curr_location);
 		Location*	currLocation(std::string request_uri);

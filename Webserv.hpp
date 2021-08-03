@@ -97,7 +97,6 @@ enum	ServerStatus {
 	ResourceWriteWaiting,
 	ResourceReadWaiting,
 	ResponseMakingDone,
-	Re3ObjectError,
 };
 
 
