@@ -1,6 +1,5 @@
 #include "PortManager.hpp"
 
-
 PortManager::PortManager(const PortManager& ref)
 	: port_fd(ref.port_fd), servers(ref.servers) {}
 
