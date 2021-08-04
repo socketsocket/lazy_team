@@ -11,7 +11,7 @@ void	initStatusCodeMap() {
 
 void	sigIntHandler(int param) {
 	ServerManager& server_manager = ServerManager::getServerManager();
-	server_manager.setStatus(QUIT);
+	server_manager.setStatus(INTR);
 };
 
 int	main(int argc, char* argv[]) {
@@ -33,7 +33,7 @@ int	main(int argc, char* argv[]) {
 	}
 	if (server_manager.getStatus() == ERROR)
 		return ERROR;
-	if (server_manager.getStatus() == QUIT) {
+	if (server_manager.getStatus() == INTR) {
 		// Adequate processing
 	}
 	return OK;

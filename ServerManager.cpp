@@ -16,7 +16,7 @@ int	ServerManager::makeClient(int port_fd, PortManager& port_manager) {
 
 	if (setsockopt(client_fd, SOL_SOCKET, SO_RCVTIMEO, (char*)&this->recv_timeout, sizeof(unsigned long)) < 0)
 		return putError("setsockopt: recv_timeout set failed");
-	if (setsockopt(client_fd, SOL_SOCKET, SO_SNDTIMEO, (char*)&this->recv_timeout, sizeof(unsigned long)) < 0)
+	if (setsockopt(client_fd, SOL_SOCKET, SO_SNDTIMEO, (char*)&this->send_timeout, sizeof(unsigned long)) < 0)
 		return putError("setsockopt: send_timeout set failed");
 
 	fcntl(client_fd, F_SETFL, O_NONBLOCK);
@@ -57,11 +57,12 @@ ServerManager::~ServerManager() {
 
 // Returns an instance of singleton class, ServerManager.
 ServerManager&	ServerManager::getServerManager() {
-	static ServerManager	instance;
+	static ServerManager	instance = ServerManager();
 	return instance;
 }
 
-int	ServerManager::initServerManager(const std::vector<std::pair<Server, std::vector<unsigned int> > > configs) {
+int	ServerManager::initServerManager( \
+	const std::vector<std::pair<Server, std::vector<unsigned int> > > configs) {
 	if (this->status != INITIATED)
 		return ERROR;
 	this->status = OK;
@@ -84,7 +85,7 @@ int	ServerManager::initServerManager(const std::vector<std::pair<Server, std::ve
 	// Set port fd.
 	int					server_socket;
 	struct sockaddr_in	server_addr;
-	for (std::map<unsigned int, std::vector<Server&> >::iterator it = server_sorter.begin();
+	for (std::map<unsigned int, std::vector<Server&> >::iterator it = server_sorter.begin(); \
 		it != server_sorter.end(); ++it) {
 		if ((server_socket = socket(PF_INET, SOCK_STREAM, 0)) == -1) {
 			putError("socket error\n");
