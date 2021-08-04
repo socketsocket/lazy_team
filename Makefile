@@ -1,5 +1,5 @@
-.PHONY: all debug clean fclean re
-.DEFAULT_GOAL: all
+.PHONY: all debug clean fclean re simple
+.DEFAULT_GOAL: simple
 
 NAME = webserv
 
@@ -11,11 +11,9 @@ CPPFLAGS = -Wall -Werror -Wextra $(DEBUGF)
 ifeq ($(MAKECMDGOALS), debug)
 DEBUGF = -g3 -fsanitize=address
 
-DEBUG_CHECK:
-	DEBUG_CHECK=1
+DEBUG_CHECK = 1
 else
-DEBUG_CHECK:
-	DEBUG_CHECK=0
+DEBUG_CHECK = 0
 endif
 
 INC_DIR = .
@@ -57,15 +55,21 @@ OBJS = ErrorMsgHandler.o \
 %.o: %.cpp
 	$(CC) $(CFLANGS) -c $< -o $@
 
-ifneq ($(shell $(DEBUG_CHECK)), DEBUG_CHECK)
-$(NAME): fclean $(OBJS)
-	$(CC) $(CFLAGS) -c $? -o $@
-else
+ifneq ($(shell echo ${debug_check+x}), x)
 $(NAME): $(OBJS)
 	$(CC) $(CFLAGS) -c $? -o $@
+	debug_check = $$(DEBUG_CHECK)
+else ifeq ($(shell echo $debug_check), $(DEBUG_CHECK))
+$(NAME): $(OBJS)
+	$(CC) $(CFLAGS) -c $? -o $@
+	debug_check = $$(DEBUG_CHECK)
+else
+$(NAME): fclean $(OBJS)
+	$(CC) $(CFLAGS) -c $? -o $@
+	debug_check = $$(DEBUG_CHECK)
 endif
 
-debug: DEBUG_CHECK all
+debug: all
 
 clean:
 	rm -rf $(OBJS)
