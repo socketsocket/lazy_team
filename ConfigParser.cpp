@@ -283,12 +283,13 @@ int	ConfigParser::serverBlock(std::vector<std::pair<Server, std::vector<unsigned
 			// if return directive is duplicated
 			if (return_to.first)
 				return this->putError(NAME_DUP_ERR, "return");
-			if (elements.size() != 3)
+			if (elements.size() != 3 && elements.size() != 2)
 				return this->putError(SEMANTIC_ERR, "return");
 			if (status_code_map.find(elements[1]) == status_code_map.end())
 				return this->putError(SEMANTIC_ERR, "return");
 			return_to.first = status_code_map[elements[1]];
-			return_to.second = elements[2];
+			if (elements.size() == 3)
+				return_to.second = elements[2];
 		}
 	} while (elements.size() > 1);
 	// if the code block is not ending
