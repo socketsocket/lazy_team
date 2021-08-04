@@ -33,14 +33,16 @@ class ConfigParser {
 		std::string				method_name;
 
 		int		getSemanticLine(std::string& line);
-		int		getIntoBlock(std::string block_name, std::string line = "");
-		int		getPath(std::string& path, std::vector<std::string>& elements);
+		int		getIntoBlock(std::string block_name, \
+			std::vector<std::string> elements = std::vector<std::string>(0));
+		int		getPath(std::string& path, std::vector<std::string>& line_elements);
 		int		getLineElements(std::vector<std::string>& elements);
 
 		int		httpBlock(ServerManager& server_manager);
-		int		serverBlock(std::vector<std::pair<Server, std::vector<unsigned int> > >& configs);
+		int		serverBlock(std::vector<std::pair<Server, std::vector<unsigned int> > >& configs, \
+			std::vector<std::string>& line_elements);
 		int		locationBlock(std::vector<Location>& location, \
-			std::vector<std::string>& elements);
+			std::vector<std::string>& line_elements);
 
 		int		putError(const char* err_msg, std::string opt);
 
