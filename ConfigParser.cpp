@@ -3,23 +3,23 @@
 
 bool	ConfigParser::is_used = false;
 
-std::string	ConfigParser::server_config_arr[6] = {
-		"listen",
-		"server_name",
-		"root",
-		"error_page",
-		"client_body_limit",
-		"return"
+std::pair<std::string, Directive>	ConfigParser::server_config_arr[6] = {
+		std::pair<std::string, Directive>("listen", kListen),
+		std::pair<std::string, Directive>("server_name", kServerName),
+		std::pair<std::string, Directive>("root", kRoot),
+		std::pair<std::string, Directive>("error_page", kErrorPage),
+		std::pair<std::string, Directive>("client_body_limit", kClientBodyLimit),
+		std::pair<std::string, Directive>("return", kReturn)
 };
 
-std::string	ConfigParser::location_config_arr[7] = {
-		"root",
-		"index",
-		"auto_index",
-		"error_page",
-		"method_allowed",
-		"cgi_info",
-		"return"
+std::pair<std::string, Directive>	ConfigParser::location_config_arr[7] = {
+		std::pair<std::string, Directive>("root", kRoot),
+		std::pair<std::string, Directive>("index", kIndex),
+		std::pair<std::string, Directive>("auto_index", kAutoIndex),
+		std::pair<std::string, Directive>("error_page", kErrorPage),
+		std::pair<std::string, Directive>("method_allowed", kMethodAllowed),
+		std::pair<std::string, Directive>("cgi_info", kCgiInfo),
+		std::pair<std::string, Directive>("return", kReturn)
 };
 
 //------------------------------------------------------------------------------
@@ -65,9 +65,6 @@ int ConfigParser::getIntoBlock(std::string block_name, std::vector<std::string> 
 			return ERROR;
 
 	if (elements.size() > 2)
-		return this->putError(SEMANTIC_ERR);
-
-	if (elements[0].compare("}"))
 		return this->putError(SEMANTIC_ERR);
 
 	// Compare block name and leading part of the line
@@ -227,78 +224,87 @@ int	ConfigParser::serverBlock( \
 		if (this->getLineElements(elements))
 			return ERROR;
 
-		// Find something else, assuming it a location block.
-		if ((this->location_config.find(elements[0])) \
-			== this->location_config.end()) {
-			if (this->locationBlock(locations, elements)) {
+		// if find something else, assuming it a location block.
+		if (this->server_config.count(elements[0] == 0)) {
+			if (this->locationBlock(locations, elements))
 				return ERROR;
-			}
-		// listen directive
-		} else if (!elements[0].compare("listen")) {
-			if (elements.size() != 2)
-				return this->putError(SEMANTIC_ERR, "listen");
-			// input port number and also check if it only contains digits.
-			std::istringstream	iss(elements[1]);
-			iss >> port;
-			if (iss.fail())
-				return this->putError(SEMANTIC_ERR, "listen");
-			ports.push_back(port);
-		// server_name directive
-		} else if (!elements[0].compare("server_name")) {
-			if (server_name_check)
-				return this->putError(NAME_DUP_ERR, "server_name");
-			if (elements.size() != 2)
-				return this->putError(SEMANTIC_ERR, "server_name");
-			server_name = elements[1];
-			server_name_check = true;
-		// root directive
-		} else if (!elements[0].compare("root")) {
-			if (default_root.length())
-				return this->putError(NAME_DUP_ERR, "root");
-			if (elements.size() != 2)
-				return this->putError(SEMANTIC_ERR, "root");
-			default_root = elements[1];
-		// error_page directive
-		} else if (!elements[0].compare("error_page")) {
-			if (!(elements.size() % 2))
-				return this->putError(SEMANTIC_ERR, "error_page");
-			// error_page 1 2 3 4 a b c d :config
-			// 0          1 2 3 4 5 6 7 8 :index
-			for (size_t i = 1; i <= elements.size() / 2; ++i) {
-				std::map<std::string, stat_type>::iterator error_code
-					= status_code_map.find(elements[i]);
-				if (error_code == status_code_map.end())
-					return this->putError(SEMANTIC_ERR, "error_page");
-				// if the code already exists
-				if (default_error_pages.count((*error_code).second))
-					return this->putError(NAME_DUP_ERR, "error_page");
-				default_error_pages[(*error_code).second] = elements[i * 2];
-			}
-		// client_body_limit directive
-		} else if (!elements[0].compare("client_body_limit")) {
-			if (client_body_limit_check)
-				return this->putError(NAME_DUP_ERR, "client_body_limit");
-			if (elements.size() != 2)
-				return this->putError(SEMANTIC_ERR, "client_body_limit");
-			std::istringstream	iss(elements[1]);
-			iss >> client_body_limit;
-			if (iss.fail())
-				return this->putError(SEMANTIC_ERR, "client_body_limit");
-			client_body_limit_check = true;
-		// return directive
 		} else {
-			// if return directive is duplicated
-			if (return_to.first)
-				return this->putError(NAME_DUP_ERR, "return");
-			if (elements.size() != 3 && elements.size() != 2)
-				return this->putError(SEMANTIC_ERR, "return");
-			if (status_code_map.find(elements[1]) == status_code_map.end())
-				return this->putError(SEMANTIC_ERR, "return");
-			return_to.first = status_code_map[elements[1]];
-			if (elements.size() == 3)
-				return_to.second = elements[2];
+			switch (this->server_config[elements[0]]) {
+				case kListen: {
+					if (elements.size() != 2)
+						return this->putError(SEMANTIC_ERR, "listen");
+					// input port number and also check if it only contains digits.
+					std::istringstream	iss(elements[1]);
+					iss >> port;
+					if (iss.fail())
+						return this->putError(SEMANTIC_ERR, "listen");
+					ports.push_back(port);
+					break;
+				}
+				case kServerName: {
+					if (server_name_check)
+						return this->putError(NAME_DUP_ERR, "server_name");
+					if (elements.size() != 2)
+						return this->putError(SEMANTIC_ERR, "server_name");
+					server_name = elements[1];
+					server_name_check = true;
+				}
+				case kRoot: {
+					if (default_root.length())
+						return this->putError(NAME_DUP_ERR, "root");
+					if (elements.size() != 2)
+						return this->putError(SEMANTIC_ERR, "root");
+					default_root = elements[1];
+					break;
+				}
+				case kErrorPage: {
+					if (!(elements.size() % 2))
+						return this->putError(SEMANTIC_ERR, "error_page");
+					// error_page 1 2 3 4 a b c d :config
+					// 0          1 2 3 4 5 6 7 8 :index
+					for (size_t i = 1; i <= elements.size() / 2; ++i) {
+						std::map<std::string, stat_type>::iterator error_code
+							= status_code_map.find(elements[i]);
+						if (error_code == status_code_map.end())
+							return this->putError(SEMANTIC_ERR, "error_page");
+						// if the code already exists
+						if (default_error_pages.count((*error_code).second))
+							return this->putError(NAME_DUP_ERR, "error_page");
+						default_error_pages[(*error_code).second] = elements[i * 2];
+					}
+					break;
+				}
+				case kClientBodyLimit: {
+					if (client_body_limit_check)
+						return this->putError(NAME_DUP_ERR, "client_body_limit");
+					if (elements.size() != 2)
+						return this->putError(SEMANTIC_ERR, "client_body_limit");
+					std::istringstream	iss(elements[1]);
+					iss >> client_body_limit;
+					if (iss.fail())
+						return this->putError(SEMANTIC_ERR, "client_body_limit");
+					client_body_limit_check = true;
+					break;
+				}
+				case kReturn: {
+					if (return_to.first)
+						return this->putError(NAME_DUP_ERR, "return");
+					if (elements.size() != 3 && elements.size() != 2)
+						return this->putError(SEMANTIC_ERR, "return");
+					if (status_code_map.find(elements[1]) == status_code_map.end())
+						return this->putError(SEMANTIC_ERR, "return");
+					return_to.first = status_code_map[elements[1]];
+					if (elements.size() == 3)
+						return_to.second = elements[2];
+					break;
+				}
+				default: {
+					assert(false);
+				}
+			}
 		}
 	} while (elements.size() > 1);
+
 	// if the code block is not ending
 	if (elements[0].compare("}"))
 		return this->putError(SEMANTIC_ERR);
@@ -328,108 +334,118 @@ int	ConfigParser::locationBlock(std::vector<Location>& locations, \
 	bool								method_allowed_check = false; // to check duplicated directives
 	std::map<std::string, std::string>	cgi_infos;
 	std::pair<stat_type, std::string>	return_to = std::make_pair(NULL, "");
-	bool								has_entity = false;
 
 	// Elements included in one line.
+	if (this->getLineElements(line_elements))
+		return ERROR;
+
 	do { // while (line_elements.size() > 1);
+		if (this->location_config.count(line_elements[0]) == 0)
+			return this->putError(NAME_MATCH_ERR);
+
+		switch (this->location_config[line_elements[0]]) {
+			case kRoot: {
+				if (line_elements.size() != 2)
+					return this->putError(SEMANTIC_ERR, "root");
+				if (root.length())
+					return this->putError(NAME_DUP_ERR, "root");
+				root = line_elements[1];
+				break;
+			}
+			case kErrorPage: {
+				if (!(line_elements.size() % 2))
+					return this->putError(SEMANTIC_ERR, "error_page");
+				// error_page 1 2 3 4 a b c d :config
+				// 0          1 2 3 4 5 6 7 8 :index
+				for (size_t i = 1; i <= line_elements.size() / 2; ++i) {
+					std::map<std::string, stat_type>::iterator error_code
+						= status_code_map.find(line_elements[i]);
+					if (error_code == status_code_map.end())
+						return this->putError(SEMANTIC_ERR, "error_page");
+					// if the code already exists
+					if (error_pages.count((*error_code).second))
+						return this->putError(NAME_DUP_ERR, "error_page");
+					error_pages[(*error_code).second] = line_elements[i * 2];
+				}
+				break;
+			}
+			case kIndex: {
+				if (line_elements.size() == 1)
+					return this->putError(NO_ENTITY_ERR, "index");
+				for (size_t i = 1; i < line_elements.size(); ++i)
+					indexes.push_back(line_elements[i]);
+				break;
+			}
+			case kAutoIndex: {
+				if (auto_index_check)
+					return this->putError(NAME_DUP_ERR, "auto_index");
+				if (line_elements.size() != 2)
+					return this->putError(SEMANTIC_ERR, "auto_index");
+				if (!line_elements[1].compare("on")) {
+					auto_index = true;
+				} else if (!line_elements[1].compare("off")) {
+					auto_index = false;
+				} else {
+					return this->putError(SEMANTIC_ERR, "auto_index");
+				}
+				auto_index_check = true;
+				break;
+			}
+			case kMethodAllowed: {
+				if (method_allowed_check)
+					return this->putError(NAME_DUP_ERR, "method_allowed");
+				if (line_elements.size() > 4)
+					return this->putError(SEMANTIC_ERR, "method_allowed");
+				bool	get = false, post = false, del = false;
+				for (size_t i = 1; i < line_elements.size(); ++i) {
+					if (get || post || del)
+						return this->putError(NAME_DUP_ERR, "method_allowed");
+					if (!line_elements[i].compare("GET")) {
+						methods_allowed |= GET;
+						get = true;
+					} else if (!line_elements[i].compare("POST")) {
+						methods_allowed |= POST;
+						post = true;
+					} else if (!line_elements[i].compare("DELETE")) {
+						methods_allowed |= DELETE;
+						del = true;
+					} else {
+						return this->putError(SEMANTIC_ERR, "method_allowed");
+					}
+				}
+				method_allowed_check = true;
+				break;
+			}
+			case kCgiInfo: {
+				if (line_elements.size() != 3)
+					return this->putError(SEMANTIC_ERR, "cgi_info");
+				if (cgi_infos.count(line_elements[1]))
+					return this->putError(NAME_DUP_ERR, "cgi_info");
+				cgi_infos[line_elements[1]] = line_elements[2];
+				break;
+			}
+			case kReturn: {
+				if (return_to.first)
+					return this->putError(NAME_DUP_ERR, "return");
+				if (line_elements.size() != 3)
+					return this->putError(SEMANTIC_ERR, "return");
+				if (!status_code_map.count(line_elements[1]))
+					return this->putError(SEMANTIC_ERR, "return");
+				return_to.first = status_code_map[line_elements[1]];
+				return_to.second = line_elements[2];
+				break;
+			}
+			default: {
+				assert(false);
+			}
+		}
 		if (this->getLineElements(line_elements))
 			return ERROR;
-		if ((this->location_config.find(line_elements[0]) \
-			== this->location_config.end()))
-			return this->putError(NAME_MATCH_ERR);
-		// root directive. check directive size and duplication.
-		if (!line_elements[0].compare("root")) {
-			if (line_elements.size() != 2)
-				return this->putError(SEMANTIC_ERR, "root");
-			if (root.length())
-				return this->putError(NAME_DUP_ERR, "root");
-			root = line_elements[1];
-		// error_page directive. check directive number.
-		} else if (!line_elements[0].compare("error_page")) {
-			if (!(line_elements.size() % 2))
-				return this->putError(SEMANTIC_ERR, "error_page");
-			// error_page 1 2 3 4 a b c d :config
-			// 0          1 2 3 4 5 6 7 8 :index
-			for (size_t i = 1; i <= line_elements.size() / 2; ++i) {
-				std::map<std::string, stat_type>::iterator error_code
-					= status_code_map.find(line_elements[i]);
-				if (error_code == status_code_map.end())
-					return this->putError(SEMANTIC_ERR, "error_page");
-				// if the code already exists
-				if (error_pages.count((*error_code).second))
-					return this->putError(NAME_DUP_ERR, "error_page");
-				error_pages[(*error_code).second] = line_elements[i * 2];
-			}
-		// index directive. check directive size.
-		} else if (!line_elements[0].compare("index")) {
-			if (line_elements.size() == 1)
-				return this->putError(NO_ENTITY_ERR, "index");
-			for (size_t i = 1; i < line_elements.size(); ++i)
-				indexes.push_back(line_elements[i]);
-		// auto_index directive. check duplication, directive size, and value.
-		} else if (!line_elements[0].compare("auto_index")) {
-			if (auto_index_check)
-				return this->putError(NAME_DUP_ERR, "auto_index");
-			if (line_elements.size() != 2)
-				return this->putError(SEMANTIC_ERR, "auto_index");
-			if (!line_elements[1].compare("on")) {
-				auto_index = true;
-			} else if (!line_elements[1].compare("off")) {
-				auto_index = false;
-			} else {
-				return this->putError(SEMANTIC_ERR, "auto_index");
-			}
-			auto_index_check = true;
-		// method_allowed directive. check duplication, directive size, and method names.
-		} else if (!line_elements[0].compare("method_allowed")) {
-			if (method_allowed_check)
-				return this->putError(NAME_DUP_ERR, "method_allowed");
-			if (line_elements.size() > 4)
-				return this->putError(SEMANTIC_ERR, "method_allowed");
-			bool	get = false, post = false, del = false;
-			for (size_t i = 1; i < line_elements.size(); ++i) {
-				if (get || post || del)
-					return this->putError(NAME_DUP_ERR, "method_allowed");
-				if (!line_elements[i].compare("GET")) {
-					methods_allowed |= GET;
-					get = true;
-				} else if (!line_elements[i].compare("POST")) {
-					methods_allowed |= POST;
-					post = true;
-				} else if (!line_elements[i].compare("DELETE")) {
-					methods_allowed |= DELETE;
-					del = true;
-				} else {
-					return this->putError(SEMANTIC_ERR, "method_allowed");
-				}
-			}
-			method_allowed_check = true;
-		// cgi_info directive. check directive size, cgi extension duplication.
-		} else if (!line_elements[0].compare("cgi_info")) {
-			if (line_elements.size() != 3)
-				return this->putError(SEMANTIC_ERR, "cgi_info");
-			if (cgi_infos.count(line_elements[1]))
-				return this->putError(NAME_DUP_ERR, "cgi_info");
-			cgi_infos[line_elements[1]] = line_elements[2];
-		// return directive. check duplication, directive size, and code check.
-		} else {
-			if (return_to.first)
-				return this->putError(NAME_DUP_ERR, "return");
-			if (line_elements.size() != 3)
-				return this->putError(SEMANTIC_ERR, "return");
-			if (!status_code_map.count(line_elements[1]))
-				return this->putError(SEMANTIC_ERR, "return");
-			return_to.first = status_code_map[line_elements[1]];
-			return_to.second = line_elements[2];
-		}
-		has_entity = true;
 	} while (line_elements.size() > 1);
+
 	// if the code block is not ending
 	if (line_elements[0].compare("}"))
 		return this->putError(SEMANTIC_ERR);
-	// if there is no root directive or no return directive
-	if (!has_entity)
-		return this->putError(NO_ENTITY_ERR);
 	locations.push_back(Location(path, root, indexes, auto_index, error_pages, \
 		methods_allowed, cgi_infos, return_to));
 	return OK;
@@ -451,9 +467,9 @@ int		ConfigParser::putError(const char* err_msg, std::string opt = "") {
 
 ConfigParser::ConfigParser(const char* config_path)
 	: server_config(ConfigParser::server_config_arr, ConfigParser::server_config_arr \
-			+ sizeof(ConfigParser::server_config_arr) / sizeof(std::string)),
+			+ sizeof(ConfigParser::server_config_arr) / sizeof(std::pair<std::string, Directive>)),
 	  location_config(ConfigParser::location_config_arr, ConfigParser::location_config_arr \
-			+ sizeof(ConfigParser::location_config_arr) / sizeof(std::string)),
+			+ sizeof(ConfigParser::location_config_arr) / sizeof(std::pair<std::string, Directive>)),
 	  config_file(config_path),
 	  class_name("Config_parser") {}
 

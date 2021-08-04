@@ -14,6 +14,19 @@
 
 #define WHITE_SPACES " \v\n\r\t"
 
+enum Directive {
+	kRoot,
+	kIndex,
+	kMethodAllowed,
+	kCgiInfo,
+	kListen,
+	kServerName,
+	kAutoIndex,
+	kErrorPage,
+	kClientBodyLimit,
+	kReturn
+};
+
 // This class can be used twice.
 class ConfigParser {
 	private:
@@ -22,11 +35,11 @@ class ConfigParser {
 		ConfigParser&	operator=(const ConfigParser& ref);
 
 		static bool				is_used; // check for duplicated use.
-		static std::string		server_config_arr[6];
-		static std::string		location_config_arr[7];
-		std::set<std::string>	server_config;
-		std::set<std::string>	location_config;
-		std::ifstream			config_file;
+		static std::pair<std::string, Directive>	server_config_arr[6];
+		static std::pair<std::string, Directive>	location_config_arr[7];
+		std::map<std::string, Directive>	server_config;
+		std::map<std::string, Directive>	location_config;
+		std::ifstream				config_file;
 
 		// variables for error_message;
 		std::string				class_name;
