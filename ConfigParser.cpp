@@ -201,7 +201,8 @@ int	ConfigParser::httpBlock(ServerManager& server_manager) {
 	return ret;
 }
 
-int	ConfigParser::serverBlock(std::vector<std::pair<Server, std::vector<unsigned int> > >& configs) {
+int	ConfigParser::serverBlock( \
+	std::vector<std::pair<Server, std::vector<unsigned int> > >& configs) {
 	this->method_name = "serverBlock";
 
 	std::vector<unsigned long>			ports;

@@ -7,16 +7,18 @@
 
 class PortManager {
 	private:
+		const unsigned int					port_num;
 		const int							port_fd;
-		const std::vector<Server>			servers;
+		const std::vector<Server&>			servers;
 
 		PortManager();
 		PortManager(const PortManager& ref);
 		PortManager&	operator=(const PortManager& ref);
 
 	public:
-		PortManager(const int port_fd, const std::vector<Server&> servers);
+		PortManager(const unsigned int port_num, const int port_fd, const std::vector<Server&> servers);
 		~PortManager();
+		unsigned int	getPortNum() const;
 };
 
 #endif
