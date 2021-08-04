@@ -11,7 +11,7 @@ ServerStatus Server::makeResponse(Re3Iter re3) {
 			return this->makeErrorResponse(re3, curr_location, stat);	
 		//리소스 상태는 'empty'/읽는중/읽음완료/에러 네가지로 들어옴
 		//만약 리소스 상태가 == 에러라면
-		if (re3->getRscPtr()->getStatus() == Disconnect
+		if (re3->getRscPtr()->getStatus() == Disconnect \
 		|| re3->getRscPtr()->getStatus() == ReadFail)
 			return this->makeErrorResponse(re3, curr_location, C500);
 		//만약 리소스 상태가 == 읽는중이라면
@@ -118,7 +118,7 @@ ServerStatus Server::makeGETResponse(Re3Iter re3, Location* curr_location, std::
 				if (autoindex_body.empty())
 					return this->makeErrorResponse(re3, curr_location, C500);
 				std::stringstream length;
-				length << (int)sb.st_size;
+				length << autoindex_body.length();
 				headers["Content-Length"] = length.str();
 				//Re3에 Response 추가
 				assert(response == NULL);
@@ -188,7 +188,7 @@ ServerStatus Server::makePOSTResponse(Re3Iter re3, Location* curr_location, std:
 			default :
 				return this->makeErrorResponse(re3, curr_location, C403);
 		}
-		return ;
+		return;
 	}
 	else if (re3->getRscPtr()->getStatus() == Finished) {
 		Request* request = re3->getReqPtr();	
@@ -221,11 +221,16 @@ ServerStatus Server::makeDELETEResponse(Re3Iter re3, Location* curr_location, st
 
 Location* Server::currLocation(std::string request_uri) {
 	std::vector<Location>::iterator res;
-
-	for (std::vector<Location>::iterator it = this->locations.begin(); it != this->locations.end(); it++) {
+	int longest = 0;
+	
+	for (std::vector<Location>::iterator it = this->locations.begin(); \
+	it != this->locations.end(); it++) {
 		std::string path = it->getPath();
-		if (request_uri.compare(0, path.length(), path) == 0)
+		if (request_uri.compare(0, path.length(), path) == 0 \
+		&& longest < path.length()) {
+			longest = path.length();
 			res = it;
+		}
 	}
 	return &*res;
 }

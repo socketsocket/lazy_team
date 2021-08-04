@@ -39,7 +39,7 @@ const std::string& Location::getRoot() const {
 	return this->root;
 }
 
-const Method& Location::getMethodsAllowed() const {
+Method Location::getMethodsAllowed() const {
 	return this->methods_allowed;
 }
 
