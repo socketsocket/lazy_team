@@ -322,6 +322,7 @@ int	ConfigParser::locationBlock(std::vector<Location>& locations, \
 	bool								method_allowed_check = false; // to check duplicated directives
 	std::map<std::string, std::string>	cgi_infos;
 	std::pair<stat_type, std::string>	return_to = std::make_pair(NULL, "");
+	bool								has_entity = false;
 
 	// Elements included in one line.
 	do { // while (elements.size() > 1);
@@ -415,13 +416,14 @@ int	ConfigParser::locationBlock(std::vector<Location>& locations, \
 			return_to.first = status_code_map[elements[1]];
 			return_to.second = elements[2];
 		}
+		has_entity = true;
 	} while (elements.size() > 1);
 	// if the code block is not ending
 	if (elements[0].compare("}"))
 		return this->putError(SEMANTIC_ERR);
 	// if there is no root directive or no return directive
-	if (!root.length() || !return_to.first)
-		return this->putError(NO_ENTITY_ERR, "root");
+	if (!has_entity)
+		return this->putError(NO_ENTITY_ERR);
 	locations.push_back(Location(path, root, indexes, auto_index, error_pages, \
 		methods_allowed, cgi_infos, return_to));
 	return OK;
