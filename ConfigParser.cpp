@@ -431,9 +431,9 @@ int	ConfigParser::locationBlock(std::vector<Location>& locations, \
 
 int		ConfigParser::putError(const char* err_msg, std::string opt = "") {
 	std::string	seperator(": ");
-	std::cerr << class_name << seperator << method_name << seperator;
+	std::cerr << class_name + seperator + method_name + seperator;
 	if (opt.length())
-		std::cerr << opt << seperator;
+		std::cerr << opt + seperator;
 	std::cerr << err_msg << std::endl;
 	return ERROR;
 }

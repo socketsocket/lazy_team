@@ -13,10 +13,10 @@ ErrorMsgHandler&	ErrorMsgHandler::getInstance() {
 void	ErrorMsgHandler::outError() {
 	const char* out_string;
 	int			string_len;
-	if (this->error_msgs.length() > IO_BUFF_SIZE) {
-		string_len = IO_BUFF_SIZE;
-		out_string = this->error_msgs.substr(0, IO_BUFF_SIZE).c_str();
-		error_msgs = error_msgs.substr(IO_BUFF_SIZE);
+	if (this->error_msgs.length() > ERROR_BUFF) {
+		string_len = ERROR_BUFF;
+		out_string = this->error_msgs.substr(0, ERROR_BUFF).c_str();
+		error_msgs = error_msgs.substr(ERROR_BUFF);
 	} else {
 		string_len = error_msgs.length();
 		out_string = this->error_msgs.c_str();

@@ -115,7 +115,7 @@ int	ServerManager::initServerManager( \
 			this->types.resize(server_socket, Blank);
 		if (this->managers.size() < server_socket)
 			this->managers.resize(server_socket, NULL);
-		this->managers[server_socket] = new PortManager(server_socket, (*it).second);
+		this->managers[server_socket] = new PortManager(it->first, server_socket, (*it).second);
 	}
 }
 
