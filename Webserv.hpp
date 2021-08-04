@@ -21,7 +21,8 @@
 #define NO_ENTITY_ERR	"There is no entity."
 
 #define LINE_BUFF_SIZE 1024
-#define	IO_BUFF_SIZE 65536
+#define	SEND_RECV_SIZE 16384
+#define LOCAL_IO_SIZE 8192
 #define MAX_CLIENT 5
 
 #define C100 "100 Continue"
