@@ -2,6 +2,7 @@
 #define WEBSERV_WEBSERV_HPP_
 
 #include <csignal>
+#include <climits>
 
 #define ERROR -1
 #define OK     0
