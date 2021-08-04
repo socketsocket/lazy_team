@@ -18,6 +18,7 @@ endif
 
 INC_DIR = .
 
+# header files dependencies
 INC_ERRMSGHANDLER = ErrorMsgHandler.hpp
 INC_LOCATION = Location.hpp
 INC_REQUEST = Request.hpp $(INC_LOCATION)
@@ -55,14 +56,17 @@ OBJS = ErrorMsgHandler.o \
 %.o: %.cpp
 	$(CC) $(CFLANGS) -c $< -o $@
 
+# if debug_check is not set, just compile.
 ifneq ($(shell echo ${debug_check+x}), x)
 $(NAME): $(OBJS)
 	$(CC) $(CFLAGS) -c $? -o $@
 	debug_check = $$(DEBUG_CHECK)
+# if the former make command is same as before, just compile.
 else ifeq ($(shell echo $debug_check), $(DEBUG_CHECK))
 $(NAME): $(OBJS)
 	$(CC) $(CFLAGS) -c $? -o $@
 	debug_check = $$(DEBUG_CHECK)
+# if the former make command is equal to the current one, delete files and recompile.
 else
 $(NAME): fclean $(OBJS)
 	$(CC) $(CFLAGS) -c $? -o $@
