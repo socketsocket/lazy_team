@@ -24,7 +24,8 @@ int	main(int argc, char* argv[]) {
 	}
 
 	// When CTRL-C is pressed, deallocate everything and end the server.
-	signal(SIGINT, sigIntHandler);
+	if ((signal(SIGINT, sigIntHandler) == SIG_ERR));
+		return ERROR;
 
 	while (true) {
 		if (server_manager.getStatus() != OK)

@@ -47,9 +47,9 @@ int	ServerManager::callKevent() {
 
 ServerManager::~ServerManager() {
 	for (size_t i = 0; i < this->types.size(); ++i) {
-		if (types[i] == PortFd) {
+		if (types[i] == kPortFd) {
 			delete managers[i];
-		} else if (types[i] == ClientFd) {
+		} else if (types[i] == kClientFd) {
 			delete clients[i];
 		}
 	}
@@ -71,7 +71,7 @@ int	ServerManager::initServerManager( \
 	this->kq = kqueue();
 	EV_SET(&this->event_current, STDERR, EVFILT_WRITE, EV_ADD, 0, 0, NULL); // set stderr kevent.
 	this->event_changes.push_back(this->event_current);
-	this->types[STDERR] = StderrFd;
+	this->types[STDERR] = kStderrFd;
 
 	std::map<unsigned int, std::vector<Server&> >	server_sorter;
 
@@ -112,7 +112,7 @@ int	ServerManager::initServerManager( \
 		fcntl(server_socket, F_SETFL, O_NONBLOCK);
 
 		if (this->types.size() < server_socket)
-			this->types.resize(server_socket, Blank);
+			this->types.resize(server_socket, kBlank);
 		if (this->managers.size() < server_socket)
 			this->managers.resize(server_socket, NULL);
 		this->managers[server_socket] = new PortManager(it->first, server_socket, (*it).second);
@@ -140,11 +140,11 @@ int	ServerManager::processEvent() {
 	for (size_t i = 0; i < num; ++i) {
 		fd = this->event_list[i].ident;
 		switch (this->types[fd]) {
-			case PortFd: {
+			case kPortFd: {
 				// managers[i].callPortManager;
 				break;
 			}
-			case ClientFd: {
+			case kClientFd: {
 				if (event_list[i].filter == EVFILT_READ) {
 					//
 				} else if (event_list[i].filter == EVFILT_WRITE) {
@@ -153,13 +153,13 @@ int	ServerManager::processEvent() {
 				// clients[i].callClient;
 				break;
 			}
-			case ResourceFd: {
+			case kResourceFd: {
 				// resources[i].readContent;
 				// if (resources[i].status() == done)
 				//	resources[i].callServer();
 				break;
 			}
-			case StderrFd: {
+			case kStderrFd: {
 				sendError();
 				break;
 			}

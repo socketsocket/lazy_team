@@ -80,31 +80,31 @@ static std::map<std::string, stat_type>	status_code_map;
 #define RE3 triplet<Request, Response, Resource>
 
 enum	FdType {
-	Blank,
-	PortFd,
-	ClientFd,
-	ResourceFd,
-	StderrFd
+	kBlank,
+	kPortFd,
+	kClientFd,
+	kResourceFd,
+	kStderrFd
 };
 
 
 enum	Status {
-	Nothing,
-	Header,
-	Body,
-	Finished,
+	kNothing,
+	kHeader,
+	kBody,
+	kFinished,
 };
 
 enum	ReadError {
-	Good,
-	Disconnect,
-	ReadFail,
+	kGood,
+	kDisconnect,
+	kReadFail,
 };
 
 enum	FileType {
-	File,
-	Directory,
-	Notfound
+	kFile,
+	kDirectory,
+	kNotfound
 };
 
 #define GET    0b001
