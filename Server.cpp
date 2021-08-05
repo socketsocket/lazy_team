@@ -26,11 +26,11 @@ ServerStatus Server::makeResponse(Re3Iter re3) {
 		size_t path_pos = resource_path.find(curr_location->getPath());
 		resource_path.replace(path_pos, curr_location->getPath().length(), curr_location->getRoot());
 
-		if (request->getMethod() & GET == true)
+		if (request->getMethod() & GET)
 			return this->makeGETResponse(re3, curr_location, resource_path);
-		if (request->getMethod() & POST == true)
+		if (request->getMethod() & POST)
 			return this->makePOSTResponse(re3, curr_location, resource_path);
-		if (request->getMethod() & DELETE == true)
+		if (request->getMethod() & DELETE)
 			return this->makeDELETEResponse(re3, curr_location, resource_path);
 	}
 }
@@ -45,8 +45,8 @@ ServerStatus Server::makeErrorResponse(Re3Iter re3, Location* location, stat_typ
 	headers["Content-Type"] = this->contentTypeHeaderInfo(".html");
 	
 	//해당 에러코드의 디폴트 에러페이지가 있으명
-	if (location->getDefaultErrorPages().count(http_status_code)) {
-		int fd = open(location->getDefaultErrorPages()[http_status_code].c_str(), O_RDONLY);
+	if (!location->getDefaultErrorPage(http_status_code).empty()) {
+		int fd = open(location->getDefaultErrorPage(http_status_code).c_str(), O_RDONLY);
 		// 디폴트 에러페이지 오픈 실패 -> 디폴트페이지가 아니라 자체적으로 만들어내는 페이지로 리턴 
 		if (fd == ERROR) {
 			std::string error_page_body = this->makeHTMLPage(http_status_code);
@@ -100,10 +100,10 @@ ServerStatus Server::makeGETResponse(Re3Iter re3, Location* curr_location, std::
 				resource_path += '/';
 			bool indexFileFlag = false;
 			//default indexfile값이 존재한다면
-			if (!request->getLocation().getIndexes().empty())
+			if (!curr_location->getIndexes().empty())
 			//indexes 이터레이터 돌면서 열리는 인덱스파일이 있는지 확인
-				for (std::vector<const std::string>::iterator iter = request->getLocation().getIndexes().begin();
-						iter != request->getLocation().getIndexes().end(); ++iter) {
+				for (std::vector<const std::string>::iterator iter = curr_location->getIndexes().begin();
+						iter != curr_location->getIndexes().end(); ++iter) {
 					struct stat buffer;
 					if (stat((resource_path + *iter).c_str(), &buffer) == 0) {
 						resource_path = resource_path + *iter;
@@ -112,7 +112,7 @@ ServerStatus Server::makeGETResponse(Re3Iter re3, Location* curr_location, std::
 					}
 				}
 			//대응하는 default indexfile이 없었는데, autoindex가 켜져있다면
-			if (indexFileFlag == false && request->getLocation().isAutoIndex() == true) {
+			if (indexFileFlag == false && curr_location->isAutoIndex() == true) {
 				headers["Content-Type"] = this->contentTypeHeaderInfo(".html");
 				std::string autoindex_body = makeAutoIndexPage(request, resource_path);
 				if (autoindex_body.empty())
@@ -236,10 +236,8 @@ Location* Server::currLocation(std::string request_uri) {
 }
 
 stat_type Server::requestValidCheck(Request* request, Location* curr_location) {
-	Location curr_location = request->getLocation();
-	if (request->getMethod() & GET == false)
-		if (request->getMethod() & curr_location->getMethodsAllowed() == false)
-			return C405;
+	if (request->getMethod() & curr_location->getMethodsAllowed() == false)
+		return C405;
 	if (this->client_body_limit != 0)
 		if (request->getHeaders().count("Content-Length")) {
 			int content_length;
@@ -373,11 +371,9 @@ std::string	Server::makeAutoIndexPage(Request* request, std::string resource_pat
 
 	return (body);
 }
-/*
-* HTML 페이지를 만듭니다.
-* @param HTML 상에 출력할 string
-* @return HTML 코드 string
-*/
+
+//@param HTML 상에 출력할 string
+//@return HTML 코드 string
 std::string Server::makeHTMLPage(std::string str) {
 	std::string body;
 

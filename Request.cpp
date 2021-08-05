@@ -22,8 +22,3 @@ Request& Request::operator=(const Request &ref) {
 int	Request::insertHeader(std::string& key, std::string& value) {
 	this->headers.insert(std::make_pair(key, value));
 }
-
-Location	Request::getLocation() const
-{
-	return location;
-}

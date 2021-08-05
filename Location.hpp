@@ -40,7 +40,8 @@ class Location {
 		Method									getMethodsAllowed() const;
 		const std::vector<std::string>&			getIndexes() const;
 		const bool&								isAutoIndex() const;
-		std::map<stat_type, std::string>		getDefaultErrorPages() const;
+		const std::map<stat_type, std::string>&	getDefaultErrorPages() const;
+		const std::string&						getDefaultErrorPage(stat_type stat);
 };
 
 #endif

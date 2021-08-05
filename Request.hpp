@@ -39,7 +39,6 @@ class Request {
 		const std::string&							getVersion();
 		std::map<std::string, std::string>&			getHeaders();
 		const std::string&							getBody();
-		Location									getLocation() const;
 };
 
 #endif
