@@ -14,13 +14,11 @@ class Request {
 		Method								method;
 		std::string							uri;
 		std::string							version;
-		std::map<std::string, std::string>	header;
+		std::map<std::string, std::string>	headers;
 		std::string							body;
-		Location							location;
 
 	public :
 		Request(/* args*/);
-		Request(const Request &ref);
 		~Request();
 		Request& operator=(const Request &ref);
 
@@ -37,21 +35,8 @@ class Request {
 		const Method&								getMethod();
 		const std::string&							getUri();
 		const std::string&							getVersion();
-		std::map<std::string, std::string>&			getHeader();
+		std::map<std::string, std::string>&			getHeaders();
 		const std::string&							getBody();
-		Location									getLocation() const;
-		void										setLocation(const Location& location);
 };
 
 #endif
-// void Response::AppendBody(std::string buffer){
-// 	this->body += buffer;
-// }
-// Location	Request::getLocation() const
-// {
-// 	return location;
-// }
-// void	Request::setLocation(const Location &location)
-// {
-// 	this->location = location;
-// }
