@@ -13,20 +13,6 @@
 
 #define READSIZE 1024
 
-// class	Client
-// {
-// 	int				status
-// 	int				client_fd;
-// 	Server&			linked_server
-
-// 	unsigned long	last_request_time;
-// 	unsigned long	last_response_time;
-
-// 	queue<Request>	requests;
-// 	queue<Response>	responses;
-// }
-
-typedef std::deque<Re3>::iterator	Re3_iter;
 class Client {
 	private:
 		int				status;
@@ -51,7 +37,7 @@ class Client {
 		Client& operator=(const Client& ref);
 
 		// std::vector<Re3_iter>	recvRequest(std::string& rawRequest);
-		int	recvRequest(std::string& rawRequest);
+		int	recvRequest(std::string rawRequest);
 		int	sendResponse(void);
 };
 

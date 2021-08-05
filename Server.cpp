@@ -239,9 +239,9 @@ stat_type Server::requestValidCheck(Request* request, Location* curr_location) {
 	if (request->getMethod() & curr_location->getMethodsAllowed() == false)
 		return C405;
 	if (this->client_body_limit != 0)
-		if (request->getHeaders().count("Content-Length")) {
+		if (!request->getHeaderValue("Content-Length").empty()) {
 			int content_length;
-			std::stringstream temp(request->getHeaders()["Content-Length"]);
+			std::stringstream temp(request->getHeaderValue("Content-Length"));
 			temp >> content_length;
 			if (content_length > this->client_body_limit)
 				return C413;
@@ -348,7 +348,7 @@ std::string Server::contentTypeHeaderInfo(std::string extension) {
 
 std::string	Server::makeAutoIndexPage(Request* request, std::string resource_path) {
 	std::string body;
-	std::string addr = "http://" + request->getHeaders()["Host"] + "/"; //하이퍼링크용 경로
+	std::string addr = "http://" + request->getHeaderValue("Host") + "/"; //하이퍼링크용 경로
 
 	body += "<!DOCTYPE html>\n";
 	body += "<html>\n";

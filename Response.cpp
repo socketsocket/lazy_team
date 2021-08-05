@@ -17,8 +17,6 @@ Response::Response(const Response& ref) {
 Response::~Response() {}
 
 Response& Response::operator=(const Response& ref) {
-	if (this == &ref)
-		return ;
 	this->status = ref.status;
 	this->http_status_code = ref.http_status_code;
 	this->headers = ref.headers;
@@ -31,7 +29,7 @@ std::string Response::getResponseMessage() {
 
 	res = this->version + " " + this->http_status_code + "\r\n";
 	for (std::map<std::string, std::string>::iterator iter = this->headers.begin();
-	iter != this->headers.end(); iter++)
+	iter != this->headers.end(); ++iter)
 		res += iter->first + ": " + iter->second + "\r\n";
 	res += "\r\n" + this->body;
 	return (res);

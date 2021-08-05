@@ -32,6 +32,6 @@ class Re3
 		int	getPortId();
 };
 
-typedef std::deque<Re3>::iterator   Re3Iter;
+typedef std::deque<Re3>::iterator	Re3Iter;
 
 #endif
