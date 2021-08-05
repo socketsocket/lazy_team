@@ -49,10 +49,12 @@ int	Client::chunkedParser(Request* request) {
 		if (len_end == std::string::npos || contents_end == std::string::npos)
 			break;
 		tmp = this->read_buff.substr(0, len_end);
-		this->read_buff.erase(0, contents_end + 2);
+		if (tmp.find_first_of("0123456789ABCDEFabcdef") != std::string::npos)
+			return ERROR; // parsing이 꼬임. ㅈ댐
 		iss.str(tmp);
 		iss >> std::hex >> len;
 		tmp = this->read_buff.substr(len_end + 2, len);
+		this->read_buff.erase(0, contents_end + 2);
 		request->appendBody(tmp);
 	}
 	if (len == 0)
@@ -80,10 +82,10 @@ int	Client::reqLineParser(Request* request) {
 	std::string			tmp;
 	std::stringstream	ss;
 
-	request->setStatus(Header);
+	request->setStatus(kHeader);
 	pos = this->read_buff.find("\r\n");
 	if (pos == std::string::npos)
-		return ERROR; // 개행이 없음. 버퍼가 중간에 끊김.
+		return OK; // 개행이 없음. 버퍼가 중간에 끊김.
 	tmp = this->read_buff.substr(0, pos);
 	read_buff.erase(0, pos + 2);
 	ss.str(tmp);
@@ -129,14 +131,16 @@ int	Client::initParser(Request* request) {
 		this->headerParser(request);
 	}
 	if (request->getStatus() == kBody) {
-		if (request->getHeaders().find("Transfer-Encoding") != request->getHeaders().end()\
-		&& request->getHeaders()["Transfer-Encoding"] == "chunked")
+		if (request->getHeaders().count("Transfer-Encoding") && request->getHeaders()["Transfer-Encoding"] == "chunked") {
 			this->chunkedParser(request);
-		else if (request->getHeaders().find("Content-Length") != request->getHeaders().end())
+		}
+		else if (request->getHeaders().count("Content-Length")) {
 			this->lengthParser(request);
-		else if (request->getMethod() == POST)
+		}
+		else if (request->getMethod() == POST) {
 			// can be changed.
 			this->re3_deque.back().getRscPtr()->setStatus(411);
+		}
 	}
 	return OK;
 }
@@ -171,10 +175,10 @@ int	Client::sendResponse(void) {
 
 	while (true) {
 		Re3Iter it = re3_deque.begin();
-		if (it->getRspPtr()->getStatus() == kFinished\
+		if (it->getRspPtr()->getStatus() == kFinished \
 		&& it->getRspPtr()->getSize()) {
 			sent = send(it->getClientId(),\
-			it->getRspPtr()->getResponseMessage().c_str(),\
+			it->getRspPtr()->getResponseMessage().c_str(), \
 			it->getRspPtr()->getSize(), 0);
 			if (sent == ERROR) {
 				// putError();
