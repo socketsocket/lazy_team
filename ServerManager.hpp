@@ -53,7 +53,7 @@ class ServerManager {
 		ServerManager&	operator=(const ServerManager& ref);
 
 		int	callKevent();
-		int	makeClient(int port_fd, PortManager& port_manager);
+		int	makeClient(PortManager& port_manager);
 
 	public:
 		~ServerManager();
@@ -66,75 +66,5 @@ class ServerManager {
 		std::vector<Server>&	getServersRef();
 		int	processEvent();
 };
-
-
-/*
-class	ServerManager
-{
-	vector<type>		types
-
-	vector<Server>		servers
-	vector<Client>		clients
-	vector<Resource>	resources
-
-	unsigned long		send_time_out
-	unsigned long		recv_time_out
-
-	vector<kevent>		change_events
-	kevent				event_list[EVENT_SIZE]
-	kevent				current_event
-	int					type
-
-	acceptClient(int fd)
-	{
-		int client_fd = accept()
-		client(client_fd, servers[fd])
-	}
-
-public
-	parseConfig(std::string config_path)
-	initWebserv()
-	initKqueue()
-	enrollServer()
-	callKevent()
-	reactEvent(int event_num)
-	{
-		current_event = event_list[event_num]
-		type = types[current_event.ident]
-		if (error)
-			deal_with_it
-		if (type == SERVER)
-			acceptClient(fd)
-		else if (type == CLIENT)
-		{
-			if (filter == EVFILT_READ)
-			{
-				clients[fd].readRequest
-
-				status = status_check();
-				if (status == BLANK || status == FINISH)
-
-				read(fd, 1024);
-				parsing();
-				status_mark();
-			}
-			else if (filter == EVFILT_WRITE)
-			{
-				client[fd].writeResponse
-
-				status_check();
-				write(respond);
-			}
-		}
-		else
-		{
-			read resource
-			clients[fd].processResource()
-		}
-	}
-	clientClose()
-
-}
-*/
 
 #endif

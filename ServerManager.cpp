@@ -7,9 +7,9 @@
 ServerManager::ServerManager()
 	: status(INITIATED) {}
 
-int	ServerManager::makeClient(int port_fd, PortManager& port_manager) {
+int	ServerManager::makeClient(PortManager& port_manager) {
 	int	client_fd;
-	if (client_fd = accept(port_fd, NULL, NULL) < 0) {
+	if (client_fd = accept(port_manager.getPortNum(), NULL, NULL) < 0) {
 		putError("accept error");
 		return ERROR;
 	}
@@ -27,10 +27,10 @@ int	ServerManager::makeClient(int port_fd, PortManager& port_manager) {
 	this->event_changes.push_back(event_current);
 
 	if (this->types.size() < client_fd)
-		this->types.resize(client_fd, Blank);
+		this->types.resize(client_fd, kBlank);
 	if (this->clients.size() < client_fd)
 		this->clients.resize(client_fd, NULL);
-	types[client_fd] = ClientFd;
+	types[client_fd] = kClientFd;
 	clients[client_fd] = new Client(client_fd, port_manager);
 	return OK;
 }
@@ -141,7 +141,7 @@ int	ServerManager::processEvent() {
 		fd = this->event_list[i].ident;
 		switch (this->types[fd]) {
 			case kPortFd: {
-				// managers[i].callPortManager;
+				this->makeClient(*this->managers[fd]);
 				break;
 			}
 			case kClientFd: {
