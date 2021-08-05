@@ -8,8 +8,9 @@
 
 class PortManager {
 	private:
+		const unsigned int					port_num;
 		const int							port_fd;
-		const std::vector<Server>			servers;
+		const std::vector<Server&>			servers;
 
 		PortManager();
 		PortManager(const PortManager& ref);
@@ -17,10 +18,9 @@ class PortManager {
 
 		std::vector<const Server>::iterator		findServer(std::string& host_name);
 	public:
-		PortManager(const int port_fd, const std::vector<Server> servers);
+		PortManager(const unsigned int port_num, const int port_fd, const std::vector<Server&> servers);
 		~PortManager();
-
-		int	passRequest(Re3_iter it);
+		int	passRequest(Re3Iter it);
 };
 
 #endif

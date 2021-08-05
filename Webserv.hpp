@@ -2,6 +2,7 @@
 #define WEBSERV_WEBSERV_HPP_
 
 #include <csignal>
+#include <climits>
 
 #define ERROR -1
 #define OK     0
@@ -9,7 +10,8 @@
 #define STDERR 2
 
 #define BLOCK_END 101
-#define	QUIT 24
+#define	INTR 24
+#define INITIATED 48
 
 #define OPEN_FILE_ERR	"Failed to open file."
 #define READ_LINE_ERR	"Failed to read a line."
@@ -19,7 +21,8 @@
 #define NO_ENTITY_ERR	"There is no entity."
 
 #define LINE_BUFF_SIZE 1024
-#define	IO_BUFF_SIZE 65536
+#define	SEND_RECV_SIZE 16384
+#define LOCAL_IO_SIZE 8192
 #define MAX_CLIENT 5
 
 #define C100 "100 Continue"
@@ -70,6 +73,8 @@ static stat_type	status_code_arr[] = {C100, C101, C200, C201, C202,
 	C401, C402, C403, C404, C405, C406, C407, C408, C409, C410, C411, C412,
 	C413, C414, C415, C416, C417, C500, C501, C502, C503, C504, C505};
 
+#define DEFAULT_ROUTE "default.config"
+
 #include <map>
 #include <string>
 static std::map<std::string, stat_type>	status_code_map;
@@ -77,22 +82,22 @@ static std::map<std::string, stat_type>	status_code_map;
 #define RE3 triplet<Request, Response, Resource>
 
 enum	FdType {
-	PortFd,
-	ClientFd,
-	ResourceFd,
-	StderrFd
+	kBlank,
+	kPortFd,
+	kClientFd,
+	kResourceFd,
+	kStderrFd
 };
 
 enum	Status {
-	Nothing,
-	Header,
-	Body,
-	Reading,
-	Writing,
-	Finished,
-	//ReadError Enum에 있던 것인데, 에러 Status일 경우 Enum 두 개를 혼용할 수 없어 이리로 이동
-	Disconnect,
-	ReadFail,
+	kNothing,
+	kHeader,
+	kBody,
+  kReading,
+  kWriting,
+	kFinished,
+  kDisconnect,
+  kReadFail
 };
 
 //Server가 리턴하는 값들
@@ -104,9 +109,9 @@ enum	ServerStatus {
 
 
 enum	FileType {
-	File,
-	Directory,
-	NotFound
+	kFile,
+	kDirectory,
+	kNotFound
 };
 
 #define NOT    0b000

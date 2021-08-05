@@ -5,6 +5,8 @@
 #include <sys/socket.h>
 #include <string>
 
+#define ERROR_BUFF 1024
+
 class ErrorMsgHandler
 {
 	private:
@@ -21,11 +23,11 @@ class ErrorMsgHandler
 
 
 	public:
-		friend void				sendError();
-		friend void				putError(std::string err_msg);
+		friend void	sendError();
+		friend int	putError(std::string err_msg);
 };
 
 void	sendError();
-void	putError(std::string err_msg);
+int		putError(std::string err_msg);
 
 #endif
