@@ -1,7 +1,7 @@
 #include "PortManager.hpp"
 
 PortManager::PortManager(const PortManager& ref)
-	: port_fd(ref.port_fd), servers(ref.servers) {}
+	: port_num(ref.port_num), port_fd(ref.port_fd), servers(ref.servers) {}
 
 PortManager::~PortManager() {}
 
@@ -14,8 +14,8 @@ std::vector<const Server>::iterator PortManager::findServer(std::string& host_na
 	return servers.begin();
 }
 
-int	PortManager::passRequest(Re3_iter it) {
+int	PortManager::passRequest(Re3Iter it) {
 	Request& req = *it->getReqPtr();
-	this->findServer(req.getHeader()["host"])->MakeResponse(it);
+	this->findServer(req.getHeader()["host"])->makeResponse(it);
 	return OK;
 }
