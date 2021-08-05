@@ -55,9 +55,11 @@ const std::string&		Request::getVersion() const {
 	return this->version;
 }
 
-// 오류 뜨는데 어떻게 해야 할지 모르겠네요.
-const std::string&		Request::getHeaderValue(const std::string& key) const {
-	return this->headers.find(key);
+const std::string&	Request::getHeaderValue(const std::string& key) const {
+	if (this->headers.count(key))
+		return this->headers.find(key)->second;
+	else
+		return "";
 }
 
 const std::string&		Request::getBody() const {

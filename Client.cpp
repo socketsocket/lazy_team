@@ -65,7 +65,7 @@ int	Client::chunkedParser(Request* request) {
 int	Client::lengthParser(Request* request) {
 	std::string	tmp;
 	size_t		len;
-	std::istringstream iss(request->getHeaders()["Content-Length"]);
+	std::istringstream iss(request->getHeaderValue("Content-Length"));
 
 	iss >> len;
 	if (this->read_buff.size() >= len) {
@@ -82,7 +82,6 @@ int	Client::reqLineParser(Request* request) {
 	std::string			tmp;
 	std::stringstream	ss;
 
-	request->setStatus(kHeader);
 	pos = this->read_buff.find("\r\n");
 	if (pos == std::string::npos)
 		return OK; // 개행이 없음. 버퍼가 중간에 끊김.
@@ -102,6 +101,7 @@ int	Client::reqLineParser(Request* request) {
 	request->setUri(tmp);
 	ss >> tmp;
 	request->setVersion(tmp);
+	request->setStatus(kHeader);
 	return OK;
 }
 
@@ -121,20 +121,19 @@ int	Client::headerParser(Request* request) {
 	}
 	if (pos == 0)
 		request->setStatus(kBody);
+	return OK;
 }
 
 int	Client::initParser(Request* request) {
-	if (request->getStatus() == kNothing\
-	|| request->getStatus() == kHeader) {
-		if (request->getMethod() == NOT)
-			this->reqLineParser(request);
+	if (request->getStatus() == kNothing)
+		this->reqLineParser(request);
+	if (request->getStatus() == kHeader)
 		this->headerParser(request);
-	}
 	if (request->getStatus() == kBody) {
-		if (request->getHeaders().count("Transfer-Encoding") && request->getHeaders()["Transfer-Encoding"] == "chunked") {
+		if (request->getHeaderValue("Transfer-Encoding").find("chunked") != std::string::npos) {
 			this->chunkedParser(request);
 		}
-		else if (request->getHeaders().count("Content-Length")) {
+		else if (request->getHeaderValue("Content-Length") != "") {
 			this->lengthParser(request);
 		}
 		else if (request->getMethod() == POST) {
