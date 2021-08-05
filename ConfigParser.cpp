@@ -225,7 +225,7 @@ int	ConfigParser::serverBlock( \
 			return ERROR;
 
 		// if find something else, assuming it a location block.
-		if (this->server_config.count(elements[0] == 0)) {
+		if (this->server_config.count(elements[0]) == 0) {
 			if (this->locationBlock(locations, elements))
 				return ERROR;
 		} else {

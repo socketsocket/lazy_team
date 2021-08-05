@@ -57,14 +57,14 @@ class ServerManager {
 
 	public:
 		~ServerManager();
+		int						getStatus();
 		static ServerManager&	getServerManager();
-		int		initServerManager(const std::vector<std::pair<Server, std::vector<unsigned int> > > configs);
-		void	setStatus(int status);
-		void	setSendTimeOut(unsigned long send_time_out);
-		void	setRecvTimeOut(unsigned long recv_time_out);
-		int		getStatus();
 		std::vector<Server>&	getServersRef();
-		int	processEvent();
+		void					setStatus(int status);
+		void					setSendTimeOut(unsigned long send_time_out);
+		void					setRecvTimeOut(unsigned long recv_time_out);
+		int						processEvent();
+		int						initServerManager(const std::vector<std::pair<Server, std::vector<unsigned int> > > configs);
 };
 
 #endif

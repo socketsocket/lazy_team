@@ -19,7 +19,16 @@ int	main(int argc, char* argv[]) {
 
 	ServerManager& server_manager = ServerManager::getServerManager();
 	{
-		ConfigParser	config_parser(argv[1]);
+		std::string	config_path;
+		if (argc == 1) {
+			config_path = DEFAULT_ROUTE;
+		} else if (argc == 2) {
+			config_path = argv[1];
+		} else {
+			std::cerr << "Too many arguments.";
+			return ERROR;
+		}
+		ConfigParser	config_parser(config_path);
 		config_parser.setData(server_manager);
 	}
 
