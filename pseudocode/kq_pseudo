@@ -129,14 +129,14 @@ class	Request{
 	int		status; // parsing status;
 	string	method
 	string	uri
-	map<string, string>	header
+	map<string, string>	headers
 	string	body
 }
 
 class	Response{
 	int		status
 	string	status_codd
-	map<string, string>	header
+	map<string, string>	headers
 	string	body
 }
 

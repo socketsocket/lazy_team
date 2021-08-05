@@ -1,6 +1,7 @@
 #ifndef WEBSERV_RE3_HPP
 #define WEBSERV_RE3_HPP
 
+#include <deque>
 #include "Request.hpp"
 #include "Response.hpp"
 #include "Resource.hpp"

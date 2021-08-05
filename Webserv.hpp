@@ -77,31 +77,36 @@ static std::map<std::string, stat_type>	status_code_map;
 #define RE3 triplet<Request, Response, Resource>
 
 enum	FdType {
-	Blank,
 	PortFd,
 	ClientFd,
 	ResourceFd,
 	StderrFd
 };
 
-
 enum	Status {
 	Nothing,
 	Header,
 	Body,
+	Reading,
+	Writing,
 	Finished,
-};
-
-enum	ReadError {
-	Good,
+	//ReadError Enum에 있던 것인데, 에러 Status일 경우 Enum 두 개를 혼용할 수 없어 이리로 이동
 	Disconnect,
 	ReadFail,
 };
 
+//Server가 리턴하는 값들
+enum	ServerStatus {
+	ResourceWriteWaiting,
+	ResourceReadWaiting,
+	ResponseMakingDone,
+};
+
+
 enum	FileType {
 	File,
 	Directory,
-	Notfound
+	NotFound
 };
 
 #define NOT    0b000

@@ -1,7 +1,6 @@
 #include "ServerManager.hpp"
 
-ServerManager::ServerManager(const std::vector<Server> servers)
-	: status(OK) {
+ServerManager::ServerManager(const std::vector<Server> servers) {
 	// get ready to add stderr fd
 	this->kq = kqueue();
 	EV_SET(&this->event_current, STDERR, EVFILT_WRITE, EV_ADD, 0, 0, NULL); // set stderr kevent.
@@ -27,7 +26,7 @@ ServerManager::ServerManager(const std::vector<Server> servers)
 		memset(&server_addr, 0, sizeof(server_addr));
 		server_addr.sin_family = AF_INET;
 		server_addr.sin_addr.s_addr = htonl(INADDR_ANY);
-		server_addr.sin_port = htons((*it).first);
+		server_addr.sin_port = htons((*it).first));
 
 		if (bind(server_socket, (struct sockaddr*)&server_addr, sizeof(server_addr)) == -1) {
 			putError("bind error\n");
