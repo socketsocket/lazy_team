@@ -73,6 +73,8 @@ static stat_type	status_code_arr[] = {C100, C101, C200, C201, C202,
 	C401, C402, C403, C404, C405, C406, C407, C408, C409, C410, C411, C412,
 	C413, C414, C415, C416, C417, C500, C501, C502, C503, C504, C505};
 
+#define DEFAULT_ROUTE "default.config"
+
 #include <map>
 #include <string>
 static std::map<std::string, stat_type>	status_code_map;

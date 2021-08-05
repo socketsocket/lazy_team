@@ -465,7 +465,7 @@ int		ConfigParser::putError(const char* err_msg, std::string opt = "") {
 // Public Functions
 //------------------------------------------------------------------------------
 
-ConfigParser::ConfigParser(const char* config_path)
+ConfigParser::ConfigParser(std::string config_path)
 	: server_config(ConfigParser::server_config_arr, ConfigParser::server_config_arr \
 			+ sizeof(ConfigParser::server_config_arr) / sizeof(std::pair<std::string, Directive>)),
 	  location_config(ConfigParser::location_config_arr, ConfigParser::location_config_arr \

@@ -60,7 +60,7 @@ class ConfigParser {
 		int		putError(const char* err_msg, std::string opt);
 
 	public:
-		ConfigParser(const char* config_path);
+		ConfigParser(std::string config_path);
 		~ConfigParser();
 		int	setData(ServerManager& server_manager);
 
