@@ -16,10 +16,8 @@ Status		Client::readRequestMessage(std::vector<IoObject *>	&pool, int currentFd)
 			}
 		}
 		buf[readLen] = '\0';
-
 		// 1 이상이면 읽기에 성공한 것이니 읽어온 버퍼 저장
 		this->readBuffer = this->readBuffer + buf;
-
 		// header && body 파싱 가능한지 보고 파싱해주기
 		if (this->status == REQUEST_RECEIVING_HEADER && this->headerParsable())
 		{

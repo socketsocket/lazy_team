@@ -14,44 +14,29 @@ class Request {
 		Method								method;
 		std::string							uri;
 		std::string							version;
-		std::map<std::string, std::string>	header;
+		std::map<std::string, std::string>	headers;
 		std::string							body;
-		Location							location;
 
 	public :
 		Request(/* args*/);
-		Request(const Request &ref);
 		~Request();
 		Request& operator=(const Request &ref);
 
 		//setter
-		int	setStatus(int);
-		int	setMethod(int);
-		int	setUri(std::string&);
-		int	setVersion(std::string&);
-		int	insertHeader(std::string& key, std::string& value);
-		int	appendBody(std::string& buffer);
+		void	setStatus(int);
+		void	setMethod(int);
+		void	setUri(std::string&);
+		void	setVersion(std::string&);
+		void	insertHeader(std::string& key, std::string& value);
+		void	appendBody(std::string& buffer);
 
 		//getter
-		const int&									getStatus();
-		const Method&								getMethod();
-		const std::string&							getUri();
-		const std::string&							getVersion();
-		std::map<std::string, std::string>&			getHeader();
-		const std::string&							getBody();
-		Location									getLocation() const;
-		void										setLocation(const Location& location);
+		const int&			getStatus() const;
+		const Method&		getMethod() const;
+		const std::string&	getUri() const;
+		const std::string&	getVersion() const;
+		const std::string&	getHeaderValue(const std::string& key) const;
+		const std::string&	getBody() const;
 };
 
 #endif
-// void Response::AppendBody(std::string buffer){
-// 	this->body += buffer;
-// }
-// Location	Request::getLocation() const
-// {
-// 	return location;
-// }
-// void	Request::setLocation(const Location &location)
-// {
-// 	this->location = location;
-// }
