@@ -20,7 +20,6 @@ class PortManager {
 	public:
 		PortManager(const unsigned int port_num, const int port_fd, const std::vector<Server&> servers);
 		~PortManager();
-
 		int	passRequest(Re3Iter it);
 };
 

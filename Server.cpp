@@ -1,59 +1,252 @@
 #include "Server.hpp"
 
-/*
-if (client Request message read done)
-{
-	Request curr_request = client->getRequest();
-	curr_request.setLocation = this->CurrLocation(curr_request.GetUri());
+ServerStatus Server::makeResponse(Re3Iter re3) {
+	Request *request = re3->getReqPtr();
 
+	if (request->getStatus() == Finished) {
+		Location* curr_location = this->currLocation(request->getUri());
+		
+		stat_type stat = this->requestValidCheck(request, curr_location);		
+		if (stat != C200)
+			return this->makeErrorResponse(re3, curr_location, stat);	
+		//리소스 상태는 'empty'/읽는중/읽음완료/에러 네가지로 들어옴
+		//만약 리소스 상태가 == 에러라면
+		if (re3->getRscPtr()->getStatus() == Disconnect \
+		|| re3->getRscPtr()->getStatus() == ReadFail)
+			return this->makeErrorResponse(re3, curr_location, C500);
+		//만약 리소스 상태가 == 읽는중이라면
+		else if (re3->getRscPtr()->getStatus() == Reading)
+		{
+			if (request->getMethod() & GET)
+				return ResourceReadWaiting;
+			if (request->getMethod() & POST)
+				return ResourceWriteWaiting;
+		}
+		std::string resource_path = request->getUri();
+		size_t path_pos = resource_path.find(curr_location->getPath());
+		resource_path.replace(path_pos, curr_location->getPath().length(), curr_location->getRoot());
 
-	stat = RequestValidCheck();
-	if (stat == OK)
-		MakeResponse(Client)
-	else
-		ErrorResponse(status)
+		if (request->getMethod() & GET)
+			return this->makeGETResponse(re3, curr_location, resource_path);
+		if (request->getMethod() & POST)
+			return this->makePOSTResponse(re3, curr_location, resource_path);
+		if (request->getMethod() & DELETE)
+			return this->makeDELETEResponse(re3, curr_location, resource_path);
+	}
 }
-*/
 
-int Server::RequestValidCheck(Client& client) {
-	Location curr_location = client.GetRequest().GetLocation();
-	if (client.GetRequest().GetMethod() & GET == false)
-		if (client.GetRequest().GetMethod() & curr_location.GetMethodsAllowed() == 0)
-			return 405;
+//@return: 디폴트 에러파일을 열 때 - ResourceReadWaiting
+//@return: 자체 에러페이지를 제작할 때 - ResponseMakingDone
+ServerStatus Server::makeErrorResponse(Re3Iter re3, Location* location, stat_type http_status_code) {
+	std::map<std::string, std::string> headers;
+
+	headers["Date"] = this->dateHeaderInfo();
+	headers["Server"] = "Passive Server";
+	headers["Content-Type"] = this->contentTypeHeaderInfo(".html");
+	
+	//해당 에러코드의 디폴트 에러페이지가 있으명
+	if (!location->getDefaultErrorPage(http_status_code).empty()) {
+		int fd = open(location->getDefaultErrorPage(http_status_code).c_str(), O_RDONLY);
+		// 디폴트 에러페이지 오픈 실패 -> 디폴트페이지가 아니라 자체적으로 만들어내는 페이지로 리턴 
+		if (fd == ERROR) {
+			std::string error_page_body = this->makeHTMLPage(http_status_code);
+			std::stringstream length;
+			length << error_page_body.length();
+			headers["Content-Length"] = length.str();
+			assert(re3->getRspPtr() == NULL);
+			re3->setRspPtr(new Response(Nothing, std::string(http_status_code), headers, error_page_body, re3->getReqPtr()->getVersion()));
+			return ResponseMakingDone;
+		}
+		else {
+			struct stat sb;
+			fstat(fd, &sb);
+			std::stringstream length;
+			length << (int)sb.st_size;
+			headers["Content-Length"] = length.str();
+
+			assert(re3->getRspPtr() == NULL);
+			re3->setRscPtr(new Resource(Reading, fd));
+			return ResourceReadWaiting;
+		}
+	}
+	//디폴트 에러페이지가 없으면 새로만듦
+	else {
+		std::string error_page_body = this->makeHTMLPage(http_status_code);
+		std::stringstream length;
+		length << error_page_body.length();
+		headers["Content-Length"] = length.str();
+		assert(re3->getRspPtr() == NULL);
+		re3->setRspPtr(new Response(Nothing, std::string(http_status_code), headers, error_page_body, re3->getReqPtr()->getVersion()));
+		return ResponseMakingDone;
+	}
+}
+
+ServerStatus Server::makeGETResponse(Re3Iter re3, Location* curr_location, std::string resource_path) {
+	struct stat	sb;
+	int fd;
+	std::map<std::string, std::string> headers;
+	Request* request = re3->getReqPtr();
+	Resource* resource = re3->getRscPtr();
+	Response* response = re3->getRspPtr();
+
+	headers["Date"] = this->dateHeaderInfo();
+	headers["Server"] = "Passive Server";
+
+	//만약 리소스 상태가 == Nothing
+	if (resource->getStatus() == Nothing) {
+		//경로가 디렉토리면
+		if (checkPath(resource_path) == Directory) {
+			if (resource_path[resource_path.length() - 1] != '/')
+				resource_path += '/';
+			bool indexFileFlag = false;
+			//default indexfile값이 존재한다면
+			if (!curr_location->getIndexes().empty())
+			//indexes 이터레이터 돌면서 열리는 인덱스파일이 있는지 확인
+				for (std::vector<const std::string>::iterator iter = curr_location->getIndexes().begin();
+						iter != curr_location->getIndexes().end(); ++iter) {
+					struct stat buffer;
+					if (stat((resource_path + *iter).c_str(), &buffer) == 0) {
+						resource_path = resource_path + *iter;
+						indexFileFlag = true;
+						break;
+					}
+				}
+			//대응하는 default indexfile이 없었는데, autoindex가 켜져있다면
+			if (indexFileFlag == false && curr_location->isAutoIndex() == true) {
+				headers["Content-Type"] = this->contentTypeHeaderInfo(".html");
+				std::string autoindex_body = makeAutoIndexPage(request, resource_path);
+				if (autoindex_body.empty())
+					return this->makeErrorResponse(re3, curr_location, C500);
+				std::stringstream length;
+				length << autoindex_body.length();
+				headers["Content-Length"] = length.str();
+				//Re3에 Response 추가
+				assert(response == NULL);
+				re3->setRspPtr(new Response(Nothing, std::string(C200), headers, autoindex_body, request->getVersion()));
+				return ResponseMakingDone;
+			}
+			//default indexfile과 대응하는 파일이 있었는데, 그 파일이 NotFounde거나, 디렉토리라면
+			if (checkPath(resource_path) == NotFound || checkPath(resource_path) == Directory)
+				return this->makeErrorResponse(re3, curr_location, C404);
+		}
+		//default indexfile과 대응하는 파일이 있거나, 요청 uri가 파일이면
+		if ((fd = open(resource_path.c_str(), O_RDONLY)) < 0)
+			return this->makeErrorResponse(re3, curr_location, C404);
+		if (fstat(fd, &sb) < 0) {
+			close(fd);
+			return this->makeErrorResponse(re3, curr_location, C500);
+		}
+		//Re3에 resource fd 추가 
+		if (resource == NULL)
+			re3->setRscPtr(new Resource(Reading, fd));
+
+		return ResourceReadWaiting;
+	}
+	//만약 리소스 상태가 == Finished
+	else if (re3->getRscPtr()->getStatus() == Finished) {
+		headers["Content-Type"] = this->contentTypeHeaderInfo(fileExtension(resource_path.substr(1)));
+		headers["Content-Language"] = "ko-KR";
+		headers["Content-Location"] = resource_path.substr(1);
+		std::stringstream length;
+		length << resource->getContent().length();
+		headers["Content-Length"] = length.str();
+		headers["Last-Modified"] = this->lastModifiedHeaderInfo(sb);
+
+		//Re3에 Response 추가
+		assert(response == NULL);
+		re3->setRspPtr(new Response(Nothing, std::string(C200), headers, resource->getContent(), request->getVersion()));
+
+		return ResponseMakingDone;
+	}
+}
+
+ServerStatus Server::makePOSTResponse(Re3Iter re3, Location* curr_location, std::string resource_path) {
+	int fd;
+	std::map<std::string, std::string> headers;
+	Resource* resource = re3->getRscPtr();
+
+	if (resource->getStatus() == Nothing) {
+		headers["Content-Location"] = resource_path.substr(1);
+		switch (checkPath(resource_path)) {
+			case NotFound : {
+				if ((fd = open(resource_path.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644)) < 0)
+					return this->makeErrorResponse(re3, curr_location, C500);
+				if (resource == NULL)
+					re3->setRscPtr(new Resource(Writing, fd));
+
+				return ResourceWriteWaiting;
+			}
+			case File :
+			{
+				if ((fd = open(resource_path.c_str(), O_WRONLY | O_APPEND )) < 0)
+					return this->makeErrorResponse(re3, curr_location, C500);
+				if (resource == NULL)
+					re3->setRscPtr(new Resource(Writing, fd));
+
+				return ResourceWriteWaiting;
+			}
+			default :
+				return this->makeErrorResponse(re3, curr_location, C403);
+		}
+		return;
+	}
+	else if (re3->getRscPtr()->getStatus() == Finished) {
+		Request* request = re3->getReqPtr();	
+		assert(re3->getRspPtr() == NULL);
+		if (checkPath(resource_path) == Directory)
+			re3->setRspPtr(new Response(Nothing, std::string(C201), headers, resource->getContent(), request->getVersion()));
+		else
+			re3->setRspPtr(new Response(Nothing, std::string(C200), headers, resource->getContent(), request->getVersion()));
+		return ResponseMakingDone;
+	}
+}
+	
+
+ServerStatus Server::makeDELETEResponse(Re3Iter re3, Location* curr_location, std::string resource_path) {
+	int fd;
+	std::map<std::string, std::string> headers;
+	Resource* resource = re3->getRscPtr();
+
+	headers["Date"] = this->dateHeaderInfo();
+	headers["Server"] = "Passive Server";
+	if (checkPath(resource_path) == File)
+	{
+		unlink(resource_path.c_str());
+		assert(re3->getRspPtr() == NULL);
+		re3->setRspPtr(new Response(Nothing, std::string(C200), headers, this->makeHTMLPage("File deleted"), re3->getReqPtr()->getVersion()));
+		return ResponseMakingDone;
+	}
+	return this->makeErrorResponse(re3, curr_location, C404);
+}
+
+Location* Server::currLocation(std::string request_uri) {
+	std::vector<Location>::iterator res;
+	int longest = 0;
+	
+	for (std::vector<Location>::iterator it = this->locations.begin(); \
+	it != this->locations.end(); it++) {
+		std::string path = it->getPath();
+		if (request_uri.compare(0, path.length(), path) == 0 \
+		&& longest < path.length()) {
+			longest = path.length();
+			res = it;
+		}
+	}
+	return &*res;
+}
+
+stat_type Server::requestValidCheck(Request* request, Location* curr_location) {
+	if (request->getMethod() & curr_location->getMethodsAllowed() == false)
+		return C405;
 	if (this->client_body_limit != 0)
-		if (client.GetRequest().GetHeader().count("Content-Length")) {
+		if (!request->getHeaderValue("Content-Length").empty()) {
 			int content_length;
-			std::stringstream temp(client.GetRequest().GetHeader()["Content-Length"]);
+			std::stringstream temp(request->getHeaderValue("Content-Length"));
 			temp >> content_length;
 			if (content_length > this->client_body_limit)
-				return 413;
+				return C413;
 		}
-	return OK;
-}
-
-Location& Server::CurrLocation(std::string request_uri) {
-	Location	res;
-
-	for (std::vector<Location>::iterator it = this->locations.begin(); it != this->locations.end(); it++) {
-		std::string path = it.GetPath();
-		if (request_uri.compare(0, path.length(), path) == 0)
-			res = *it;
-	}
-	return res;
-}
-
-void Server::MakeResponse(Client& client) {
-	Location curr_location = client.GetRequest().GetLocation();
-	std::string resource_path = client.GetRequest().GetUri();
-	size_t path_pos = resource_path.find_first_of(curr_location.GetPath());
-	resource_path.replace(path_pos, curr_location.GetPath().length(), curr_location.GetRoot());
-
-	if (curr_request->getMethod() == "GET")
-		MakeGetResponse(client, resource_path);
-	/*if (curr_request->getMethod() == "POST")
-	{};
-	if (curr_request->getMethod() == "DELETE")
-	{};*/
+	return C200;
 }
 
 int Server::checkPath(std::string path) {
@@ -66,10 +259,10 @@ int Server::checkPath(std::string path) {
 		else if (S_ISDIR(buffer.st_mode))
 			return Directory;
 	}
-	return Notfound;
+	return NotFound;
 }
 
-std::string Server::DateHeaderInfo() {
+std::string Server::dateHeaderInfo() {
 	time_t rawtime;
 	struct tm* timeinfo;
 	char buffer[80];
@@ -80,67 +273,14 @@ std::string Server::DateHeaderInfo() {
 	return buffer;
 }
 
-std::string Server::LastModifiedHeaderInfo(struct stat sb) {
+std::string Server::lastModifiedHeaderInfo(struct stat sb) {
 	struct tm*	timeinfo = localtime(&sb.st_mtime);
 	char buffer[80];
 	strftime(buffer, 80, "%a, %d, %b %Y %X GMT", timeinfo);
 	return buffer;
 }
 
-void Server::MakeGetResponse(Client& client, std::string resource_path) {
-	struct stat	sb;
-	int fd;
-	std::map<std::string, std::string> header;
-	Request request = client.GetRequest();
-
-	header["Date"] = DateHeaderInfo();
-	header["Server"] = "Passive Server";
-
-	if (checkPath(resource_path) == Directory) {
-		if (resource_path[resource_path.length() - 1] != '/')
-			resource_path += '/';
-
-		bool indexFileFlag = false;
-		if (!request.GetLocation().GetIndex().empty()) {
-			for (std::vector<std::string>::iterator iter = request.GetLocation().GetIndex().begin();
-					iter != request.GetLocation().GetIndex().end(); iter++) {
-				struct stat buffer;
-				if (stat((resource_path + *iter).c_str(), &buffer) == 0) {
-					resource_path = resource_path + *iter;
-					indexFileFlag = true;
-					break ;
-				}
-			}
-		}
-		if (indexFileFlag == false && request.GetLocation().GetAutoIndex() == true) {
-			header["Content-Type"] = ContentTypeHeaderInfo(".html");
-			std::string autoindex_body = MakeAutoIndexPage(request, resource_path);
-			std::stringstream length;
-			length << (int)sb.st_size;
-			header["Content-Length"] = length.str();
-			client.PushResponse(Response(finished, "200 OK", header, autoindex_body, request.GetHttpVersion()));
-		}
-		if (checkPath(resource_path) == Notfound || checkPath(resource_path) == Directory)
-			ErrorResponse(404);
-	}
-	if ((fd = open(resource_path.c_str(), O_RDONLY)) < 0)
-		ErrorResponse(404);
-	if (fstat(fd, &sb) < 0) {
-		close(fd);
-		ErrorResponse(500);
-	}
-	header["Content-Type"] = ContentTypeHeaderInfo(fileExtension(resource_path.substr(1)));
-	header["Content-Language"] = "ko-KR";
-	header["Content-Location"] = resource_path.substr(1);
-	std::stringstream length;
-	length << (int)sb.st_size;
-	header["Content-Length"] = length.str();
-	header["Last-Modified"] = LastModifiedHeaderInfo(sb);
-
-	setResource(working, client, fd);
-}
-
-std::string Server::ContentTypeHeaderInfo(std::string extension) {
+std::string Server::contentTypeHeaderInfo(std::string extension) {
 	std::map<std::string, std::string> mimeType;
 	mimeType[".aac"] = "audio/aac";
 	mimeType[".abw"] = "application/x-abiword";
@@ -206,20 +346,20 @@ std::string Server::ContentTypeHeaderInfo(std::string extension) {
 		return mimeType[extension];
 }
 
-std::string	Server::MakeAutoIndexPage(Request& request, std::string resource_path) {
+std::string	Server::makeAutoIndexPage(Request* request, std::string resource_path) {
 	std::string body;
-	std::string addr = "http://" + request.GetHeader()["Host"] + "/"; //하이퍼링크용 경로
+	std::string addr = "http://" + request->getHeaderValue("Host") + "/"; //하이퍼링크용 경로
 
 	body += "<!DOCTYPE html>\n";
 	body += "<html>\n";
 	body += "<head>\n";
 	body += "</head>\n";
 	body += "<body>\n";
-	body += "<h1> Index of "+ request.GetUri() + "</h1>\n";
+	body += "<h1> Index of "+ request->getUri() + "</h1>\n";
 
 	DIR *dir = NULL;
 	if ((dir = opendir(resource_path.c_str())) == NULL)
-		ErrorResponse(500);
+		return NULL;
 
 	struct dirent *file = NULL;
 	while ((file = readdir(dir)) != NULL)
@@ -232,37 +372,27 @@ std::string	Server::MakeAutoIndexPage(Request& request, std::string resource_pat
 	return (body);
 }
 
-//이녀석의 리턴값에 대한 고민 필요 및 리스폰스 전달방식에대하 고민필요
-void Server::ErrorResponse(Client& client, int http_status_code) {
-	std::map<std::string, std::string> header;
-	Location& location = client.GetRequest().GetLocation();
+//@param HTML 상에 출력할 string
+//@return HTML 코드 string
+std::string Server::makeHTMLPage(std::string str) {
+	std::string body;
 
-	header["Date"] = DateHeaderInfo();
-	header["Server"] = "Passive Server";
-	header["Content-Type"] = ContentTypeHeaderInfo(".html");
-
-	if (location.GetDefaultErrorPages(http_status_code).empty())
-		// setResponse(makeErrorResponse(http_status_code));
-		// client.PushResponse(Response(finished, "200 OK", header, autoindex_body, request.GetHttpVersion()));
-	else {
-		int fd = open(location.GetDefaultErrorPages(http_status_code).c_str(), O_RDONLY);
-		if (fd == -1) // 실패 -> 디폴트페이지가 아니라 자체적으로 만들어내는 페이지로 리턴
-			// setResponse(makeErrorResponse(http_status_code));
-		else {
-			struct stat sb;
-
-			fstat(fd, &sb);
-				std::stringstream length;
-			length << (int)sb.st_size;
-			header["Content-Length"] = length.str();
-			setResource(working, fd, client);
-		}
-	}
+	body += "<!DOCTYPE html>\n";
+	body += "<html>\n";
+	body += "<head>\n";
+	body += "</head>\n";
+	body += "<body>\n";
+	body += "<h1>";
+	body += str;
+	body += "<h1>\n";
+	body += "</body>\n";
+	body += "</html>";
+	return (body);
 }
 
 std::string Server::fileExtension(std::string resource_path)
 {
-	if (resource_path.find('.') != std::string::npos)
+	if (resource_path.rfind('.') != std::string::npos)
 		return (resource_path.substr(resource_path.find('.')));
 	return resource_path;
 }
