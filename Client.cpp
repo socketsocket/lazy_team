@@ -152,7 +152,7 @@ int	Client::initParser(Request* request) {
 // }
 
 // std::vector<Re3Iter>	Client::recvRequest(std::string& rawRequest) {
-int	Client::recvRequest(std::string& rawRequest) {
+int	Client::recvRequest(std::string rawRequest) {
 	this->read_buff += rawRequest;
 	do {
 		if (this->re3_deque.back().getReqPtr()->getStatus() == kFinished) {

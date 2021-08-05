@@ -37,7 +37,7 @@ class Client {
 		Client& operator=(const Client& ref);
 
 		// std::vector<Re3_iter>	recvRequest(std::string& rawRequest);
-		int	recvRequest(std::string& rawRequest);
+		int	recvRequest(std::string rawRequest);
 		int	sendResponse(void);
 };
 
