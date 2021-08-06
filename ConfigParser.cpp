@@ -38,6 +38,8 @@ int	ConfigParser::getSemanticLine(std::string& line) {
 	while (line.length() == 0) {
 		// get line till the end of line
 		do {
+			if (this->config_file.eofbit)
+				return END_OF_FILE;
 			this->config_file.getline(buffer, LINE_BUFF);
 			if (this->config_file.bad())
 				return this->putError(READ_LINE_ERR);
@@ -52,6 +54,25 @@ int	ConfigParser::getSemanticLine(std::string& line) {
 
 		// Trim whitespaces.
 		line = trimWhitespace(line);
+	}
+	return OK;
+}
+
+
+int	ConfigParser::getLineElements(std::vector<std::string>& elements) {
+	this->method_name = "getLineElements";
+
+	std::string	line;
+	int	ret;
+	if ((ret = this->getSemanticLine(line)))
+		return ret;
+	elements.clear();
+
+	// split
+	size_t	pos = 0;
+	while ((pos = line.find_first_of(WHITE_SPACES)) != std::string::npos) {
+		elements.push_back(trimWhitespace(line.substr(0, pos)));
+		line.erase(0, pos + 1);
 	}
 	return OK;
 }
@@ -112,23 +133,6 @@ int	ConfigParser::getPath(std::string& path, \
 	return OK;
 }
 
-int	ConfigParser::getLineElements(std::vector<std::string>& elements) {
-	this->method_name = "getLineElements";
-
-	std::string	line;
-	if (this->getSemanticLine(line))
-		return ERROR;
-	elements.clear();
-
-	// split
-	size_t	pos = 0;
-	while ((pos = line.find_first_of(WHITE_SPACES)) != std::string::npos) {
-		elements.push_back(trimWhitespace(line.substr(0, pos)));
-		line.erase(0, pos + 1);
-	}
-	return OK;
-}
-
 int	ConfigParser::httpBlock(ServerManager& server_manager) {
 	this->method_name = "httpBlock";
 
@@ -150,6 +154,7 @@ int	ConfigParser::httpBlock(ServerManager& server_manager) {
 	{
 		if (this->getLineElements(line_elements))
 			return ERROR;
+		else
 		if (line_elements.size() == 1) {
 			if (line_elements[0].compare("}"))
 				return this->putError(SEMANTIC_ERR);
@@ -479,6 +484,9 @@ ConfigParser::~ConfigParser() {}
 int	ConfigParser::setData(ServerManager& server_manager) {
 	this->method_name = "getData";
 
+	std::string	line;
+	int			ret;
+
 	if (ConfigParser::is_used)
 		return ERROR;
 	ConfigParser::is_used = true;
@@ -486,6 +494,11 @@ int	ConfigParser::setData(ServerManager& server_manager) {
 	if (!this->config_file.is_open())
 		return this->putError(OPEN_FILE_ERR, "readFile");
 	this->httpBlock(server_manager);
+	ret = getSemanticLine(line);
+	if (ret == ERROR)
+		return ERROR;
+	if (ret != END_OF_FILE || line.size() != 0)
+		return ERROR;
 	this->config_file.close();
 	return OK;
 }

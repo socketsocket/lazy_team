@@ -4,9 +4,10 @@
 #include <csignal>
 #include <climits>
 
-#define CHUNK_ERR	-22
+#define CHUNK_ERR -22
 #define ERROR -1
 #define OK     0
+#define END_OF_FILE 26
 
 #define STDERR 2
 

@@ -4,7 +4,7 @@
 #include "Server.hpp"
 
 void	initStatusCodeMap() {
-	for (size_t i = 0; i < sizeof(status_code_arr); ++i)
+	for (size_t i = 0; i < 40; ++i)
 		status_code_map[std::string(status_code_arr[i]).substr(0, 3)]
 			= status_code_arr[i];
 }

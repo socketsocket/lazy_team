@@ -66,17 +66,17 @@ OBJS = ErrorMsgHandler.o \
 # if debug_check is not set, just compile.
 ifneq ($(shell echo ${debug_check+x}), x)
 $(NAME): $(OBJS)
-	$(CC) $(CPPFLAGS) $? -o $@
+	$(CC) $(CPPFLAGS) $(OBJS) -o $@
 	debug_check=$$(DEBUG_CHECK)
 # if the former make command is same as before, just compile.
 else ifeq ($(shell echo $debug_check), $(DEBUG_CHECK))
 $(NAME): $(OBJS)
-	$(CC) $(CPPFLAGS) $? -o $@
+	$(CC) $(CPPFLAGS) $(OBJS) -o $@
 	debug_check=$$(DEBUG_CHECK)
 # if the former make command is equal to the current one, delete files and recompile.
 else
 $(NAME): fclean $(OBJS)
-	$(CC) $(CPPFLAGS) $? -o $@
+	$(CC) $(CPPFLAGS) $(OBJS) -o $@
 	debug_check=$$(DEBUG_CHECK)
 endif
 
