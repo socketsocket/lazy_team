@@ -8,8 +8,8 @@ ServerManager::ServerManager()
 	: status(INITIATED) {}
 
 int	ServerManager::makeClient(PortManager& port_manager) {
-	int	client_fd;
-	if (client_fd = accept(port_manager.getPortNum(), NULL, NULL) < 0) {
+	size_t	client_fd;
+	if ((client_fd = accept(port_manager.getPortNum(), NULL, NULL)) < 0) {
 		putError("accept error");
 		return ERROR;
 	}
@@ -73,19 +73,19 @@ int	ServerManager::initServerManager( \
 	this->event_changes.push_back(this->event_current);
 	this->types[STDERR] = kStderrFd;
 
-	std::map<unsigned int, std::vector<Server&> >	server_sorter;
+	std::map<unsigned int, std::vector<Server*> >	server_sorter;
 
 	for (size_t i = 0; i < configs.size(); ++i) {
 		servers.push_back(configs[i].first);
 		for (size_t j = 0; j < configs[i].second.size(); ++j) {
-			server_sorter[configs[i].second[j]].push_back(servers.back());
+			server_sorter[configs[i].second[j]].push_back(&servers.back());
 		}
 	}
 
 	// Set port fd.
-	int					server_socket;
+	unsigned long		server_socket;
 	struct sockaddr_in	server_addr;
-	for (std::map<unsigned int, std::vector<Server&> >::iterator it = server_sorter.begin(); \
+	for (std::map<unsigned int, std::vector<Server*> >::iterator it = server_sorter.begin(); \
 		it != server_sorter.end(); ++it) {
 		if ((server_socket = socket(PF_INET, SOCK_STREAM, 0)) == -1) {
 			putError("socket error\n");
@@ -95,7 +95,7 @@ int	ServerManager::initServerManager( \
 		memset(&server_addr, 0, sizeof(server_addr));
 		server_addr.sin_family = AF_INET;
 		server_addr.sin_addr.s_addr = htonl(INADDR_ANY);
-		server_addr.sin_port = htons((*it).first));
+		server_addr.sin_port = htons((*it).first);
 
 		if (bind(server_socket, (struct sockaddr*)&server_addr, sizeof(server_addr)) == -1) {
 			putError("bind error\n");
@@ -117,10 +117,19 @@ int	ServerManager::initServerManager( \
 			this->managers.resize(server_socket, NULL);
 		this->managers[server_socket] = new PortManager(it->first, server_socket, (*it).second);
 	}
+	return OK;
 }
 
 void	ServerManager::setStatus(int status) {
 	this->status = status;
+}
+
+void	ServerManager::setSendTimeOut(unsigned long send_timeout) {
+	this->send_timeout = send_timeout;
+}
+
+void	ServerManager::setRecvTimeOut(unsigned long recv_timeout) {
+	this->recv_timeout = recv_timeout;
 }
 
 int		ServerManager::getStatus() {
@@ -132,21 +141,23 @@ std::vector<Server>&	ServerManager::getServersRef() {
 }
 
 int	ServerManager::processEvent() {
-	int	num = this->callKevent();
-	if (num < 0)
-		return num;
+	this->kevent_num = this->callKevent();
+	if (this->kevent_num < 0)
+		return this->kevent_num;
 
-	int	fd;
-	for (size_t i = 0; i < num; ++i) {
-		fd = this->event_list[i].ident;
-		switch (this->types[fd]) {
+	for (int i = 0; i < this->kevent_num; ++i) {
+		this->cur_fd = this->event_list[i].ident;
+		switch (this->types[this->cur_fd]) {
 			case kPortFd: {
-				this->makeClient(*this->managers[fd]);
+				this->makeClient(*this->managers[this->cur_fd]);
 				break;
 			}
 			case kClientFd: {
 				if (event_list[i].filter == EVFILT_READ) {
-					//
+					this->checker = recv(this->cur_fd, this->recv_buffer, NETWORK_BUFF, 0);
+					// if (this->checker == ERROR) NOTE need to discuss
+					this->clients[this->cur_fd]->recvRequest( \
+						std::string(this->recv_buffer, this->checker));
 				} else if (event_list[i].filter == EVFILT_WRITE) {
 					//
 				}
@@ -168,4 +179,5 @@ int	ServerManager::processEvent() {
 			}
 		}
 	}
+	return OK;
 }

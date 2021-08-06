@@ -12,25 +12,33 @@ class Response {
 		Status								status;
 		//예시:200 OK
 		std::string							http_status_code;
-		std::string							version;
 		std::map<std::string, std::string>	headers;
 		std::string							body;
-		size_t								size;
+		std::string							version;
+		std::string							head;
 
 	public:
 		Response();
 		Response(Status status);
-		Response(Status status, std::string http_status_code, std::map<std::string, std::string> headers, std::string body, std::string version);
+		Response(
+			Status status,
+			std::string http_status_code,
+			std::map<std::string, std::string> headers,
+			std::string body,
+			std::string version);
 		Response(const Response& ref);
 		~Response();
 		Response& operator=(const Response& ref);
 
-		Method		getStatus();
-		std::string getResponseMessage();
-		size_t		getSize() const;
-		void		deductSize(size_t send);
+		Status			getStatus();
+		std::string&	getBody();
+		std::string&	getHead();
+
+		// std::string getResponseMessage();
+		void	setStatus(Status);
 		void	appendBody(std::string buffer);
 		void	addHeader(std::string key, std::string value);
+		void	makeHead();
 };
 
 #endif

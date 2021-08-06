@@ -10,10 +10,6 @@ Request::Request()
 Request::~Request() {
 }
 
-Request& Request::operator=(const Request &ref) {
-	return *this;
-}
-
 void	Request::setStatus(int status) {
 	this->status = status;
 }
@@ -55,11 +51,10 @@ const std::string&		Request::getVersion() const {
 	return this->version;
 }
 
-const std::string&	Request::getHeaderValue(const std::string& key) const {
+std::string				Request::getHeaderValue(const std::string& key) const {
 	if (this->headers.count(key))
 		return this->headers.find(key)->second;
-	else
-		return "";
+	return "";
 }
 
 const std::string&		Request::getBody() const {

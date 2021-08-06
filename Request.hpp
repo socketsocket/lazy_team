@@ -2,7 +2,6 @@
 #define WEBSERV_REQUEST_HPP_
 
 #include "Webserv.hpp"
-#include "Server.hpp"
 #include <sys/socket.h>
 #include <string>
 #include <iostream>
@@ -19,6 +18,7 @@ class Request {
 
 	public :
 		Request(/* args*/);
+		Request(const Request &ref);
 		~Request();
 		Request& operator=(const Request &ref);
 
@@ -35,7 +35,7 @@ class Request {
 		const Method&		getMethod() const;
 		const std::string&	getUri() const;
 		const std::string&	getVersion() const;
-		const std::string&	getHeaderValue(const std::string& key) const;
+		std::string			getHeaderValue(const std::string& key) const;
 		const std::string&	getBody() const;
 };
 

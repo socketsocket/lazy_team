@@ -2,7 +2,6 @@
 #define WEBSERV_RESOURCE_HPP_
 
 #include "Webserv.hpp"
-#include "Client.hpp"
 #include <string>
 #include <iostream>
 

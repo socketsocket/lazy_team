@@ -30,12 +30,12 @@ void	ErrorMsgHandler::addError(std::string err_msg) {
 }
 
 void	sendError() {
-	ErrorMsgHandler err_msg_handler = ErrorMsgHandler::getInstance();
+	ErrorMsgHandler& err_msg_handler = ErrorMsgHandler::getInstance();
 	err_msg_handler.outError();
 }
 
 int	putError(std::string err_msg) {
-	ErrorMsgHandler err_msg_handler = ErrorMsgHandler::getInstance();
+	ErrorMsgHandler& err_msg_handler = ErrorMsgHandler::getInstance();
 	err_msg_handler.addError(err_msg);
 	return ERROR;
 }

@@ -10,9 +10,10 @@ Resource::~Resource() {};
 
 Resource& Resource::operator=(const Resource &ref) {
 	if (this == &ref)
-		return ;
+		return *this;
 	this->status = ref.status;
 	this->resource_fd = ref.resource_fd;
+	return *this;
 }
 
 const int& Resource::getStatus() const {

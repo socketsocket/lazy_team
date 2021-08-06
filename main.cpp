@@ -10,6 +10,7 @@ void	initStatusCodeMap() {
 }
 
 void	sigIntHandler(int param) {
+	(void)param;
 	ServerManager& server_manager = ServerManager::getServerManager();
 	server_manager.setStatus(INTR);
 };
@@ -33,7 +34,7 @@ int	main(int argc, char* argv[]) {
 	}
 
 	// When CTRL-C is pressed, deallocate everything and end the server.
-	if ((signal(SIGINT, sigIntHandler) == SIG_ERR));
+	if ((signal(SIGINT, sigIntHandler) == SIG_ERR))
 		return ERROR;
 
 	while (true) {

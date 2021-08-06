@@ -1,6 +1,7 @@
 #ifndef WEBSERV_CONFIGPARSER_HPP
 #define WEBSERV_CONFIGPARSER_HPP
 
+
 #include <fstream>
 #include <iostream>
 #include <set>
@@ -57,7 +58,7 @@ class ConfigParser {
 		int		locationBlock(std::vector<Location>& location, \
 			std::vector<std::string>& line_elements);
 
-		int		putError(const char* err_msg, std::string opt);
+		int		putError(const char* err_msg, std::string opt = "");
 
 	public:
 		ConfigParser(std::string config_path);

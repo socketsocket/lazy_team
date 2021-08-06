@@ -47,6 +47,11 @@ class ServerManager {
 		struct kevent				event_list[EVENT_SIZE];
 		struct kevent				event_current;
 
+		int							kevent_num;
+		int							cur_fd;
+		int							checker;
+		char						recv_buffer[NETWORK_BUFF];
+
 		ServerManager();
 // copy constructor, and assignation operator are disabled.
 		ServerManager(const ServerManager& ref);
@@ -61,10 +66,11 @@ class ServerManager {
 		static ServerManager&	getServerManager();
 		std::vector<Server>&	getServersRef();
 		void					setStatus(int status);
-		void					setSendTimeOut(unsigned long send_time_out);
-		void					setRecvTimeOut(unsigned long recv_time_out);
+		void					setSendTimeOut(unsigned long send_timeout);
+		void					setRecvTimeOut(unsigned long recv_timeout);
 		int						processEvent();
-		int						initServerManager(const std::vector<std::pair<Server, std::vector<unsigned int> > > configs);
+		int						initServerManager( \
+			const std::vector<std::pair<Server, std::vector<unsigned int> > > configs);
 };
 
 #endif

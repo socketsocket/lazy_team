@@ -3,7 +3,6 @@
 
 #include "Webserv.hpp"
 #include "Location.hpp"
-#include "Client.hpp"
 #include "Re3.hpp"
 #include <iostream>
 #include <sstream>
@@ -23,12 +22,11 @@ class Server
 		std::vector<Location>				locations;
 		std::pair<stat_type, std::string>	return_to;
 
-		ServerStatus		makeResponse(Re3Iter re3);
-		ServerStatus		makeGETResponse(Re3Iter re3, Location* curr_location, std::string resource_path);
-		ServerStatus		makePOSTResponse(Re3Iter re3, Location* curr_location, std::string resource_path);
-		ServerStatus		makeDELETEResponse(Re3Iter re3, Location* curr_location, std::string resource_path);
-		ServerStatus		makeErrorResponse(Re3Iter re3, Location* curr_location, stat_type http_status_code);
-		
+		ServerStatus		makeGETResponse(Re3* re3, Location* curr_location, std::string resource_path);
+		ServerStatus		makePOSTResponse(Re3* re3, Location* curr_location, std::string resource_path);
+		ServerStatus		makeDELETEResponse(Re3* re3, Location* curr_location, std::string resource_path);
+		ServerStatus		makeErrorResponse(Re3* re3, Location* curr_location, stat_type http_status_code);
+
 		stat_type	requestValidCheck(Request* request, Location* curr_location);
 		Location*	currLocation(std::string request_uri);
 		int			checkPath(std::string path);
@@ -53,8 +51,8 @@ class Server
 			std::pair<stat_type, std::string> return_to);
 		~Server();
 
-		unsigned int	getPortNum() const;
-		std::string&	getServerName() const;
+		ServerStatus		makeResponse(Re3* re3);
+		const std::string&	getServerName() const;
 };
 
 #endif

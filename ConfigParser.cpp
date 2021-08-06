@@ -30,7 +30,7 @@ std::pair<std::string, Directive>	ConfigParser::location_config_arr[7] = {
 int	ConfigParser::getSemanticLine(std::string& line) {
 	this->method_name = "getSemanticLine";
 
-	char	buffer[LINE_BUFF_SIZE];
+	char	buffer[LINE_BUFF];
 
 	line = "";
 
@@ -38,7 +38,7 @@ int	ConfigParser::getSemanticLine(std::string& line) {
 	while (line.length() == 0) {
 		// get line till the end of line
 		do {
-			this->config_file.getline(buffer, LINE_BUFF_SIZE);
+			this->config_file.getline(buffer, LINE_BUFF);
 			if (this->config_file.bad())
 				return this->putError(READ_LINE_ERR);
 			line += buffer;
@@ -61,7 +61,7 @@ int ConfigParser::getIntoBlock(std::string block_name, std::vector<std::string> 
 	this->method_name = "getIntoBlock";
 
 	if (elements.size() == 0)
-		if (this->getLineElements(elements));
+		if (this->getLineElements(elements))
 			return ERROR;
 
 	if (elements.size() > 2)
@@ -208,7 +208,7 @@ int	ConfigParser::serverBlock( \
 	if (this->getIntoBlock("server", line_elements))
 		return ERROR;
 
-	std::vector<unsigned long>			ports;
+	std::vector<unsigned int>			ports;
 	unsigned int						port;
 	std::string							server_name = "localhost";
 	bool								server_name_check = false;
@@ -217,7 +217,7 @@ int	ConfigParser::serverBlock( \
 	unsigned long						client_body_limit = 0;
 	bool								client_body_limit_check = false;
 	std::vector<Location>				locations;
-	std::pair<stat_type, std::string>	return_to = std::make_pair(NULL, "");
+	std::pair<stat_type, std::string>	return_to = std::make_pair("", "");
 
 	std::vector<std::string>	elements;
 	do { // while (elements.size() > 1);
@@ -333,7 +333,7 @@ int	ConfigParser::locationBlock(std::vector<Location>& locations, \
 	Method								methods_allowed = GET; // default method is get
 	bool								method_allowed_check = false; // to check duplicated directives
 	std::map<std::string, std::string>	cgi_infos;
-	std::pair<stat_type, std::string>	return_to = std::make_pair(NULL, "");
+	std::pair<stat_type, std::string>	return_to = std::make_pair("", "");
 
 	// Elements included in one line.
 	if (this->getLineElements(line_elements))
@@ -451,7 +451,7 @@ int	ConfigParser::locationBlock(std::vector<Location>& locations, \
 	return OK;
 }
 
-int		ConfigParser::putError(const char* err_msg, std::string opt = "") {
+int		ConfigParser::putError(const char* err_msg, std::string opt) {
 	std::string	seperator(": ");
 	std::cerr << class_name + seperator + method_name + seperator;
 	if (opt.length())

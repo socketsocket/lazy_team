@@ -4,6 +4,7 @@
 #include <csignal>
 #include <climits>
 
+#define CHUNK_ERR	-22
 #define ERROR -1
 #define OK     0
 
@@ -20,9 +21,9 @@
 #define NAME_DUP_ERR	"Token or name is duplicated."
 #define NO_ENTITY_ERR	"There is no entity."
 
-#define LINE_BUFF_SIZE 1024
-#define	SEND_RECV_SIZE 16384
-#define LOCAL_IO_SIZE 8192
+#define LINE_BUFF 1024
+#define	NETWORK_BUFF 16384
+#define LOCAL_BUFF 8192
 #define MAX_CLIENT 5
 
 #define C100 "100 Continue"
@@ -89,22 +90,23 @@ enum	FdType {
 	kStderrFd
 };
 
+// Request, Response, Resource의 Status.
 enum	Status {
-	kNothing,
-	kHeader,
-	kBody,
-  kReading,
-  kWriting,
-	kFinished,
-  kDisconnect,
-  kReadFail
+	kNothing, // Request
+	kHeader, // Request
+	kBody, // Request
+	kReading,
+	kWriting,
+	kFinished, // Request
+	kDisconnect,
+	kReadFail
 };
 
 //Server가 리턴하는 값들
 enum	ServerStatus {
-	ResourceWriteWaiting,
-	ResourceReadWaiting,
-	ResponseMakingDone,
+	kResourceWriteWaiting,
+	kResourceReadWaiting,
+	kResponseMakingDone,
 };
 
 

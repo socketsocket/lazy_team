@@ -2,6 +2,7 @@
 #define WEBSERV_CLIENT_HPP_
 
 #include "Webserv.hpp"
+#include "ErrorMsgHandler.hpp"
 #include "PortManager.hpp"
 #include "Re3.hpp"
 #include <vector>
@@ -38,7 +39,7 @@ class Client {
 
 		// std::vector<Re3_iter>	recvRequest(std::string& rawRequest);
 		int	recvRequest(std::string rawRequest);
-		int	sendResponse(void);
+		std::string	passResponse();
 };
 
 #endif
