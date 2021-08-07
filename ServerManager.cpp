@@ -27,10 +27,8 @@ int	ServerManager::makeClient(PortManager& port_manager) {
 
 	fcntl(client_fd, F_SETFL, O_NONBLOCK);
 
-	EV_SET(&event_current, client_fd, EVFILT_READ, EV_ADD, 0, 0, NULL);
-	this->event_changes.push_back(event_current);
-	EV_SET(&event_current, client_fd, EVFILT_WRITE, EV_ADD, 0, 0, NULL);
-	this->event_changes.push_back(event_current);
+	this->setEvent(client_fd, EVFILT_READ, EV_ADD);
+	this->setEvent(client_fd, EVFILT_WRITE, EV_ADD);
 
 	if (this->types.size() < client_fd + 1)
 		this->types.resize(client_fd + 1, kBlank);
@@ -45,24 +43,24 @@ int	ServerManager::makeClient(PortManager& port_manager) {
 
 void	ServerManager::checkStdBuffer() {
 	if (this->stdFdSwitch[STDOUT] && !hasMsg(STDOUT)) {
-		changeFdFlag(STDOUT, EVFILT_WRITE, EV_DISABLE);
+		this->setEvent(STDOUT, EVFILT_WRITE, EV_DISABLE);
 		this->stdFdSwitch[STDOUT] = false;
 	}
 	else if (!this->stdFdSwitch[STDOUT] && hasMsg(STDOUT)) {
-		changeFdFlag(STDOUT, EVFILT_WRITE, EV_ENABLE);
+		this->setEvent(STDOUT, EVFILT_WRITE, EV_ENABLE);
 		this->stdFdSwitch[STDOUT] = true;
 	}
 	if (this->stdFdSwitch[STDERR] && !hasMsg(STDERR)) {
-		changeFdFlag(STDERR, EVFILT_WRITE, EV_DISABLE);
+		this->setEvent(STDERR, EVFILT_WRITE, EV_DISABLE);
 		this->stdFdSwitch[STDERR] = false;
 	}
 	else if (!this->stdFdSwitch[STDERR] && hasMsg(STDERR)) {
-		changeFdFlag(STDERR, EVFILT_WRITE, EV_ENABLE);
+		this->setEvent(STDERR, EVFILT_WRITE, EV_ENABLE);
 		this->stdFdSwitch[STDERR] = true;
 	}
 }
 
-void	ServerManager::changeFdFlag(int fd, int filter, int flag) {
+void	ServerManager::setEvent(int fd, int filter, int flag) {
 	EV_SET(&this->event_current, fd, filter, flag, 0, 0, NULL); // set stderr kevent.
 	this->event_changes.push_back(this->event_current);
 }
@@ -96,10 +94,8 @@ int	ServerManager::initServerManager( \
 
 	// get ready to add stderr fd
 	this->kq = kqueue();
-	EV_SET(&this->event_current, STDOUT, EVFILT_WRITE, EV_ADD, 0, 0, NULL); // set stderr kevent.
-	this->event_changes.push_back(this->event_current);
-	EV_SET(&this->event_current, STDERR, EVFILT_WRITE, EV_ADD, 0, 0, NULL); // set stderr kevent.
-	this->event_changes.push_back(this->event_current);
+	this->setEvent(STDOUT, EVFILT_WRITE, EV_ADD);
+	this->setEvent(STDERR, EVFILT_WRITE, EV_ADD);
 	types.resize(STDERR + 1);
 	this->types[STDOUT] = kStdOutErrFd;
 	this->types[STDERR] = kStdOutErrFd;
@@ -152,8 +148,7 @@ int	ServerManager::initServerManager( \
 
 		fcntl(server_socket, F_SETFL, O_NONBLOCK);
 
-		EV_SET(&this->event_current, server_socket, EVFILT_READ, EV_ADD, 0, 0, NULL);
-		this->event_changes.push_back(this->event_current);
+		this->setEvent(server_socket, EVFILT_READ, EV_ADD);
 		putMsg(std::string("Port number: ") + std::to_string((*it).first) + "\n");
 		if (this->types.size() < server_socket)
 			this->types.resize(server_socket + 1, kBlank);
@@ -208,7 +203,7 @@ int	ServerManager::processEvent() {
 					this->clients[this->cur_fd]->recvRequest( \
 						std::string(this->recv_buffer, this->checker));
 				} else if (event_list[i].filter == EVFILT_WRITE) {
-					send(this->cur_fd, this->recv_buffer, this->checker, 0);
+					send(this->cur_fd, this->recv_buffer, this->checker, 0); // ANCHOR for test
 					//
 				}
 				// clients[i].callClient;

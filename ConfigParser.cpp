@@ -47,12 +47,13 @@ int	ConfigParser::getSemanticLine(std::string& line) {
 		do {
 			if (this->config_file.eof())
 				return END_OF_FILE;
+			this->config_file.clear();
 			this->config_file.getline(buffer, LINE_BUFF);
-			++this->line_num;
 			if (this->config_file.bad())
 				return this->putError(READ_LINE_ERR);
 			line += buffer;
 		} while (this->config_file.fail());
+		++this->line_num;
 
 		// Delete comment.
 		size_t sharp_pos = line.find_first_of('#');
@@ -109,7 +110,8 @@ int ConfigParser::getIntoBlock(std::string block_name, std::vector<std::string> 
 
 	// Check if there is only a opening bracket. If it is not block end, error.
 	if (elements.size() == 1) {
-		getLineElements(elements);
+		if (this->getLineElements(elements))
+			return ERROR;
 		if (elements.size() != 1 || elements[0].compare("{"))
 			return this->putError(SEMANTIC_ERR, "Find no opening bracket");
 		this->method_name.pop_back();

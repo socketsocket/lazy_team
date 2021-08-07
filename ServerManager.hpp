@@ -62,7 +62,7 @@ class ServerManager {
 		int		callKevent();
 		int		makeClient(PortManager& port_manager);
 		void	checkStdBuffer();
-		void	changeFdFlag(int fd, int filter, int flag);
+		void	setEvent(int fd, int filter, int flag);
 
 	public:
 		~ServerManager();
