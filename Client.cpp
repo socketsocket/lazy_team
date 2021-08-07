@@ -162,7 +162,7 @@ int	Client::recvRequest(std::string rawRequest) {
 	std::vector<Re3*>	RscClaim(0);
 	do {
 		if (this->re3_deque.back().getReqPtr()->getStatus() == kFinished) {
-			this->port_manager.passRequest(&this->re3_deque.back());
+			this->port_manager.passRequest(&this->re3_deque.back()); // NOTE passRequest의 리턴값을 활용하여 Server에게 Resource 전달해야함.
 			this->re3_deque.push_back(Re3());
 			this->re3_deque.back().setReqPtr(new Request);
 		}
