@@ -21,7 +21,7 @@ endif
 INC_DIR = .
 
 # header files dependencies
-INC_ERRMSGHANDLER = ErrorMsgHandler.hpp
+INC_TERMPRINTER = TermPrinter.hpp
 INC_LOCATION = Location.hpp
 INC_REQUEST = Request.hpp $(INC_LOCATION)
 INC_RESPONSE = Response.hpp
@@ -34,7 +34,7 @@ INC_SERVERMANAGER = ServerManager.hpp $(INC_CLIENT) $(INC_ERRMSGHANDLER)
 INC_CONFIGPARSER = Webserv.hpp $(INC_SERVERMANAGER)
 INC_MAIN = $(INC_CONFIGPARSER)
 
-ErrorMsgHandler.o: %.o : %.cpp $(INC_ERRMSGHANDLER)
+TermPrinter.o: %.o : %.cpp $(INC_ERRMSGHANDLER)
 	$(CC) $(CPPFLAGS) -c $< -o $@
 Location.o: %.o : %.cpp $(INC_LOCATION)
 	$(CC) $(CPPFLAGS) -c $< -o $@
@@ -57,7 +57,7 @@ ServerManager.o: %.o : %.cpp $(INC_SERVERMANAGER)
 ConfigParser.o: %.o : %.cpp $(INC_CONFIGPARSER)
 	$(CC) $(CPPFLAGS) -c $< -o $@
 
-OBJS = ErrorMsgHandler.o \
+OBJS = TermPrinter.o \
 	Location.o \
 	Request.o \
 	Response.o \
@@ -74,20 +74,20 @@ OBJS = ErrorMsgHandler.o \
 	$(CC) $(CPPFLAGS) -c $< -o $@
 
 # if debug_check is not set, just compile.
-ifneq ($(shell echo ${debug_check+x}), x)
+ifeq ($(shell cat .make.tmp), $(DEBUG_CHECK))
 $(NAME): $(OBJS)
 	$(CC) $(CPPFLAGS) $(OBJS) -o $@
-	debug_check=$(DEBUG_CHECK)
+	echo $(DEBUG_CHECK) > .make.tmp
 # if the former make command is same as before, just compile.
 else ifeq ($(shell echo $debug_check), $(DEBUG_CHECK))
 $(NAME): $(OBJS)
 	$(CC) $(CPPFLAGS) $(OBJS) -o $@
-	debug_check=$(DEBUG_CHECK)
+	echo $(DEBUG_CHECK) > .make.tmp
 # if the former make command is equal to the current one, delete files and recompile.
 else
 $(NAME): fclean $(OBJS)
 	$(CC) $(CPPFLAGS) $(OBJS) -o $@
-	debug_check=$(DEBUG_CHECK)
+	echo $(DEBUG_CHECK) > .make.tmp
 endif
 
 debug: all

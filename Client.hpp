@@ -2,7 +2,7 @@
 #define WEBSERV_CLIENT_HPP_
 
 #include "Webserv.hpp"
-#include "ErrorMsgHandler.hpp"
+#include "TermPrinter.hpp"
 #include "PortManager.hpp"
 #include "Re3.hpp"
 #include <vector>

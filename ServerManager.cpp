@@ -7,17 +7,23 @@
 ServerManager::ServerManager()
 	: status(INITIATED) {}
 
+int	ServerManager::callKevent() {
+	int	num_events = kevent(this->kq, &this->event_changes[0], event_changes.size(), event_list, EVENT_SIZE, NULL);
+	event_changes.clear();
+	return num_events;
+}
+
 int	ServerManager::makeClient(PortManager& port_manager) {
 	size_t	client_fd;
 	if ((client_fd = accept(port_manager.getPortNum(), NULL, NULL)) < 0) {
-		putError("accept error");
+		putErr("accept error");
 		return ERROR;
 	}
 
 	if (setsockopt(client_fd, SOL_SOCKET, SO_RCVTIMEO, (char*)&this->recv_timeout, sizeof(unsigned long)) < 0)
-		return putError("setsockopt: recv_timeout set failed");
+		return putErr("setsockopt: recv_timeout set failed");
 	if (setsockopt(client_fd, SOL_SOCKET, SO_SNDTIMEO, (char*)&this->send_timeout, sizeof(unsigned long)) < 0)
-		return putError("setsockopt: send_timeout set failed");
+		return putErr("setsockopt: send_timeout set failed");
 
 	fcntl(client_fd, F_SETFL, O_NONBLOCK);
 
@@ -32,14 +38,35 @@ int	ServerManager::makeClient(PortManager& port_manager) {
 		this->clients.resize(client_fd, NULL);
 	types[client_fd] = kClientFd;
 	clients[client_fd] = new Client(client_fd, port_manager);
+	putMsg(std::string() + "New client connected on port " \
+		+ std::to_string(port_manager.getPortNum()) + '\n');
 	return OK;
 }
 
-int	ServerManager::callKevent() {
-	int	num_events = kevent(this->kq, &this->event_changes[0], event_changes.size(), event_list, EVENT_SIZE, NULL);
-	event_changes.clear();
-	return num_events;
+void	ServerManager::checkStdBuffer() {
+	if (this->stdFdSwitch[STDOUT] && !hasMsg(STDOUT)) {
+		changeFdFlag(STDOUT, EVFILT_WRITE, EV_DISABLE);
+		this->stdFdSwitch[STDOUT] = false;
+	}
+	else if (!this->stdFdSwitch[STDOUT] && hasMsg(STDOUT)) {
+		changeFdFlag(STDOUT, EVFILT_WRITE, EV_ENABLE);
+		this->stdFdSwitch[STDOUT] = true;
+	}
+	if (this->stdFdSwitch[STDERR] && !hasMsg(STDERR)) {
+		changeFdFlag(STDERR, EVFILT_WRITE, EV_DISABLE);
+		this->stdFdSwitch[STDERR] = false;
+	}
+	else if (!this->stdFdSwitch[STDERR] && hasMsg(STDERR)) {
+		changeFdFlag(STDERR, EVFILT_WRITE, EV_ENABLE);
+		this->stdFdSwitch[STDERR] = true;
+	}
 }
+
+void	ServerManager::changeFdFlag(int fd, int filter, int flag) {
+	EV_SET(&this->event_current, fd, filter, flag, 0, 0, NULL); // set stderr kevent.
+	this->event_changes.push_back(this->event_current);
+}
+
 
 //------------------------------------------------------------------------------
 // Public Functions
@@ -69,10 +96,15 @@ int	ServerManager::initServerManager( \
 
 	// get ready to add stderr fd
 	this->kq = kqueue();
+	EV_SET(&this->event_current, STDOUT, EVFILT_WRITE, EV_ADD, 0, 0, NULL); // set stderr kevent.
+	this->event_changes.push_back(this->event_current);
 	EV_SET(&this->event_current, STDERR, EVFILT_WRITE, EV_ADD, 0, 0, NULL); // set stderr kevent.
 	this->event_changes.push_back(this->event_current);
-	types.resize(kStderrFd + 1);
-	this->types[STDERR] = kStderrFd;
+	types.resize(kStdOutErrFd + 1);
+	this->types[STDOUT] = kStdOutErrFd;
+	this->types[STDERR] = kStdOutErrFd;
+	this->stdFdSwitch[STDOUT] = false;
+	this->stdFdSwitch[STDERR] = false;
 
 	std::map<unsigned int, std::vector<Server*> >	server_sorter;
 
@@ -89,28 +121,36 @@ int	ServerManager::initServerManager( \
 	for (std::map<unsigned int, std::vector<Server*> >::iterator it = server_sorter.begin(); \
 		it != server_sorter.end(); ++it) {
 		if ((server_socket = socket(PF_INET, SOCK_STREAM, 0)) == -1) {
-			putError("socket error\n");
+			putErr("socket error\n");
 			this->status = ERROR;
 			break;
 		}
+		if (setsockopt(server_socket, SOL_SOCKET, SO_RCVTIMEO, (char*)&this->recv_timeout, sizeof(unsigned long)) < 0)
+			return putErr("setsockopt: recv_timeout set failed");
+		if (setsockopt(server_socket, SOL_SOCKET, SO_SNDTIMEO, (char*)&this->send_timeout, sizeof(unsigned long)) < 0)
+			return putErr("setsockopt: send_timeout set failed");
 		memset(&server_addr, 0, sizeof(server_addr));
 		server_addr.sin_family = AF_INET;
 		server_addr.sin_addr.s_addr = htonl(INADDR_ANY);
 		server_addr.sin_port = htons((*it).first);
 
 		if (bind(server_socket, (struct sockaddr*)&server_addr, sizeof(server_addr)) == -1) {
-			putError("bind error\n");
+			putErr("bind error\n");
 			this->status = ERROR;
 			break;
 		}
 
 		if (listen(server_socket, MAX_CLIENT) == -1) {
-			putError("listen error\n");
+			putErr("listen error\n");
 			this->status = ERROR;
 			break;
 		}
 
 		fcntl(server_socket, F_SETFL, O_NONBLOCK);
+
+		EV_SET(&this->event_current, server_socket, EVFILT_READ, EV_ADD, 0, 0, NULL);
+		this->event_changes.push_back(this->event_current);
+		// putMsg(std::string("Port number ") + std::to_string((*it).first));
 
 		if (this->types.size() < server_socket)
 			this->types.resize(server_socket + 1, kBlank);
@@ -118,6 +158,7 @@ int	ServerManager::initServerManager( \
 			this->managers.resize(server_socket + 1, NULL);
 		this->managers[server_socket] = new PortManager(it->first, server_socket, (*it).second);
 	}
+	putMsg("Server initialized");
 	return OK;
 }
 
@@ -166,19 +207,26 @@ int	ServerManager::processEvent() {
 				break;
 			}
 			case kResourceFd: {
+				if (event_list[i].filter == EVFILT_READ) {
+				} else if (event_list[i].filter == EVFILT_WRITE) {
+				}
 				// resources[i].readContent;
 				// if (resources[i].status() == done)
 				//	resources[i].callServer();
 				break;
 			}
-			case kStderrFd: {
-				sendError();
+			case kStdOutErrFd: {
+				this->msg = getMsg(this->cur_fd);
+				if (this->msg.length())
+					send(this->cur_fd, this->msg.c_str(), this->msg.length(), 0);
 				break;
 			}
 			default: {
+				this->status = ERROR;
 				return ERROR;
 			}
 		}
 	}
+	this->checkStdBuffer();
 	return OK;
 }

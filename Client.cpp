@@ -50,7 +50,7 @@ int	Client::chunkedParser(Request* request) {
 			break;
 		tmp = this->read_buff.substr(0, len_end);
 		if (tmp.find_first_of("0123456789ABCDEFabcdef") != std::string::npos) {
-			putError("An invalid chunked body received");
+			putErr("An invalid chunked body received");
 			return ERROR; // parsing이 꼬임. ㅈ댐
 		}
 		iss.str(tmp);

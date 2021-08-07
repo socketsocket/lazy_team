@@ -9,6 +9,7 @@
 #define OK     0
 #define END_OF_FILE 26
 
+#define STDOUT 1
 #define STDERR 2
 
 #define BLOCK_END 101
@@ -85,7 +86,7 @@ enum	FdType {
 	kPortFd,
 	kClientFd,
 	kResourceFd,
-	kStderrFd
+	kStdOutErrFd
 };
 
 // Request, Response, Resource의 Status.
