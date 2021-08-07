@@ -71,6 +71,7 @@ int	ServerManager::initServerManager( \
 	this->kq = kqueue();
 	EV_SET(&this->event_current, STDERR, EVFILT_WRITE, EV_ADD, 0, 0, NULL); // set stderr kevent.
 	this->event_changes.push_back(this->event_current);
+	types.resize(kStderrFd + 1);
 	this->types[STDERR] = kStderrFd;
 
 	std::map<unsigned int, std::vector<Server*> >	server_sorter;
@@ -112,9 +113,9 @@ int	ServerManager::initServerManager( \
 		fcntl(server_socket, F_SETFL, O_NONBLOCK);
 
 		if (this->types.size() < server_socket)
-			this->types.resize(server_socket, kBlank);
+			this->types.resize(server_socket + 1, kBlank);
 		if (this->managers.size() < server_socket)
-			this->managers.resize(server_socket, NULL);
+			this->managers.resize(server_socket + 1, NULL);
 		this->managers[server_socket] = new PortManager(it->first, server_socket, (*it).second);
 	}
 	return OK;
