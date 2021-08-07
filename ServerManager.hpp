@@ -38,8 +38,8 @@ class ServerManager {
 		std::vector<Re3*>			Re3s;
 
 // Send_time_out and recv_time_out is determined by configuration file.
-		unsigned long				send_timeout;
-		unsigned long				recv_timeout;
+		struct timeval				send_timeout;
+		struct timeval				recv_timeout;
 
 // These variables are needed for using kqueue
 		int							kq;

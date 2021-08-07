@@ -22,6 +22,7 @@ class PortManager {
 		PortManager(const unsigned int port_num, const int port_fd, const std::vector<Server*> servers);
 		~PortManager();
 		int	getPortNum() const;
+		int	getPortFd() const;
 		int	passRequest(Re3* ptr) const;
 };
 

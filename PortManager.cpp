@@ -25,6 +25,10 @@ int	PortManager::getPortNum() const {
 	return this->port_num;
 }
 
+int	PortManager::getPortFd() const {
+	return this->port_fd;
+}
+
 int	PortManager::passRequest(Re3* ptr) const {
 	Server*	tmp = *this->findServer(ptr->getReqPtr()->getHeaderValue("host"));
 	tmp->makeResponse(ptr);

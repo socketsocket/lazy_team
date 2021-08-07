@@ -22,9 +22,9 @@ std::string	TermPrinter::trimMsg(int fd) {
 	std::string&	msg = (fd == STDERR) ? this->err_msgs : this->out_msgs;
 
 	std::string out_string;
-	if (msg.length() > ERROR_BUFF) {
-		out_string = msg.substr(0, ERROR_BUFF);
-		msg.erase(0, ERROR_BUFF);
+	if (msg.length() > BC_STRING_MAX) {
+		out_string = msg.substr(0, BC_STRING_MAX);
+		msg.erase(0, BC_STRING_MAX);
 	} else {
 		out_string = msg;
 		msg = "";
@@ -33,11 +33,11 @@ std::string	TermPrinter::trimMsg(int fd) {
 }
 
 void	TermPrinter::addMsg(std::string msg) {
-	this->out_msgs + '\n' + msg;
+	this->out_msgs += msg;
 }
 
 void	TermPrinter::addErrMsg(std::string err_msg) {
-	this->err_msgs + '\n' + err_msg;
+	this->err_msgs += err_msg;
 }
 
 bool	hasMsg(int fd) {

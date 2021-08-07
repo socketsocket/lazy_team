@@ -46,9 +46,9 @@ int	main(int argc, char* argv[]) {
 		return ERROR;
 
 	while (true) {
-		if (server_manager.getStatus() != OK)
-			break;
 		server_manager.processEvent();
+		if (server_manager.getStatus() != OK && !hasMsg(STDERR))
+			break;
 	}
 	if (server_manager.getStatus() == ERROR)
 		return ERROR;

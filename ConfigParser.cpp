@@ -186,7 +186,7 @@ int	ConfigParser::httpBlock(ServerManager& server_manager) {
 				iss >> send_timeout;
 				if (iss.fail())
 					return this->putError(SEMANTIC_ERR, "send_timeout");
-				server_manager.setSendTimeOut(send_timeout * 1000);
+				server_manager.setSendTimeOut(send_timeout);
 				send_timeout_check = true;
 				continue;
 			} else if (!line_elements[0].compare("recv_timeout")) {
@@ -196,7 +196,7 @@ int	ConfigParser::httpBlock(ServerManager& server_manager) {
 				iss >> recv_timeout;
 				if (iss.fail())
 					return this->putError(SEMANTIC_ERR, "recv_timeout");
-				server_manager.setRecvTimeOut(recv_timeout * 1000);
+				server_manager.setRecvTimeOut(recv_timeout);
 				recv_timeout_check = true;
 				continue;
 			}

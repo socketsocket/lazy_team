@@ -5,8 +5,6 @@
 #include <sys/socket.h>
 #include <string>
 
-#define ERROR_BUFF 1024
-
 class TermPrinter
 {
 	private:
