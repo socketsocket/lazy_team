@@ -104,6 +104,7 @@ int	ServerManager::initServerManager( \
 
 	std::map<unsigned int, std::vector<Server*> >	server_sorter;
 
+	this->servers.reserve(configs.size());
 	for (size_t i = 0; i < configs.size(); ++i) {
 		this->servers.push_back(configs[i].first);
 		for (size_t j = 0; j < configs[i].second.size(); ++j) {
@@ -200,7 +201,7 @@ int	ServerManager::processEvent() {
 					this->checker = recv(this->cur_fd, this->recv_buffer, NETWORK_BUFF, 0);
 					putMsg(this->recv_buffer); // ANCHOR for test
 					// if (this->checker == ERROR) NOTE need to discuss
-					this->clients[this->cur_fd]->recvRequest( \
+					this->clients[this->cur_fd]->recvRequest(\
 						std::string(this->recv_buffer, this->checker));
 				} else if (event_list[i].filter == EVFILT_WRITE) {
 					send(this->cur_fd, this->recv_buffer, this->checker, 0); // ANCHOR for test
