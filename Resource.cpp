@@ -1,7 +1,7 @@
 #include "Resource.hpp"
 
-Resource::Resource(Status status, int port_fd)
-	: status(status), port_fd(port_fd) {}
+Resource::Resource(Status status)
+	: status(status) {}
 
 Resource::Resource(const Resource &ref)
 	: status(ref.status), resource_fd(ref.resource_fd) {}
@@ -24,10 +24,6 @@ int	Resource::getStatus() const {
 
 int	Resource::getResourceFd() const {
 	return this->resource_fd;
-}
-
-int	Resource::getPortFd() const {
-	return this->port_fd;
 }
 
 const std::string&	Resource::getContent() const {

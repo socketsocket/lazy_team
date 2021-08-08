@@ -41,7 +41,7 @@ class Location {
 		const std::vector<std::string>&			getIndexes() const;
 		const bool&								isAutoIndex() const;
 		const std::map<stat_type, std::string>&	getDefaultErrorPages() const;
-		const std::string						getDefaultErrorPage(stat_type stat);
+		const std::string						getDefaultErrorPage(stat_type stat) const;
 };
 
 #endif

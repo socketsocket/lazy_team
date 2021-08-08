@@ -30,7 +30,7 @@ int	PortManager::getPortFd() const {
 
 ServerStatus	PortManager::passRequest(Re3* ptr) {
 	ptr->setPortId(this->port_fd);
-	ptr->setRscPtr(new Resource(kNothing, this->port_fd));
+	ptr->setRscPtr(new Resource(kNothing));
 	std::string	host_name = ptr->getReqPtr()->getHeaderValue("host");
 	return this->findServer(host_name)->makeResponse(ptr);
 }

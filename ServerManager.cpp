@@ -83,7 +83,7 @@ void	ServerManager::setRe3s(int fd, Re3* re3) {
 void	ServerManager::setAndPassResource(Re3* re3, Status status) {
 	Resource*	resource = re3->getRscPtr();
 	resource->setStatus(status);
-	this->managers[resource->getPortFd()]->passResource(re3);
+	this->managers[re3->getPortId()]->passResource(re3);
 }
 
 int	ServerManager::clientReadEvent() {
