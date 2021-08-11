@@ -86,33 +86,39 @@ enum	FdType {
 	kPortFd,
 	kClientFd,
 	kResourceFd,
-	kStdOutErrFd
+	kStdOutErrFd,
+	kCgiInput,
 };
 
 // Request, Response, Resource의 Status.
 enum	Status {
-	kNothing, // Request
+	kNothing, // Request, Resource
 	kHeader, // Request
 	kBody, // Request
-	kReading,
-	kWriting,
-	kFinished, // Request
+	kReading, // Resource
+	kWriting, // Resource
+	kFinished, // Request, Resource
 	kDisconnect,
-	kReadFail
+	kReadFail, // Resource, Request
+	kWriteFail,
+	kLengthReq,
 };
 
 //Server가 리턴하는 값들
 enum	ServerStatus {
+	kResourceWriteInit,
+	kResourceReadInit,
 	kResourceWriteWaiting,
 	kResourceReadWaiting,
 	kResponseMakingDone,
+	kResponseError,
 };
 
 
 enum	FileType {
 	kFile,
 	kDirectory,
-	kNotFound
+	kNotFound,
 };
 
 #define NOT    0b000

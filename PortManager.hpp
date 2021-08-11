@@ -24,6 +24,7 @@ class PortManager {
 		int	getPortNum() const;
 		int	getPortFd() const;
 		ServerStatus	passRequest(Re3* ptr); // NOTE 얘도 const
+		ServerStatus	passResource(Re3* ptr);
 };
 
 #endif

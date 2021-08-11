@@ -31,13 +31,13 @@ class Client {
 		int	initParser(Request* request);
 		void	putRspIntoBuff(size_t& network_buff_left, std::string& to_be_sent, std::string& data);
 
-
 	public:
 		Client(int client_fd, PortManager& port_manager);
 		Client(const Client& ref);
 		~Client();
 		Client& operator=(const Client& ref);
 
+		int	getClientFd() const;
 		std::vector<std::pair<Re3*, ServerStatus> >	recvRequest(std::string rawRequest);
 		std::string	passResponse();
 };

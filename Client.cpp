@@ -22,9 +22,7 @@ Client::Client(const Client& ref)
 	*this = ref;
 }
 
-Client::~Client() {
-
-}
+Client::~Client() {}
 
 Client& Client::operator=(const Client& ref) {
 	// const clinet_fd, refence port_manager
@@ -41,7 +39,6 @@ int	Client::chunkedParser(Request* request) {
 	size_t		len_end, contents_end;
 	size_t		len = 1;
 	std::istringstream iss;
-
 
 	while (len) {
 		len_end = this->read_buff.find("\r\n");
@@ -136,12 +133,11 @@ int	Client::initParser(Request* request) {
 			return this->chunkedParser(request); // chunked error인 경우에 servermanager까지 전해줘서 연결 닫도록 해야돼요
 		if (request->getHeaderValue("Content-Length") != "")
 			return this->lengthParser(request);
-		if (request->getMethod() == POST) {
-			this->re3_deque.back().getRscPtr()->setStatus(411); // 411 error를 반환해야함.
+		if (request->getMethod() == POST)
+			this->re3_deque.back().getReqPtr()->setStatus(kLengthReq);
+			// this->re3_deque.back().getRscPtr()->setStatus(411); // 411 error를 반환해야함.
 			// response http_status_code 를 바꿔놓을지?
-			this->re3_deque.back().getReqPtr()->setStatus(kFinished);
-		}
-			// can be changed.
+		this->re3_deque.back().getReqPtr()->setStatus(kFinished);
 	}
 	return OK;
 }
@@ -153,12 +149,17 @@ std::vector<std::pair<Re3*, ServerStatus> >	Client::recvRequest(std::string rawR
 	this->read_buff += rawRequest;
 	do {
 		if (this->re3_deque.back().getReqPtr()->getStatus() == kFinished) {
-			tmp = this->port_manager.passRequest(&this->re3_deque.back()); // NOTE passRequest의 리턴값을 활용하여 Server에게 Resource 전달해야함.
-			rsc_Claim.push_back(std::make_pair(re3_deque.back(), tmp));
+			tmp = this->port_manager.passRequest(&this->re3_deque.back());
+			rsc_claim.push_back(std::make_pair(&re3_deque.back(), tmp));
 			this->re3_deque.push_back(Re3());
 			this->re3_deque.back().setReqPtr(new Request);
 		}
-		this->initParser(this->re3_deque.back().getReqPtr());
+		if (ERROR == (this->initParser(this->re3_deque.back().getReqPtr()))) {
+			this->re3_deque.back().getReqPtr()->setStatus(kReadFail);
+			std::vector<std::pair<Re3*, ServerStatus> >	length_read_fail(0);
+			length_read_fail.push_back(std::make_pair(&re3_deque.back(), kResponseError));
+			return length_read_fail;
+		}
 	} while (this->re3_deque.back().getReqPtr()->getStatus() == kFinished);
 	return rsc_claim;
 }
@@ -193,4 +194,9 @@ std::string	Client::passResponse() {
 		}
 	}
 	return to_be_sent;
+}
+
+
+int	Client::getClientFd() const {
+	return this->client_fd;
 }

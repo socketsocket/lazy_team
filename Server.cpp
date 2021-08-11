@@ -11,7 +11,9 @@ ServerStatus Server::makeResponse(Re3* re3) { // NOTE const 붙일 수 있나요
 		return this->makeErrorResponse(re3, curr_location, stat);
 	//리소스 상태는 'empty'/읽는중/읽음완료/에러 네가지로 들어옴
 	//만약 리소스 상태가 == 에러라면
-	if (re3->getRscPtr()->getStatus() == kDisconnect \
+	// 저 request가 411에러면 상태를 kLengthReq로 바꿔 놓을게요. good??
+	if (re3->getRscPtr() == NULL
+	|| re3->getRscPtr()->getStatus() == kDisconnect
 	|| re3->getRscPtr()->getStatus() == kReadFail)
 		return this->makeErrorResponse(re3, curr_location, C500);
 	//만약 리소스 상태가 == 읽는중이라면
@@ -64,9 +66,10 @@ ServerStatus Server::makeErrorResponse(Re3* re3, Location* location, stat_type h
 			length << (int)sb.st_size;
 			headers["Content-Length"] = length.str();
 
-			assert(re3->getRspPtr() == NULL);
-			re3->setRscPtr(new Resource(kReading, fd));
-			return kResourceReadWaiting;
+			assert(re3->getRscPtr()->getStatus() == kNothing);
+			re3->getRscPtr()->setStatus(kReading);
+			re3->getRscPtr()->setResourceFd(fd);
+			return kResourceReadInit;
 		}
 	}
 	//디폴트 에러페이지가 없으면 새로만듦
@@ -93,7 +96,7 @@ ServerStatus Server::makeGETResponse(Re3* re3, Location* curr_location, std::str
 	headers["Server"] = "Passive Server";
 
 	//만약 리소스 상태가 == Nothing
-	if (resource == NULL) {
+	if (resource->getStatus() == kNothing) {
 		//경로가 디렉토리면
 		if (checkPath(resource_path) == kDirectory) {
 			if (resource_path[resource_path.length() - 1] != '/')
@@ -137,10 +140,12 @@ ServerStatus Server::makeGETResponse(Re3* re3, Location* curr_location, std::str
 			return this->makeErrorResponse(re3, curr_location, C500);
 		}
 		//Re3에 resource fd 추가
-		if (resource == NULL)
-			re3->setRscPtr(new Resource(kReading, fd));
-
-		return kResourceReadWaiting;
+		if (resource->getStatus() == kNothing)
+		{
+			resource->setStatus(kReading);
+			resource->setResourceFd(fd);
+		}
+		return kResourceReadInit;
 	}
 	//만약 리소스 상태가 == Finished
 	else if (re3->getRscPtr()->getStatus() == kFinished) {
@@ -166,25 +171,23 @@ ServerStatus Server::makePOSTResponse(Re3* re3, Location* curr_location, std::st
 	std::map<std::string, std::string> headers;
 	Resource* resource = re3->getRscPtr();
 
-	if (resource == NULL) {
+	if (resource->getStatus() == kNothing) {
 		headers["Content-Location"] = resource_path.substr(1);
 		switch (checkPath(resource_path)) {
 			case kNotFound : {
 				if ((fd = open(resource_path.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644)) < 0)
 					return this->makeErrorResponse(re3, curr_location, C500);
-				if (resource == NULL)
-					re3->setRscPtr(new Resource(kWriting, fd));
-
-				return kResourceWriteWaiting;
+				resource->setStatus(kWriting);
+				resource->setResourceFd(fd);
+				return kResourceWriteInit;
 			}
 			case kFile :
 			{
 				if ((fd = open(resource_path.c_str(), O_WRONLY | O_APPEND )) < 0)
 					return this->makeErrorResponse(re3, curr_location, C500);
-				if (resource == NULL)
-					re3->setRscPtr(new Resource(kWriting, fd));
-
-				return kResourceWriteWaiting;
+				resource->setStatus(kWriting);
+				resource->setResourceFd(fd);
+				return kResourceWriteInit;
 			}
 			default :
 				return this->makeErrorResponse(re3, curr_location, C403);

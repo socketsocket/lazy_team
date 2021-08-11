@@ -1,9 +1,10 @@
 #ifndef WEBSERV_RESOURCE_HPP_
 #define WEBSERV_RESOURCE_HPP_
 
-#include "Webserv.hpp"
 #include <string>
 #include <iostream>
+#include <unistd.h>
+#include "Webserv.hpp"
 
 
 // open한 uri의 fd와 그 상태를 백업하고, 읽으며 읽은 내용을 저장하기 위한 구조체
@@ -14,20 +15,25 @@
 struct Resource {
 	private:
 		int				status;
-		int				resource_fd;
+		int				resource_fd; // status를 보고 소멸자에서 close;
+		int				port_fd;
 		std::string		content;
 		Resource();
 
 	public:
-		Resource(int status, int resource_fd);
+		Resource(Status status, int port_fd);
 		Resource(const Resource &ref);
 		~Resource();
 		Resource& operator=(const Resource &ref);
 
-		const int&				getStatus() const;
-		const int&				getResourceFd() const;
+		int						getStatus() const;
+		int						getResourceFd() const;
+		int						getPortFd() const;
 		const std::string&		getContent() const;
-		void setStatus(int status);
+		void		addContent(const std::string& str);
+		std::string	getContent(size_t size);
+		void		setStatus(int status);
+		void		setResourceFd(int fd);
 };
 
 #endif

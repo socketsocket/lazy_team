@@ -35,7 +35,7 @@ class ServerManager {
 		std::vector<FdType>			types;
 		std::vector<PortManager*>	managers;
 		std::vector<Client*>		clients;
-		std::vector<Re3*>			Re3s;
+		std::vector<Re3*>			re3s;
 
 // Send_time_out and recv_time_out is determined by configuration file.
 		struct timeval				send_timeout;
@@ -53,6 +53,7 @@ class ServerManager {
 		int							checker;
 		std::string					msg;
 		char						recv_buffer[NETWORK_BUFF];
+		char						read_buffer[LOCAL_BUFF];
 
 		ServerManager();
 // copy constructor, and assignation operator are disabled.
@@ -62,7 +63,16 @@ class ServerManager {
 		int		callKevent();
 		int		makeClient(PortManager& port_manager);
 		void	checkStdBuffer();
+		std::string	closeClient(int fd);
 		void	setEvent(int fd, int filter, int flag);
+		void	setClients(int fd, Client* client);
+		void	setRe3s(int fd, Re3* re3);
+		void	setAndPassResource(Re3* re3, Status status);
+		int		clientReadEvent();
+		int		clientWriteEvent();
+		int		resourceReadEvent();
+		int		resourceWriteEvent();
+
 
 	public:
 		~ServerManager();
