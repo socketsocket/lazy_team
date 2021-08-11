@@ -29,7 +29,8 @@ class Client {
 		int	lengthParser(Request* request);
 		int	headerParser(Request* request);
 		int	initParser(Request* request);
-		// std::vector<Re3_iter>	rscToEnroll(void);
+		void	putRspIntoBuff(size_t& network_buff_left, std::string& to_be_sent, std::string& data);
+
 
 	public:
 		Client(int client_fd, PortManager& port_manager);
@@ -37,7 +38,6 @@ class Client {
 		~Client();
 		Client& operator=(const Client& ref);
 
-		// std::vector<Re3_iter>	recvRequest(std::string& rawRequest);
 		std::vector<std::pair<Re3*, ServerStatus> >	recvRequest(std::string rawRequest);
 		std::string	passResponse();
 };
