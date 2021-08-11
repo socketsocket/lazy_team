@@ -146,30 +146,21 @@ int	Client::initParser(Request* request) {
 	return OK;
 }
 
-// std::vector<Re3*>	Client::rscToEnroll(void) {
-// 	std::vector<Re3*> ret;
-// 	for (Re3* it = re3_deque.begin(); it != re3_deque.end(); ++it) {
-// 		//to be enroll
-// 		if (it->getRscPtr()->getStatus() == to_be_enroll)
-// 			ret.push_back(it);
-// 	}
-// 	return ret;
-// }
+std::vector<std::pair<Re3*, ServerStatus> >	Client::recvRequest(std::string rawRequest) {
+	std::vector<std::pair<Re3*, ServerStatus> >	rsc_Claim(0);
+	ServerStatus	tmp;
 
-// std::vector<Re3*>	Client::recvRequest(std::string& rawRequest) {
-int	Client::recvRequest(std::string rawRequest) {
 	this->read_buff += rawRequest;
-	std::vector<Re3*>	RscClaim(0);
 	do {
 		if (this->re3_deque.back().getReqPtr()->getStatus() == kFinished) {
-			this->port_manager.passRequest(&this->re3_deque.back()); // NOTE passRequest의 리턴값을 활용하여 Server에게 Resource 전달해야함.
+			tmp = this->port_manager.passRequest(&this->re3_deque.back()); // NOTE passRequest의 리턴값을 활용하여 Server에게 Resource 전달해야함.
+			rsc_Claim.push_back(std::make_pair(re3_deque.back(), tmp));
 			this->re3_deque.push_back(Re3());
 			this->re3_deque.back().setReqPtr(new Request);
 		}
 		this->initParser(this->re3_deque.back().getReqPtr());
 	} while (this->re3_deque.back().getReqPtr()->getStatus() == kFinished);
-	// return this->rscToEnroll();
-	return OK;
+	return rsc_Claim;
 }
 
 std::string	Client::passResponse() {
