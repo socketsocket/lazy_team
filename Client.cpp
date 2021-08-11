@@ -147,7 +147,7 @@ int	Client::initParser(Request* request) {
 }
 
 std::vector<std::pair<Re3*, ServerStatus> >	Client::recvRequest(std::string rawRequest) {
-	std::vector<std::pair<Re3*, ServerStatus> >	rsc_Claim(0);
+	std::vector<std::pair<Re3*, ServerStatus> >	rsc_claim(0);
 	ServerStatus	tmp;
 
 	this->read_buff += rawRequest;
@@ -160,7 +160,7 @@ std::vector<std::pair<Re3*, ServerStatus> >	Client::recvRequest(std::string rawR
 		}
 		this->initParser(this->re3_deque.back().getReqPtr());
 	} while (this->re3_deque.back().getReqPtr()->getStatus() == kFinished);
-	return rsc_Claim;
+	return rsc_claim;
 }
 
 std::string	Client::passResponse() {
