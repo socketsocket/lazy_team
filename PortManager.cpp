@@ -12,22 +12,24 @@ PortManager::PortManager(
 
 PortManager::~PortManager() {}
 
-std::vector<Server*>::const_iterator PortManager::findServer(const std::string& host_name) const {
+Server* PortManager::findServer(const std::string& host_name) {
 	for (std::vector<Server*>::const_iterator serv_it = servers.begin(); \
 	serv_it < servers.end(); ++serv_it) {
 		if (host_name == (*serv_it)->getServerName())
-			return serv_it;
+			return *serv_it;
 	}
-	return servers.begin();
+	return *servers.begin();
 }
 
 int	PortManager::getPortNum() const {
 	return this->port_num;
 }
 
-int	PortManager::passRequest(Re3* ptr) const {
-	Server*	tmp = *this->findServer(ptr->getReqPtr()->getHeaderValue("host"));
-	tmp->makeResponse(ptr);
-	// FIXME makeResponse의 리턴값 이용하지 않음.
-	return OK;
+int	PortManager::getPortFd() const {
+	return this->port_fd;
+}
+
+ServerStatus	PortManager::passRequest(Re3* ptr) {
+	std::string	host_name = ptr->getReqPtr()->getHeaderValue("host");
+	return this->findServer(host_name)->makeResponse(ptr);
 }

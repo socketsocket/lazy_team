@@ -16,7 +16,7 @@
 #include <map>
 
 #include "Webserv.hpp"
-#include "ErrorMsgHandler.hpp"
+#include "TermPrinter.hpp"
 #include "PortManager.hpp"
 #include "Server.hpp"
 #include "Client.hpp"
@@ -38,8 +38,8 @@ class ServerManager {
 		std::vector<Re3*>			Re3s;
 
 // Send_time_out and recv_time_out is determined by configuration file.
-		unsigned long				send_timeout;
-		unsigned long				recv_timeout;
+		struct timeval				send_timeout;
+		struct timeval				recv_timeout;
 
 // These variables are needed for using kqueue
 		int							kq;
@@ -47,9 +47,11 @@ class ServerManager {
 		struct kevent				event_list[EVENT_SIZE];
 		struct kevent				event_current;
 
+		bool						stdFdSwitch[3];
 		int							kevent_num;
 		int							cur_fd;
 		int							checker;
+		std::string					msg;
 		char						recv_buffer[NETWORK_BUFF];
 
 		ServerManager();
@@ -57,8 +59,10 @@ class ServerManager {
 		ServerManager(const ServerManager& ref);
 		ServerManager&	operator=(const ServerManager& ref);
 
-		int	callKevent();
-		int	makeClient(PortManager& port_manager);
+		int		callKevent();
+		int		makeClient(PortManager& port_manager);
+		void	checkStdBuffer();
+		void	setEvent(int fd, int filter, int flag);
 
 	public:
 		~ServerManager();

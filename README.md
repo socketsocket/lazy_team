@@ -49,8 +49,8 @@ std::cerr << "ConfigParser: " << "getIntoBlock: " << NAME_MATCH_ERR << std::endl
 	- ConfigParser
 		- Location 생성
 		- Server 생성
-		- config파일의 path는 반드시 /로 끝날 것
-	- ErrorMsgHandler
+		- config파일의 path는 반드시 /로 끝날 것 // NOTE 적용 안 됨
+	- TermPrinter
 	- Re3
 
 
