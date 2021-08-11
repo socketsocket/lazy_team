@@ -8,8 +8,11 @@ ServerManager::ServerManager()
 	: status(INITIATED) {}
 
 int	ServerManager::makeClient(PortManager& port_manager) {
-	size_t	client_fd;
-	if ((client_fd = accept(port_manager.getPortNum(), NULL, NULL)) < 0) {
+	int					client_fd;
+	struct sockaddr_in	client;
+	size_t				size = sizeof(client);;
+
+	if ((client_fd = accept(port_manager.getPortNum(), (struct sockaddr*)&client, (socklen_t*)&size)) < 0) {
 		putError("accept error");
 		return ERROR;
 	}

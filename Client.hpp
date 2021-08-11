@@ -16,13 +16,15 @@
 
 class Client {
 	private:
-		int				status;
-		const int		client_fd;
-		PortManager&	port_manager;
-		unsigned long	last_request_time;
-		unsigned long	last_response_time;
-		std::string				read_buff;
-		std::deque<Re3>			re3_deque;
+		int							status;
+		const int					client_fd;
+//		const struct sockaddr_in	client_addr; for extracting IP address
+
+		PortManager&				port_manager;
+		unsigned long				last_request_time;
+		unsigned long				last_response_time;
+		std::string					read_buff;
+		std::deque<Re3>				re3_deque;
 
 		int	reqLineParser(Request* request);
 		int	chunkedParser(Request* request);
