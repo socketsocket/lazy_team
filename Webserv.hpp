@@ -4,9 +4,12 @@
 #include <csignal>
 #include <climits>
 
+#define CHUNK_ERR -22
 #define ERROR -1
 #define OK     0
+#define END_OF_FILE 26
 
+#define STDOUT 1
 #define STDERR 2
 
 #define BLOCK_END 101
@@ -20,9 +23,9 @@
 #define NAME_DUP_ERR	"Token or name is duplicated."
 #define NO_ENTITY_ERR	"There is no entity."
 
-#define LINE_BUFF_SIZE 1024
-#define	SEND_RECV_SIZE 16384
-#define LOCAL_IO_SIZE 8192
+#define LINE_BUFF 1024
+#define	NETWORK_BUFF 16384
+#define LOCAL_BUFF 8192
 #define MAX_CLIENT 5
 
 #define C100 "100 Continue"
@@ -68,16 +71,13 @@
 
 typedef const char*	stat_type;
 
-static stat_type	status_code_arr[] = {C100, C101, C200, C201, C202,
-	C203, C204, C205, C206, C300, C301, C302, C303, C304, C305, C307, C400,
-	C401, C402, C403, C404, C405, C406, C407, C408, C409, C410, C411, C412,
-	C413, C414, C415, C416, C417, C500, C501, C502, C503, C504, C505};
+extern stat_type	stat_code_arr[40];
 
 #define DEFAULT_ROUTE "default.config"
 
 #include <map>
 #include <string>
-static std::map<std::string, stat_type>	status_code_map;
+extern std::map<std::string, stat_type>	stat_code_map;
 
 #define RE3 triplet<Request, Response, Resource>
 
@@ -86,25 +86,26 @@ enum	FdType {
 	kPortFd,
 	kClientFd,
 	kResourceFd,
-	kStderrFd
+	kStdOutErrFd
 };
 
+// Request, Response, Resource의 Status.
 enum	Status {
-	kNothing,
-	kHeader,
-	kBody,
-  kReading,
-  kWriting,
-	kFinished,
-  kDisconnect,
-  kReadFail
+	kNothing, // Request
+	kHeader, // Request
+	kBody, // Request
+	kReading,
+	kWriting,
+	kFinished, // Request
+	kDisconnect,
+	kReadFail
 };
 
 //Server가 리턴하는 값들
 enum	ServerStatus {
-	ResourceWriteWaiting,
-	ResourceReadWaiting,
-	ResponseMakingDone,
+	kResourceWriteWaiting,
+	kResourceReadWaiting,
+	kResponseMakingDone,
 };
 
 
@@ -122,7 +123,7 @@ enum	FileType {
 
 typedef	unsigned char	Method;
 
-void	initStatusCodeMap();
+void	initStatCodeMap();
 void	sigIntHandler(int param);
 
 

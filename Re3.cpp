@@ -18,6 +18,7 @@ int	Re3::setReqPtr(Request* req) {
 	// 에러메시지 출력
 		return ERROR;
 	this->req_ptr = req;
+	return OK;
 }
 
 int	Re3::setRspPtr(Response* rsp){
@@ -25,6 +26,7 @@ int	Re3::setRspPtr(Response* rsp){
 	// 에러메시지 출력
 		return ERROR;
 	this->rsp_ptr = rsp;
+	return OK;
 }
 
 int	Re3::setRscPtr(Resource* rsc){
@@ -32,24 +34,25 @@ int	Re3::setRscPtr(Resource* rsc){
 	// 에러메시지 출력
 		return ERROR;
 	this->rsc_ptr = rsc;
+	return OK;
 }
 
 Request*	Re3::getReqPtr() {
-	return req_ptr;
+	return this->req_ptr;
 }
 
 Response*	Re3::getRspPtr() {
-	return rsp_ptr;
+	return this->rsp_ptr;
 }
 
 Resource*	Re3::getRscPtr() {
-	return rsc_ptr;
+	return this->rsc_ptr;
 }
 
 int	Re3::getClientId() {
-	return client_fd;
+	return this->client_id;
 }
 
 int	Re3::getPortId() {
-	return port_manager_fd;
+	return this->port_manager_id;
 }

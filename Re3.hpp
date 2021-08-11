@@ -13,7 +13,7 @@ class Re3
 		Response*	rsp_ptr;
 		Resource*	rsc_ptr;
 		int			client_id;
-		int			port_manager_fd;
+		int			port_manager_id;
 
 	public:
 		Re3();
@@ -31,7 +31,5 @@ class Re3
 		int	getClientId();
 		int	getPortId();
 };
-
-typedef std::deque<Re3>::iterator	Re3Iter;
 
 #endif

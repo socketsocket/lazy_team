@@ -1,6 +1,8 @@
 #ifndef WEBSERV_CONFIGPARSER_HPP
 #define WEBSERV_CONFIGPARSER_HPP
 
+
+#include <sstream>
 #include <fstream>
 #include <iostream>
 #include <set>
@@ -42,8 +44,9 @@ class ConfigParser {
 		std::ifstream				config_file;
 
 		// variables for error_message;
-		std::string				class_name;
-		std::string				method_name;
+		size_t						line_num;
+		std::string					class_name;
+		std::vector<std::string>	method_name;
 
 		int		getSemanticLine(std::string& line);
 		int		getIntoBlock(std::string block_name, \
@@ -57,7 +60,7 @@ class ConfigParser {
 		int		locationBlock(std::vector<Location>& location, \
 			std::vector<std::string>& line_elements);
 
-		int		putError(const char* err_msg, std::string opt);
+		int		putError(const char* err_msg, std::string opt = "");
 
 	public:
 		ConfigParser(std::string config_path);
