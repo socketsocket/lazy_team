@@ -1,6 +1,12 @@
 #include "Server.hpp"
 
+<<<<<<< HEAD
 ServerStatus Server::makeResponse(Re3* re3) const {
+=======
+std::map<std::string, std::string>	Server::mime_types;
+
+ServerStatus Server::makeResponse(Re3* re3) const { // NOTE const 붙일 수 있나요? 가능하면 붙여주세요.
+>>>>>>> 2a243b0 (PortManager functions are now const)
 	Request *request = re3->getReqPtr();
 
 	const Location* curr_location = this->currLocation(request->getUri());
