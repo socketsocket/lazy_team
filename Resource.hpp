@@ -15,6 +15,7 @@
 struct Resource {
 	private:
 		int				status;
+		int				client_fd;
 		int				resource_fd; // status를 보고 소멸자에서 close;
 		int				port_fd;
 		std::string		content;

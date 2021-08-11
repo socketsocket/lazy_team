@@ -7,7 +7,7 @@ Client::Client(int client_fd, PortManager& port_manager)
 	last_request_time(0),
 	last_response_time(0),
 	read_buff("") {
-	this->re3_deque.push_back(Re3());
+	this->re3_deque.push_back(Re3(client_fd));
 	this->re3_deque.back().setReqPtr(new Request);
 }
 
@@ -151,7 +151,7 @@ std::vector<std::pair<Re3*, ServerStatus> >	Client::recvRequest(std::string rawR
 		if (this->re3_deque.back().getReqPtr()->getStatus() == kFinished) {
 			tmp = this->port_manager.passRequest(&this->re3_deque.back());
 			rsc_claim.push_back(std::make_pair(&re3_deque.back(), tmp));
-			this->re3_deque.push_back(Re3());
+			this->re3_deque.push_back(Re3(this->client_fd));
 			this->re3_deque.back().setReqPtr(new Request);
 		}
 		if (ERROR == (this->initParser(this->re3_deque.back().getReqPtr()))) {

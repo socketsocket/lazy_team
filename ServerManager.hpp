@@ -84,7 +84,7 @@ class ServerManager {
 		void					setRecvTimeOut(unsigned long recv_timeout);
 		int						processEvent();
 		int						initServerManager( \
-			const std::vector<std::pair<Server, std::vector<unsigned int> > > configs);
+		const std::vector<std::pair<Server, std::vector<unsigned int> > > configs);
 };
 
 #endif

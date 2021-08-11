@@ -16,18 +16,18 @@ int	ServerManager::callKevent() {
 int	ServerManager::makeClient(PortManager& port_manager) {
 	size_t	client_fd;
 	if ((client_fd = accept(port_manager.getPortFd(), NULL, NULL)) < 0) {
-		putErr("accept error");
+		putErr("accept error\n");
 		return ERROR;
 	}
 	if (setsockopt(client_fd, SOL_SOCKET, SO_RCVTIMEO, (void*)&this->recv_timeout, sizeof(struct timeval)) < 0)
-		return putErr("setsockopt: recv_timeout set failed");
+		return putErr("setsockopt: recv_timeout set failed\n");
 	if (setsockopt(client_fd, SOL_SOCKET, SO_SNDTIMEO, (void*)&this->send_timeout, sizeof(struct timeval)) < 0)
-		return putErr("setsockopt: send_timeout set failed");
+		return putErr("setsockopt: send_timeout set failed\n");
 
 	fcntl(client_fd, F_SETFL, O_NONBLOCK);
 
 	this->setEvent(client_fd, EVFILT_READ, EV_ADD);
-	this->setEvent(client_fd, EVFILT_WRITE, EV_ADD);
+	this->setEvent(client_fd, EVFILT_WRITE, EV_ADD | EV_DISABLE);
 
 	if (this->types.size() < client_fd + 1)
 		this->types.resize(client_fd + 1, kBlank);
@@ -44,16 +44,14 @@ void	ServerManager::checkStdBuffer() {
 	if (this->stdFdSwitch[STDOUT] && !hasMsg(STDOUT)) {
 		this->setEvent(STDOUT, EVFILT_WRITE, EV_DISABLE);
 		this->stdFdSwitch[STDOUT] = false;
-	}
-	else if (!this->stdFdSwitch[STDOUT] && hasMsg(STDOUT)) {
+	} else if (!this->stdFdSwitch[STDOUT] && hasMsg(STDOUT)) {
 		this->setEvent(STDOUT, EVFILT_WRITE, EV_ENABLE);
 		this->stdFdSwitch[STDOUT] = true;
 	}
 	if (this->stdFdSwitch[STDERR] && !hasMsg(STDERR)) {
 		this->setEvent(STDERR, EVFILT_WRITE, EV_DISABLE);
 		this->stdFdSwitch[STDERR] = false;
-	}
-	else if (!this->stdFdSwitch[STDERR] && hasMsg(STDERR)) {
+	} else if (!this->stdFdSwitch[STDERR] && hasMsg(STDERR)) {
 		this->setEvent(STDERR, EVFILT_WRITE, EV_ENABLE);
 		this->stdFdSwitch[STDERR] = true;
 	}
@@ -98,7 +96,7 @@ int	ServerManager::clientReadEvent() {
 		std::string(this->recv_buffer, this->checker));
 	for (size_t i = 0; i < resource_status.size(); ++i) {
 		Re3* re3 = resource_status[i].first;
-		if(re3->getReqPtr()->getStatus() == kReadFail) {
+		if (re3->getReqPtr()->getStatus() == kReadFail) {
 			close(this->clients[this->cur_fd]->getClientFd());
 			delete clients[this->cur_fd];
 			break;
@@ -119,14 +117,18 @@ int	ServerManager::clientReadEvent() {
 
 int	ServerManager::clientWriteEvent() {
 	std::string	str = clients[this->cur_fd]->passResponse();
-	if (str.length() == 0)
+	if (str.length() < NETWORK_BUFF) {
+		this->setEvent(this->cur_fd, EVFILT_WRITE, EV_DISABLE);
 		return OK;
+	}
 
 	this->checker = send(this->cur_fd, str.c_str(), str.length(), 0);
 	if (this->checker == ERROR) {
+		this->setEvent(this->cur_fd, EVFILT_WRITE, EV_DISABLE);
 		return ERROR;
 	}
 	if (this->checker < static_cast<int>(str.length())) {
+		this->setEvent(this->cur_fd, EVFILT_WRITE, EV_DISABLE);
 		return ERROR;
 	}
 	return OK;
@@ -136,15 +138,20 @@ int	ServerManager::resourceReadEvent() {
 	Re3*		re3 = this->re3s[this->cur_fd];
 	Resource*	resource = re3->getRscPtr();
 	this->checker = read(this->cur_fd, this->read_buffer, LOCAL_BUFF);
+
+	// error check
 	if (this->checker < 0) {
-		putErr("Read resource failed");
+		putErr("Read resource failed\n");
 		this->setAndPassResource(re3, kReadFail);
+		this->setEvent(re3->getClientId(), EVFILT_WRITE, EV_ENABLE);
 		return ERROR;
 	}
 
+	// read done.
 	if (this->checker < LOCAL_BUFF) {
 		resource->addContent(std::string(this->read_buffer, this->checker));
 		this->setAndPassResource(re3, kFinished);
+		this->setEvent(re3->getClientId(), EVFILT_WRITE, EV_ENABLE);
 	} else { // this->checker == LOCAL_BUFF
 		resource->addContent(std::string(this->read_buffer, LOCAL_BUFF));
 	}
@@ -156,22 +163,32 @@ int	ServerManager::resourceWriteEvent() {
 	Resource*	resource = re3->getRscPtr();
 	std::string	write_str = resource->getContent(LOCAL_BUFF);
 
-	if (write_str.length() == 0)
+	if (write_str.length() == 0) {
 		this->setAndPassResource(re3, kFinished);
-
+		this->setEvent(re3->getClientId(), EVFILT_WRITE, EV_ENABLE);
+	}
 	this->checker = write(this->cur_fd, write_str.c_str(), write_str.length());
+
 	if (this->checker < 0) {
-		putErr("Write resource failed");
+		putErr("Write resource failed\n");
 		this->setAndPassResource(re3, kWriteFail);
+		this->setEvent(re3->getClientId(), EVFILT_WRITE, EV_ENABLE);
 		return ERROR;
 	}
-	if (this->checker < static_cast<int>(write_str.length())) {
-		putErr("Write resource not finished");
+
+	// nothing left in resource
+	if (write_str.length() < LOCAL_BUFF) {
+		// error
+		if (this->checker < static_cast<int>(write_str.length())) {
+			putErr("Write resource not finished\n");
+			this->setAndPassResource(re3, kWriteFail);
+			this->setEvent(re3->getClientId(), EVFILT_WRITE, EV_ENABLE);
+			return ERROR;
+		}
+		// No error
 		this->setAndPassResource(re3, kFinished);
-		return ERROR;
+			this->setEvent(re3->getClientId(), EVFILT_WRITE, EV_ENABLE);
 	}
-	// No error
-	this->setAndPassResource(re3, kFinished);
 	return OK;
 }
 
@@ -208,8 +225,8 @@ int	ServerManager::initServerManager( \
 	types.resize(STDERR + 1);
 	this->types[STDOUT] = kStdOutErrFd;
 	this->types[STDERR] = kStdOutErrFd;
-	this->stdFdSwitch[STDOUT] = false;
-	this->stdFdSwitch[STDERR] = false;
+	this->stdFdSwitch[STDOUT] = true;
+	this->stdFdSwitch[STDERR] = true;
 
 	std::map<unsigned int, std::vector<Server*> >	server_sorter;
 
@@ -233,11 +250,11 @@ int	ServerManager::initServerManager( \
 		}
 		if (setsockopt(server_socket, SOL_SOCKET, SO_RCVTIMEO, (void*)&this->recv_timeout, sizeof(struct timeval)) < 0) {
 			this->status = ERROR;
-			return putErr("setsockopt: recv_timeout set failed");
+			return putErr("setsockopt: recv_timeout set failed\n");
 		}
 		if (setsockopt(server_socket, SOL_SOCKET, SO_SNDTIMEO, (void*)&this->send_timeout, sizeof(struct timeval)) < 0) {
 			this->status = ERROR;
-			return putErr("setsockopt: send_timeout set failed");
+			return putErr("setsockopt: send_timeout set failed\n");
 		}
 		memset(&server_addr, 0, sizeof(server_addr));
 		server_addr.sin_family = AF_INET;
@@ -303,7 +320,7 @@ int	ServerManager::processEvent() {
 		if (this->event_list[i].flags & EV_ERROR) {
 			switch (this->types[this->cur_fd]) {
 				case kPortFd: {
-					putErr("Server socket error");
+					putErr("Server socket error\n");
 					close(this->cur_fd);
 					delete this->managers[this->cur_fd];
 					this->managers[this->cur_fd] = NULL;
@@ -311,7 +328,7 @@ int	ServerManager::processEvent() {
 					break;
 				}
 				case kClientFd: {
-					putErr("Client socket error");
+					putErr("Client socket error\n");
 					close(this->cur_fd);
 					delete this->clients[this->cur_fd];
 					this->clients[this->cur_fd] = NULL;
@@ -319,7 +336,7 @@ int	ServerManager::processEvent() {
 					break;
 				}
 				case kResourceFd: {
-					putErr("Resource error");
+					putErr("Resource error\n");
 					close(this->cur_fd);
 					if (this->event_list[i].filter == EVFILT_WRITE) {
 						this->re3s[this->cur_fd]->getRscPtr()->setStatus(kWriteFail);
@@ -338,7 +355,7 @@ int	ServerManager::processEvent() {
 		switch (this->types[this->cur_fd]) {
 			case kPortFd: {
 				if (this->makeClient(*this->managers[this->cur_fd]) == ERROR) {
-					putErr("Recv error");
+					putErr("Recv error\n");
 					close(this->cur_fd);
 					delete this->clients[this->cur_fd];
 					this->re3s[this->cur_fd] = NULL;
@@ -347,16 +364,24 @@ int	ServerManager::processEvent() {
 				break;
 			}
 			case kClientFd: {
+				if (event_list[i].flags & EV_EOF) {
+					putMsg("Client closed connection\n");
+					close(this->cur_fd);
+					delete this->clients[this->cur_fd];
+					this->clients[this->cur_fd] = NULL;
+					this->types[this->cur_fd] = kBlank;
+					continue;
+				}
 				if (event_list[i].filter == EVFILT_READ) {
 					if (this->clientReadEvent() == ERROR) {
-						putErr("Client read error");
+						putErr("Client read error\n");
 						delete this->clients[this->cur_fd];
 						this->clients[this->cur_fd] = NULL;
 						this->types[this->cur_fd] = kBlank;
 					}
 				} else if (event_list[i].filter == EVFILT_WRITE) {
 					if (this->clientWriteEvent() == ERROR) {
-						putErr("Client write error");
+						putErr("Client write error\n");
 						delete this->clients[this->cur_fd];
 						this->clients[this->cur_fd] = NULL;
 						this->types[this->cur_fd] = kBlank;
