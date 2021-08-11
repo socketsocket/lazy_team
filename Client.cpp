@@ -163,6 +163,18 @@ std::vector<std::pair<Re3*, ServerStatus> >	Client::recvRequest(std::string rawR
 	return rsc_claim;
 }
 
+void Client::putRspIntoBuff(size_t& network_buff_left, std::string& to_be_sent, std::string& data) {
+	if (network_buff_left >= data.size()) {
+		network_buff_left -= data.size();
+		to_be_sent += data;
+		data.erase(0);
+	} else {
+		to_be_sent += data.substr(0, network_buff_left);
+		data.erase(0, network_buff_left);
+		network_buff_left = 0;
+	}
+}
+
 std::string	Client::passResponse() {
 	size_t	network_buff_left = NETWORK_BUFF;
 	std::string to_be_sent;
@@ -173,25 +185,9 @@ std::string	Client::passResponse() {
 		response = ptr->getRspPtr();
 		response->makeHead();
 		if (response->getHead().size() > 0) {
-			if (network_buff_left >= response->getHead().size()) {
-				network_buff_left -= response->getHead().size();
-				to_be_sent += response->getHead();
-				response->getHead().erase(0);
-			} else {
-				to_be_sent += response->getHead().substr(0, network_buff_left);
-				response->getHead().erase(0, network_buff_left);
-				network_buff_left = 0;
-			}
+			this->putRspIntoBuff(network_buff_left, to_be_sent, response->getHead());
 		} else if (response->getBody().size() > 0) {
-			if (network_buff_left >= response->getBody().size()) {
-				network_buff_left -= response->getBody().size();
-				to_be_sent += response->getHead();
-				response->getHead().erase(0);
-			} else {
-				to_be_sent += response->getBody().substr(0, network_buff_left);
-				response->getBody().erase(0, network_buff_left);
-				network_buff_left = 0;
-			}
+			this->putRspIntoBuff(network_buff_left, to_be_sent, response->getBody());
 		} else {
 			this->re3_deque.pop_front();
 		}
