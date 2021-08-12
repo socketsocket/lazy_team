@@ -1,11 +1,7 @@
 .vscode
 webserv
-<<<<<<< HEAD
 *.tmp
 *.http
-=======
-.tmp
->>>>>>> 807649b (Server methods are now const)
 
 # Created by https://www.toptal.com/developers/gitignore/api/c++
 # Edit at https://www.toptal.com/developers/gitignore?templates=c++

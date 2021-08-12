@@ -182,6 +182,7 @@ std::string	Client::passResponse() {
 	Response*	response;
 
 	while (network_buff_left && this->re3_deque.front().getRspPtr()->getStatus() == kFinished) {
+		putMsg("asdf");
 		Re3* ptr = &this->re3_deque.front();
 		response = ptr->getRspPtr();
 		response->makeHead();
@@ -195,7 +196,6 @@ std::string	Client::passResponse() {
 	}
 	return to_be_sent;
 }
-
 
 int	Client::getClientFd() const {
 	return this->client_fd;

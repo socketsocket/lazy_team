@@ -1,12 +1,8 @@
 #include "Server.hpp"
 
-<<<<<<< HEAD
-ServerStatus Server::makeResponse(Re3* re3) const {
-=======
 std::map<std::string, std::string>	Server::mime_types;
 
-ServerStatus Server::makeResponse(Re3* re3) const { // NOTE const 붙일 수 있나요? 가능하면 붙여주세요.
->>>>>>> 2a243b0 (PortManager functions are now const)
+ServerStatus Server::makeResponse(Re3* re3) const {
 	Request *request = re3->getReqPtr();
 
 	const Location* curr_location = this->currLocation(request->getUri());
@@ -131,7 +127,7 @@ ServerStatus Server::makeGETResponse(Re3* re3, const Location* curr_location, st
 				headers["Content-Length"] = length.str();
 				//Re3에 Response 추가
 				assert(response == NULL);
-				re3->setRspPtr(new Response(kNothing, std::string(C200), headers, autoindex_body, request->getVersion()));
+				re3->setRspPtr(new Response(kFinished, std::string(C200), headers, autoindex_body, request->getVersion()));
 				return kResponseMakingDone;
 			}
 			//default indexfile과 대응하는 파일이 있었는데, 그 파일이 NotFounde거나, 디렉토리라면
@@ -148,14 +144,12 @@ ServerStatus Server::makeGETResponse(Re3* re3, const Location* curr_location, st
 		//Re3에 resource fd 추가
 		if (resource->getStatus() == kNothing)
 		{
-			putMsg("here");
 			resource->setStatus(kReading);
 			resource->setResourceFd(fd);
 		}
 		return kResourceReadInit;
-	}
 	//만약 리소스 상태가 == Finished
-	else if (re3->getRscPtr()->getStatus() == kFinished) {
+	} else if (re3->getRscPtr()->getStatus() == kFinished) {
 		headers["Content-Type"] = this->contentTypeHeaderInfo(fileExtension(resource_path.substr(1)));
 		headers["Content-Language"] = "ko-KR";
 		headers["Content-Location"] = resource_path.substr(1);
@@ -166,7 +160,7 @@ ServerStatus Server::makeGETResponse(Re3* re3, const Location* curr_location, st
 
 		//Re3에 Response 추가
 		assert(response == NULL);
-		re3->setRspPtr(new Response(kNothing, std::string(C200), headers, resource->getContent(), request->getVersion()));
+		re3->setRspPtr(new Response(kFinished, std::string(C200), headers, resource->getContent(), request->getVersion()));
 
 		return kResponseMakingDone;
 	}
@@ -260,7 +254,7 @@ stat_type Server::requestValidCheck(Request* request, const Location* curr_locat
 	return C200;
 }
 
-int Server::checkPath(std::string path) const {
+int Server::  checkPath(std::string path) const {
 	struct stat buffer;
 
 	int exist = stat(path.c_str(), &buffer);

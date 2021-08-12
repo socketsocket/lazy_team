@@ -72,6 +72,7 @@ class ServerManager {
 		int		clientWriteEvent();
 		int		resourceReadEvent();
 		int		resourceWriteEvent();
+		void	clientSocketClose();
 
 
 	public:
