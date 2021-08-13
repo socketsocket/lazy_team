@@ -119,11 +119,9 @@ int	ServerManager::clientReadEvent() {
 
 int	ServerManager::clientWriteEvent() {
 	std::string	str = clients[this->cur_fd]->passResponse();
-	putMsg(str); // ANCHOR for test
-	if (str.length() < NETWORK_BUFF) {
+	putMsg(str + "!"); // ANCHOR for test
+	if (str.length() < NETWORK_BUFF)
 		this->setEvent(this->cur_fd, EVFILT_WRITE, EV_DISABLE);
-		return OK;
-	}
 
 	this->checker = send(this->cur_fd, str.c_str(), str.length(), 0);
 	if (this->checker == ERROR) {
@@ -147,6 +145,8 @@ int	ServerManager::resourceReadEvent() {
 		this->setAndPassResource(re3, kReadFail);
 		return ERROR;
 	}
+	if (this->checker == 0 && resource->getContent().length() == 0)
+		return OK;
 
 	// read done.
 	if (this->checker < LOCAL_BUFF) {
@@ -190,7 +190,6 @@ int	ServerManager::resourceWriteEvent() {
 void	ServerManager::clientSocketClose() {
 	close(this->cur_fd);
 	delete this->clients[this->cur_fd];
-	this->re3s[this->cur_fd] = NULL;
 	this->types[this->cur_fd] = kBlank;
 }
 
@@ -357,7 +356,6 @@ int	ServerManager::processEvent() {
 			case kPortFd: {
 				if (this->makeClient(*this->managers[this->cur_fd]) == ERROR) {
 					putErr("Recv error\n");
-
 				}
 				break;
 			}
@@ -409,5 +407,10 @@ int	ServerManager::processEvent() {
 		}
 	}
 	this->checkStdBuffer();
+	if (ptr != NULL) // ANCHOR
+	{
+		delete[] ptr;
+		ptr = NULL;
+	}
 	return OK;
 }

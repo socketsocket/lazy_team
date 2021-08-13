@@ -336,8 +336,10 @@ int	ConfigParser::serverBlock( \
 	// if there is no root directive and location or no return directive
 	if (!default_root.length() && !locations.size() && !std::string(return_to.first).length())
 		return this->putError(NO_ENTITY_ERR, "root/return");
+	putMsg("before push\n");
 	configs.push_back(std::make_pair(Server(server_name, default_root, \
 		default_error_pages, client_body_limit, locations, return_to), ports));
+	putMsg("after push\n");
 	this->method_name.pop_back();
 	return OK;
 }

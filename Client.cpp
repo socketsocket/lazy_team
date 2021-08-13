@@ -178,21 +178,25 @@ void Client::putRspIntoBuff(size_t& network_buff_left, std::string& to_be_sent, 
 }
 
 std::string	Client::passResponse() {
-	size_t	network_buff_left = NETWORK_BUFF;
+	size_t		network_buff_left = NETWORK_BUFF;
 	std::string to_be_sent;
-	Response*	response;
+	Response*	response = this->re3_deque.front().getRspPtr();
 
-	while (network_buff_left && this->re3_deque.front().getRspPtr()->getStatus() == kFinished) {
-		putMsg("asdf");
-		Re3* ptr = &this->re3_deque.front();
-		response = ptr->getRspPtr();
-		response->makeHead();
+	assert(this->re3_deque.size());
+	assert(response != NULL);
+	while (network_buff_left && this->re3_deque.size() \
+		&& response->getStatus() == kFinished) {
 		if (response->getHead().size() > 0) {
 			this->putRspIntoBuff(network_buff_left, to_be_sent, response->getHead());
 		} else if (response->getBody().size() > 0) {
 			this->putRspIntoBuff(network_buff_left, to_be_sent, response->getBody());
 		} else {
 			this->re3_deque.pop_front();
+			if (this->re3_deque.size() && this->re3_deque.front().getRspPtr()) {
+				response = this->re3_deque.front().getRspPtr();
+			} else {
+				break;
+			}
 		}
 	}
 	return to_be_sent;

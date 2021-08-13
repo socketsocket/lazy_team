@@ -51,17 +51,7 @@ ServerStatus Server::makeErrorResponse(Re3* re3, const Location* location, stat_
 	//해당 에러코드의 디폴트 에러페이지가 있으명
 	if (!location->getDefaultErrorPage(http_status_code).empty()) {
 		int fd = open(location->getDefaultErrorPage(http_status_code).c_str(), O_RDONLY);
-		// 디폴트 에러페이지 오픈 실패 -> 디폴트페이지가 아니라 자체적으로 만들어내는 페이지로 리턴
-		if (fd == ERROR) {
-			std::string error_page_body = this->makeHTMLPage(http_status_code);
-			std::stringstream length;
-			length << error_page_body.length();
-			headers["Content-Length"] = length.str();
-			assert(re3->getRspPtr() == NULL);
-			re3->setRspPtr(new Response(kNothing, std::string(http_status_code), headers, error_page_body, re3->getReqPtr()->getVersion()));
-			return kResponseMakingDone;
-		}
-		else {
+		if (fd != ERROR) {
 			struct stat sb;
 			fstat(fd, &sb);
 			std::stringstream length;
@@ -73,17 +63,16 @@ ServerStatus Server::makeErrorResponse(Re3* re3, const Location* location, stat_
 			re3->getRscPtr()->setResourceFd(fd);
 			return kResourceReadInit;
 		}
+		// 디폴트 에러페이지 오픈 실패 -> 디폴트페이지가 아니라 자체적으로 만들어내는 페이지로 리턴
 	}
 	//디폴트 에러페이지가 없으면 새로만듦
-	else {
-		std::string error_page_body = this->makeHTMLPage(http_status_code);
-		std::stringstream length;
-		length << error_page_body.length();
-		headers["Content-Length"] = length.str();
-		assert(re3->getRspPtr() == NULL);
-		re3->setRspPtr(new Response(kNothing, std::string(http_status_code), headers, error_page_body, re3->getReqPtr()->getVersion()));
-		return kResponseMakingDone;
-	}
+	std::string error_page_body = this->makeHTMLPage(http_status_code);
+	std::stringstream length;
+	length << error_page_body.length();
+	headers["Content-Length"] = length.str();
+	assert(re3->getRspPtr() == NULL);
+	re3->setRspPtr(new Response(kFinished, std::string(http_status_code), headers, error_page_body, re3->getReqPtr()->getVersion()));
+	return kResponseMakingDone;
 }
 
 ServerStatus Server::makeGETResponse(Re3* re3, const Location* curr_location, std::string resource_path) const {
@@ -150,7 +139,7 @@ ServerStatus Server::makeGETResponse(Re3* re3, const Location* curr_location, st
 		return kResourceReadInit;
 	//만약 리소스 상태가 == Finished
 	} else if (re3->getRscPtr()->getStatus() == kFinished) {
-		headers["Content-Type"] = this->contentTypeHeaderInfo(fileExtension(resource_path.substr(1)));
+		headers["Content-Type"] = this->contentTypeHeaderInfo(fileExtension(resource_path.substr()));
 		headers["Content-Language"] = "ko-KR";
 		headers["Content-Location"] = resource_path.substr(1);
 		std::stringstream length;
@@ -199,9 +188,9 @@ ServerStatus Server::makePOSTResponse(Re3* re3, const Location* curr_location, s
 		Request* request = re3->getReqPtr();
 		assert(re3->getRspPtr() == NULL);
 		if (checkPath(resource_path) == kDirectory) {
-			re3->setRspPtr(new Response(kNothing, std::string(C201), headers, resource->getContent(), request->getVersion()));
+			re3->setRspPtr(new Response(kFinished, std::string(C201), headers, resource->getContent(), request->getVersion()));
 		} else {
-			re3->setRspPtr(new Response(kNothing, std::string(C200), headers, resource->getContent(), request->getVersion()));
+			re3->setRspPtr(new Response(kFinished, std::string(C200), headers, resource->getContent(), request->getVersion()));
 		}
 		return kResponseMakingDone;
 	}
@@ -218,7 +207,7 @@ ServerStatus Server::makeDELETEResponse(Re3* re3, const Location* curr_location,
 	{
 		unlink(resource_path.c_str());
 		assert(re3->getRspPtr() == NULL);
-		re3->setRspPtr(new Response(kNothing, std::string(C200), headers, this->makeHTMLPage("File deleted"), re3->getReqPtr()->getVersion()));
+		re3->setRspPtr(new Response(kFinished, std::string(C200), headers, this->makeHTMLPage("File deleted"), re3->getReqPtr()->getVersion()));
 		return kResponseMakingDone;
 	}
 	return this->makeErrorResponse(re3, curr_location, C404);
@@ -400,7 +389,7 @@ std::string Server::makeHTMLPage(std::string str) const {
 std::string Server::fileExtension(std::string resource_path) const
 {
 	if (resource_path.rfind('.') != std::string::npos)
-		return (resource_path.substr(resource_path.find('.')));
+		return (resource_path.substr(resource_path.rfind('.')));
 	return resource_path;
 }
 

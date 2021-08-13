@@ -3,6 +3,13 @@
 #include "ServerManager.hpp"
 #include "Server.hpp"
 
+// char* ptr = NULL;//ANCHOR for test
+// 	if (ptr != NULL) // ANCHOR
+// 	{
+// 		delete[] ptr;
+// 		ptr = NULL;
+// 	}
+
 stat_type	stat_code_arr[] = {C100, C101, C200, C201, C202,
 	C203, C204, C205, C206, C300, C301, C302, C303, C304, C305, C307, C400,
 	C401, C402, C403, C404, C405, C406, C407, C408, C409, C410, C411, C412,
@@ -23,6 +30,10 @@ void	sigIntHandler(int param) {
 };
 
 int	main(int argc, char* argv[]) {
+	// ptr = new char[2]; // ANCHOR for test
+	// ptr[0] = 'a';
+	// ptr[1] = '\0';
+
 	initStatCodeMap();
 
 	ServerManager& server_manager = ServerManager::getServerManager();
@@ -44,6 +55,7 @@ int	main(int argc, char* argv[]) {
 	// When CTRL-C is pressed, deallocate everything and end the server.
 	if ((signal(SIGINT, sigIntHandler) == SIG_ERR))
 		return ERROR;
+
 
 	while (true) {
 		server_manager.processEvent();

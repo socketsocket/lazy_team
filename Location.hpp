@@ -8,18 +8,17 @@
 
 class Location {
 	private:
-		std::string							path; // uri
-		std::string							root;
-		std::vector<std::string>			indexes;
-		bool								auto_index;
+		const std::string							path; // uri
+		const std::string							root;
+		const std::vector<std::string>				indexes;
+		const bool									auto_index;
+		const std::map<stat_type, std::string>		error_pages;
+		const Method								methods_allowed; // discerned by bits
+		const std::map<std::string, std::string>	cgi_infos;
+		const std::pair<stat_type, std::string>		return_to;
 
-		std::map<stat_type, std::string>	error_pages;
-		Method								methods_allowed; // discerned by bits
-		std::map<std::string, std::string>	cgi_infos;
-		std::pair<stat_type, std::string>	return_to;
-
-		Location();
-		Location&							operator=(const Location& ref);
+		Location(); // unuse
+		Location&	operator=(const Location& ref); // unuse
 
 	public:
 		Location(const Location& ref);

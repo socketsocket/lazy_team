@@ -1,5 +1,7 @@
 #include "Location.hpp"
 
+#include "TermPrinter.hpp"
+
 Location::Location(const Location& ref)
 	: path(ref.path),
 	  root(ref.root),
@@ -58,5 +60,6 @@ const std::map<stat_type, std::string>& Location::getDefaultErrorPages() const {
 const std::string Location::getDefaultErrorPage(stat_type stat) const {
 	if (this->error_pages.count(stat))
 		return (*this->error_pages.find(stat)).first;
-	else return "";
+	else
+		return "";
 };
