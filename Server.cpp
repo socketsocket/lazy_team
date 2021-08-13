@@ -19,16 +19,21 @@ ServerStatus Server::makeResponse(Re3* re3) const {
 	|| re3->getRscPtr()->getStatus() == kReadFail)
 		return this->makeErrorResponse(re3, curr_location, C500);
 	//만약 리소스 상태가 == 읽는중이라면
-	else if (re3->getRscPtr()->getStatus() == kReading)
-	{
+	else if (re3->getRscPtr()->getStatus() == kReading) {
 		if (request->getMethod() & GET)
 			return kResourceReadWaiting;
 		if (request->getMethod() & POST)
 			return kResourceWriteWaiting;
 	}
-	std::string resource_path = request->getUri();
-	size_t path_pos = resource_path.find(curr_location->getPath());
-	resource_path.replace(path_pos, curr_location->getPath().length(), curr_location->getRoot());
+	std::string resource_path;
+	if (re3->getRscPtr()->getStatus() == kFinished)
+		resource_path = re3->getRscPtr()->getResourceUri();
+	else {
+		resource_path = request->getUri();
+		size_t path_pos = resource_path.find(curr_location->getPath());
+		resource_path.replace(path_pos, curr_location->getPath().length(), curr_location->getRoot());
+		re3->getRscPtr()->setResourceUri(resource_path);
+	}
 
 	if (request->getMethod() & GET)
 		return this->makeGETResponse(re3, curr_location, resource_path);
@@ -101,6 +106,7 @@ ServerStatus Server::makeGETResponse(Re3* re3, const Location* curr_location, st
 					struct stat buffer;
 					if (stat((resource_path + *iter).c_str(), &buffer) == 0) {
 						resource_path = resource_path + *iter;
+						resource->setResourceUri(resource_path);
 						indexFileFlag = true;
 						break;
 					}

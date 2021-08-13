@@ -17,6 +17,7 @@ struct Resource {
 		int				status;
 		int				resource_fd; // status를 보고 소멸자에서 close;
 		std::string		content;
+		std::string		uri;
 		Resource();
 
 	public:
@@ -28,9 +29,11 @@ struct Resource {
 		int						getStatus() const;
 		int						getResourceFd() const;
 		int						getPortFd() const;
+		std::string				getContent(size_t size);
 		const std::string&		getContent() const;
+		std::string				getResourceUri() const;
+		void					setResourceUri(std::string uri);
 		void		addContent(const std::string& str);
-		std::string	getContent(size_t size);
 		void		setStatus(int status);
 		void		setResourceFd(int fd);
 };

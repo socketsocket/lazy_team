@@ -40,8 +40,16 @@ std::string	Resource::getContent(size_t size) {
 	return ret;
 }
 
+std::string Resource::getResourceUri() const {
+	return this->uri;
+}
+
 void Resource::setStatus(int status) {
 	this->status = status;
+}
+
+void Resource::setResourceUri(std::string input) {
+	this->uri = input;
 }
 
 void Resource::setResourceFd(int fd) {
