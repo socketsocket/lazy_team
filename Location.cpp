@@ -57,9 +57,11 @@ const std::map<stat_type, std::string>& Location::getDefaultErrorPages() const {
 	return this->error_pages;
 }
 
+#include <iostream>
+
 const std::string Location::getDefaultErrorPage(stat_type stat) const {
 	if (this->error_pages.count(stat))
-		return (*this->error_pages.find(stat)).first;
+		return (*this->error_pages.find(stat)).second;
 	else
 		return "";
 };
