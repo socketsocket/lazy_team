@@ -153,6 +153,7 @@ ServerStatus Server::makeGETResponse(Re3* re3, const Location* curr_location, st
 		std::stringstream length;
 		length << resource->getContent().length();
 		headers["Content-Length"] = length.str();
+		stat(resource_path.c_str(), &sb);
 		headers["Last-Modified"] = this->lastModifiedHeaderInfo(sb);
 
 		//Re3에 Response 추가
@@ -279,7 +280,7 @@ std::string Server::lastModifiedHeaderInfo(struct stat sb) const {
 	struct tm*	timeinfo = localtime(&sb.st_mtime);
 	char buffer[80];
 	strftime(buffer, 80, "%a, %d, %b %Y %X GMT", timeinfo);
-	return buffer;
+	return std::string(buffer);
 }
 
 std::string Server::contentTypeHeaderInfo(std::string extension) const {
