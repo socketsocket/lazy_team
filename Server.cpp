@@ -7,6 +7,8 @@ ServerStatus Server::makeResponse(Re3* re3) const {
 
 	const Location* curr_location = this->currLocation(request->getUri());
 
+	if (re3->getReqPtr()->getStatus() == kLengthReq)
+		return this->makeErrorResponse(re3, curr_location, C411);
 	assert(re3->getReqPtr()->getStatus() == kFinished);
 	stat_type stat = this->requestValidCheck(request, curr_location);
 	if (std::string(stat).compare(C200))
@@ -53,8 +55,11 @@ ServerStatus Server::makeErrorResponse(Re3* re3, const Location* location, stat_
 	headers["Server"] = "Passive Server";
 	headers["Content-Type"] = this->contentTypeHeaderInfo(".html");
 
+	std::cout << "Errorpage!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << http_status_code <<std::endl << std::endl;
 	//해당 에러코드의 디폴트 에러페이지가 있으명
 	if (!location->getDefaultErrorPage(http_status_code).empty()) {
+		std::cout << "defaoultpage!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << location->getDefaultErrorPage(http_status_code).c_str() <<std::endl << std::endl;
+
 		int fd = open(location->getDefaultErrorPage(http_status_code).c_str(), O_RDONLY);
 		if (fd != ERROR) {
 			struct stat sb;
@@ -77,6 +82,7 @@ ServerStatus Server::makeErrorResponse(Re3* re3, const Location* location, stat_
 	headers["Content-Length"] = length.str();
 	assert(re3->getRspPtr() == NULL);
 	re3->setRspPtr(new Response(kFinished, std::string(http_status_code), headers, error_page_body, re3->getReqPtr()->getVersion()));
+	std::cout << "newError" << re3->getRspPtr()->getBody() <<std::endl << std::endl;
 	return kResponseMakingDone;
 }
 
