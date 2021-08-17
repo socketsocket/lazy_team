@@ -1,7 +1,7 @@
 #include "Client.hpp"
 
 Client::Client(int client_fd, PortManager& port_manager)
-	: status(0),
+	: status(kNothing),
 	client_fd(client_fd),
 	port_manager(port_manager),
 	last_request_time(0),

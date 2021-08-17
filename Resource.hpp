@@ -14,7 +14,7 @@
 // 4. Resource struct는 open한 uri의 fd와 그 상태를 백업
 struct Resource {
 	private:
-		int				status;
+		Status				status;
 		int				resource_fd; // status를 보고 소멸자에서 close;
 		std::string		content;
 		std::string		uri;
@@ -26,7 +26,7 @@ struct Resource {
 		~Resource();
 		Resource& operator=(const Resource &ref);
 
-		int						getStatus() const;
+		Status					getStatus() const;
 		int						getResourceFd() const;
 		int						getPortFd() const;
 		std::string				getContent(size_t size);
@@ -34,7 +34,7 @@ struct Resource {
 		std::string				getResourceUri() const;
 		void					setResourceUri(std::string uri);
 		void		addContent(const std::string& str);
-		void		setStatus(int status);
+		void		setStatus(Status status);
 		void		setResourceFd(int fd);
 };
 

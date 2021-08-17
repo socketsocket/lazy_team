@@ -16,7 +16,7 @@
 
 class Client {
 	private:
-		int					status;
+		Status				status;
 		const int			client_fd;
 		const PortManager&	port_manager;
 		unsigned long		last_request_time;

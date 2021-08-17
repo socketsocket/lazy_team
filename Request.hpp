@@ -9,7 +9,7 @@
 
 class Request {
 	private:
-		int									status;
+		Status								status;
 		Method								method;
 		std::string							uri;
 		std::string							version;
@@ -23,16 +23,16 @@ class Request {
 		Request& operator=(const Request &ref);
 
 		//setter
-		void	setStatus(int);
-		void	setMethod(int);
+		void	setStatus(Status);
+		void	setMethod(Method);
 		void	setUri(std::string&);
 		void	setVersion(std::string&);
 		void	insertHeader(std::string& key, std::string& value);
 		void	appendBody(std::string& buffer);
 
 		//getter
-		const int&			getStatus() const;
-		const Method&		getMethod() const;
+		const Status		getStatus() const;
+		const Method		getMethod() const;
 		const std::string&	getUri() const;
 		const std::string&	getVersion() const;
 		std::string			getHeaderValue(const std::string& key) const;

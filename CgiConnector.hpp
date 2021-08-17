@@ -1,5 +1,5 @@
-#ifndef WEBSERV_CGICONNECTOR_HPP
-#define WEBSERV_CGICONNECTOR_HPP
+#ifndef WEBSERV_CGICONNECTOR_HPP_
+#define WEBSERV_CGICONNECTOR_HPP_
 
 #include <vector>
 #include "Webserv.hpp"

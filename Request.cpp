@@ -1,7 +1,7 @@
 #include "Request.hpp"
 
 Request::Request()
-	: status(NOT), \
+	: status(kNothing), \
 	method(0), \
 	uri(""), \
 	version(""), \
@@ -10,11 +10,11 @@ Request::Request()
 Request::~Request() {
 }
 
-void	Request::setStatus(int status) {
+void	Request::setStatus(Status status) {
 	this->status = status;
 }
 
-void	Request::setMethod(int method) {
+void	Request::setMethod(Method method) {
 	this->method = method;
 }
 
@@ -35,11 +35,11 @@ void	Request::appendBody(std::string& buffer) {
 	this->body += buffer;
 }
 
-const int&				Request::getStatus() const {
+const Status			Request::getStatus() const {
 	return this->status;
 }
 
-const Method&			Request::getMethod() const {
+const Method				Request::getMethod() const {
 	return this->method;
 }
 
