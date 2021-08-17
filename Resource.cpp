@@ -18,7 +18,7 @@ Resource& Resource::operator=(const Resource &ref) {
 	return *this;
 }
 
-int	Resource::getStatus() const {
+Status	Resource::getStatus() const {
 	return this->status;
 }
 
@@ -44,7 +44,7 @@ std::string Resource::getResourceUri() const {
 	return this->uri;
 }
 
-void Resource::setStatus(int status) {
+void Resource::setStatus(Status status) {
 	this->status = status;
 }
 
