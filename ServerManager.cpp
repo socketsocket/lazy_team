@@ -113,6 +113,8 @@ int	ServerManager::clientReadEvent() {
 			this->setEvent(fd, EVFILT_WRITE, EV_ADD);
 			this->setRe3s(fd, re3);
 		}
+		else if (ss == kResponseMakingDone)
+			this->setEvent(re3->getClientId(), EVFILT_WRITE, EV_ENABLE);
 	}
 	return OK;
 }
@@ -407,10 +409,10 @@ int	ServerManager::processEvent() {
 		}
 	}
 	this->checkStdBuffer();
-	if (ptr != NULL) // ANCHOR
-	{
-		delete[] ptr;
-		ptr = NULL;
-	}
+	// if (ptr != NULL) // ANCHOR
+	// {
+	// 	delete[] ptr;
+	// 	ptr = NULL;
+	// }
 	return OK;
 }
