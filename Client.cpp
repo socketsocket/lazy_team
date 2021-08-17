@@ -6,10 +6,7 @@ Client::Client(int client_fd, PortManager& port_manager)
 	port_manager(port_manager),
 	last_request_time(0),
 	last_response_time(0),
-	read_buff("") {
-	this->re3_deque.push_back(Re3());
-	this->re3_deque.back().setReqPtr(new Request);
-}
+	read_buff("") { }
 
 Client::Client(const Client& ref)
 	: status(ref.status),
@@ -22,9 +19,7 @@ Client::Client(const Client& ref)
 	*this = ref;
 }
 
-Client::~Client() {
-
-}
+Client::~Client() {}
 
 Client& Client::operator=(const Client& ref) {
 	// const clinet_fd, refence port_manager
@@ -42,7 +37,6 @@ int	Client::chunkedParser(Request* request) {
 	size_t		len = 1;
 	std::istringstream iss;
 
-
 	while (len) {
 		len_end = this->read_buff.find("\r\n");
 		contents_end = this->read_buff.find("\r\n", len_end + 2);
@@ -50,7 +44,8 @@ int	Client::chunkedParser(Request* request) {
 			break;
 		tmp = this->read_buff.substr(0, len_end);
 		if (tmp.find_first_of("0123456789ABCDEFabcdef") != std::string::npos) {
-			putError("An invalid chunked body received");
+			putErr("An invalid chunked body received");
+			request->setStatus(kReadFail);
 			return ERROR; // parsing이 꼬임. ㅈ댐
 		}
 		iss.str(tmp);
@@ -85,10 +80,10 @@ int	Client::reqLineParser(Request* request) {
 	std::stringstream	ss;
 
 	pos = this->read_buff.find("\r\n");
-	if (pos == std::string::npos)
+	if (pos == std::string::npos || pos == 0)
 		return OK; // 개행이 없음. 버퍼가 중간에 끊김.
 	tmp = this->read_buff.substr(0, pos);
-	read_buff.erase(0, pos + 2);
+	this->read_buff.erase(0, pos + 2);
 	ss.str(tmp);
 	ss >> tmp;
 	if (tmp == "GET")
@@ -114,15 +109,17 @@ int	Client::headerParser(Request* request) {
 	pos = this->read_buff.find("\r\n");
 	while (pos != std::string::npos && pos != 0) {
 		tmp = this->read_buff.substr(0, pos);
-		read_buff.erase(0, pos + 2);
+		this->read_buff.erase(0, pos + 2);
 		pos = tmp.find(":");
 		key = tmp.substr(0, pos);
 		value = tmp.substr(pos + 2);
 		request->insertHeader(key, value);
 		pos = this->read_buff.find("\r\n");
 	}
-	if (pos == 0)
+	if (pos == 0) {
 		request->setStatus(kBody);
+		this->read_buff.erase(pos, pos + 2);
+	}
 	return OK;
 }
 
@@ -137,73 +134,85 @@ int	Client::initParser(Request* request) {
 		if (request->getHeaderValue("Content-Length") != "")
 			return this->lengthParser(request);
 		if (request->getMethod() == POST) {
-			this->re3_deque.back().getRscPtr()->setStatus(411); // 411 error를 반환해야함.
-			// response http_status_code 를 바꿔놓을지?
+			this->re3_deque.back().getReqPtr()->setStatus(kLengthReq);
+			return ERROR;
+		}
+		else {
 			this->re3_deque.back().getReqPtr()->setStatus(kFinished);
 		}
-			// can be changed.
 	}
 	return OK;
 }
 
-// std::vector<Re3*>	Client::rscToEnroll(void) {
-// 	std::vector<Re3*> ret;
-// 	for (Re3* it = re3_deque.begin(); it != re3_deque.end(); ++it) {
-// 		//to be enroll
-// 		if (it->getRscPtr()->getStatus() == to_be_enroll)
-// 			ret.push_back(it);
-// 	}
-// 	return ret;
-// }
+std::vector<std::pair<Re3*, ServerStatus> >	Client::recvRequest(std::string rawRequest) {
+	std::vector<std::pair<Re3*, ServerStatus> >	rsc_claim(0);
+	ServerStatus	server_response;
 
-// std::vector<Re3*>	Client::recvRequest(std::string& rawRequest) {
-int	Client::recvRequest(std::string rawRequest) {
+	if (this->re3_deque.empty()) {
+		this->re3_deque.push_back(Re3(client_fd));
+		this->re3_deque.back().setReqPtr(new Request);
+	}
+	if (!rawRequest.size())
+		return rsc_claim;
 	this->read_buff += rawRequest;
-	std::vector<Re3*>	RscClaim(0);
 	do {
 		if (this->re3_deque.back().getReqPtr()->getStatus() == kFinished) {
-			this->port_manager.passRequest(&this->re3_deque.back());
-			this->re3_deque.push_back(Re3());
+			server_response = this->port_manager.passRequest(&this->re3_deque.back());
+			rsc_claim.push_back(std::make_pair(&re3_deque.back(), server_response));
+			this->re3_deque.push_back(Re3(this->client_fd));
 			this->re3_deque.back().setReqPtr(new Request);
 		}
-		this->initParser(this->re3_deque.back().getReqPtr());
+		if (ERROR == (this->initParser(this->re3_deque.back().getReqPtr()))) {
+			if (this->re3_deque.back().getReqPtr()->getStatus() == kReadFail) { // 응답 없이 연결 끊기
+				std::vector<std::pair<Re3*, ServerStatus> >	chunked_length_read_fail(1, std::make_pair(&re3_deque.back(), kResponseError));
+				return chunked_length_read_fail;
+			} else if (this->re3_deque.back().getReqPtr()->getStatus() == kLengthReq) { // 응답 후 연결 끊기
+				server_response = this->port_manager.passRequest(&this->re3_deque.back());
+				std::vector<std::pair<Re3*, ServerStatus> >	length_read_fail(1, std::make_pair(&re3_deque.back(), server_response));
+				return length_read_fail; // NOTE 클라이언트와 연결을 끊어야 할 상황.
+			}
+		}
 	} while (this->re3_deque.back().getReqPtr()->getStatus() == kFinished);
-	// return this->rscToEnroll();
-	return OK;
+	return rsc_claim;
+}
+
+void Client::putRspIntoBuff(size_t& network_buff_left, std::string& to_be_sent, std::string& data) {
+	if (network_buff_left >= data.size()) {
+		network_buff_left -= data.size();
+		to_be_sent += data;
+		data.erase(0);
+	} else {
+		to_be_sent += data.substr(0, network_buff_left);
+		data.erase(0, network_buff_left);
+		network_buff_left = 0;
+	}
 }
 
 std::string	Client::passResponse() {
-	size_t	network_buff_left = NETWORK_BUFF;
+	size_t		network_buff_left = NETWORK_BUFF;
 	std::string to_be_sent;
-	Response*	response;
+	Response*	response = this->re3_deque.front().getRspPtr();
 
-	while (network_buff_left && this->re3_deque.front().getRspPtr()->getStatus() == kFinished) {
-		Re3* ptr = &this->re3_deque.front();
-		response = ptr->getRspPtr();
-		response->makeHead();
+	assert(this->re3_deque.size());
+	assert(response != NULL);
+	while (network_buff_left && this->re3_deque.size() \
+		&& response->getStatus() == kFinished) {
 		if (response->getHead().size() > 0) {
-			if (network_buff_left >= response->getHead().size()) {
-				network_buff_left -= response->getHead().size();
-				to_be_sent += response->getHead();
-				response->getHead().erase(0);
-			} else {
-				to_be_sent += response->getHead().substr(0, network_buff_left);
-				response->getHead().erase(0, network_buff_left);
-				network_buff_left = 0;
-			}
+			this->putRspIntoBuff(network_buff_left, to_be_sent, response->getHead());
 		} else if (response->getBody().size() > 0) {
-			if (network_buff_left >= response->getBody().size()) {
-				network_buff_left -= response->getBody().size();
-				to_be_sent += response->getHead();
-				response->getHead().erase(0);
-			} else {
-				to_be_sent += response->getBody().substr(0, network_buff_left);
-				response->getBody().erase(0, network_buff_left);
-				network_buff_left = 0;
-			}
+			this->putRspIntoBuff(network_buff_left, to_be_sent, response->getBody());
 		} else {
 			this->re3_deque.pop_front();
+			if (this->re3_deque.size() && this->re3_deque.front().getRspPtr()) {
+				response = this->re3_deque.front().getRspPtr();
+			} else {
+				break;
+			}
 		}
 	}
 	return to_be_sent;
+}
+
+int	Client::getClientFd() const {
+	return this->client_fd;
 }

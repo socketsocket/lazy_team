@@ -2,7 +2,7 @@
 #define WEBSERV_CLIENT_HPP_
 
 #include "Webserv.hpp"
-#include "ErrorMsgHandler.hpp"
+#include "TermPrinter.hpp"
 #include "PortManager.hpp"
 #include "Re3.hpp"
 #include <vector>
@@ -16,22 +16,20 @@
 
 class Client {
 	private:
-		int							status;
-		const int					client_fd;
-//		const struct sockaddr_in	client_addr; for extracting IP address
-
-		PortManager&				port_manager;
-		unsigned long				last_request_time;
-		unsigned long				last_response_time;
-		std::string					read_buff;
-		std::deque<Re3>				re3_deque;
+		int					status;
+		const int			client_fd;
+		const PortManager&	port_manager;
+		unsigned long		last_request_time;
+		unsigned long		last_response_time;
+		std::string			read_buff;
+		std::deque<Re3>		re3_deque;
 
 		int	reqLineParser(Request* request);
 		int	chunkedParser(Request* request);
 		int	lengthParser(Request* request);
 		int	headerParser(Request* request);
 		int	initParser(Request* request);
-		// std::vector<Re3_iter>	rscToEnroll(void);
+		void	putRspIntoBuff(size_t& network_buff_left, std::string& to_be_sent, std::string& data);
 
 	public:
 		Client(int client_fd, PortManager& port_manager);
@@ -39,8 +37,8 @@ class Client {
 		~Client();
 		Client& operator=(const Client& ref);
 
-		// std::vector<Re3_iter>	recvRequest(std::string& rawRequest);
-		int	recvRequest(std::string rawRequest);
+		int	getClientFd() const;
+		std::vector<std::pair<Re3*, ServerStatus> >	recvRequest(std::string rawRequest);
 		std::string	passResponse();
 };
 

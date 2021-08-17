@@ -9,6 +9,7 @@
 #define OK     0
 #define END_OF_FILE 26
 
+#define STDOUT 1
 #define STDERR 2
 
 #define BLOCK_END 101
@@ -70,16 +71,13 @@
 
 typedef const char*	stat_type;
 
-static stat_type	status_code_arr[] = {C100, C101, C200, C201, C202,
-	C203, C204, C205, C206, C300, C301, C302, C303, C304, C305, C307, C400,
-	C401, C402, C403, C404, C405, C406, C407, C408, C409, C410, C411, C412,
-	C413, C414, C415, C416, C417, C500, C501, C502, C503, C504, C505};
+extern stat_type	stat_code_arr[40];
 
 #define DEFAULT_ROUTE "default.config"
 
 #include <map>
 #include <string>
-static std::map<std::string, stat_type>	status_code_map;
+extern std::map<std::string, stat_type>	stat_code_map;
 
 #define RE3 triplet<Request, Response, Resource>
 
@@ -88,33 +86,39 @@ enum	FdType {
 	kPortFd,
 	kClientFd,
 	kResourceFd,
-	kStderrFd
+	kStdOutErrFd,
+	kCgiInput,
 };
 
 // Request, Response, Resource의 Status.
 enum	Status {
-	kNothing, // Request
+	kNothing, // Request, Resource
 	kHeader, // Request
 	kBody, // Request
-	kReading,
-	kWriting,
-	kFinished, // Request
+	kReading, // Resource
+	kWriting, // Resource
+	kFinished, // Request, Resource
 	kDisconnect,
-	kReadFail
+	kReadFail, // Resource, Request
+	kWriteFail,
+	kLengthReq,
 };
 
 //Server가 리턴하는 값들
 enum	ServerStatus {
+	kResourceWriteInit,
+	kResourceReadInit,
 	kResourceWriteWaiting,
 	kResourceReadWaiting,
 	kResponseMakingDone,
+	kResponseError,
 };
 
 
 enum	FileType {
 	kFile,
 	kDirectory,
-	kNotFound
+	kNotFound,
 };
 
 #define NOT    0b000
@@ -125,7 +129,7 @@ enum	FileType {
 
 typedef	unsigned char	Method;
 
-void	initStatusCodeMap();
+void	initStatCodeMap();
 void	sigIntHandler(int param);
 
 

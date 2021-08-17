@@ -2,6 +2,13 @@
 
 Re3::Re3(): req_ptr(NULL), rsp_ptr(NULL), rsc_ptr(NULL) {}
 
+Re3::Re3(int client_fd)
+	: req_ptr(NULL),
+	  rsp_ptr(NULL),
+	  rsc_ptr(NULL),
+	  client_id(client_fd),
+	  port_manager_id(STDOUT) {}
+
 Re3::Re3(Request* request): req_ptr(request), rsp_ptr(NULL), rsc_ptr(NULL) {}
 
 Re3::~Re3() {
@@ -35,6 +42,14 @@ int	Re3::setRscPtr(Resource* rsc){
 		return ERROR;
 	this->rsc_ptr = rsc;
 	return OK;
+}
+
+void	Re3::setClientId(int client_fd) {
+	this->client_id = client_fd;
+}
+
+void	Re3::setPortId(int port_fd) {
+	this->port_manager_id = port_fd;
 }
 
 Request*	Re3::getReqPtr() {

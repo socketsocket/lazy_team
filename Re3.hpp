@@ -17,12 +17,16 @@ class Re3
 
 	public:
 		Re3();
+		Re3(int clinet_id);
 		Re3(Request* req);
 		~Re3();
 
 		int	setReqPtr(Request* req);
 		int	setRspPtr(Response* rsp);
 		int	setRscPtr(Resource* rsc);
+
+		void setClientId(int client_fd);
+		void setPortId(int port_fd);
 
 		Request*	getReqPtr();
 		Response*	getRspPtr();
