@@ -9,7 +9,6 @@
 class CgiConnector {
 	private:
 		std::map<std::string, std::string>	env_map;
-
 		const char**	makeEnvp() const;
 
 	public:
