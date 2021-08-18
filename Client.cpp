@@ -62,7 +62,7 @@ int	Client::chunkedParser(Request* request) {
 int	Client::lengthParser(Request* request) {
 	std::string	tmp;
 	size_t		len;
-	std::istringstream iss(request->getHeaderValue("Content-Length"));
+	std::istringstream iss(request->getHeaderValue("content-length"));
 
 	iss >> len;
 	if (this->read_buff.size() >= len) {
@@ -131,7 +131,7 @@ int	Client::initParser(Request* request) {
 	if (request->getStatus() == kBody) {
 		if (request->getHeaderValue("Transfer-Encoding").find("chunked") != std::string::npos)
 			return this->chunkedParser(request); // chunked error인 경우에 servermanager까지 전해줘서 연결 닫도록 해야돼요
-		if (request->getHeaderValue("Content-Length") != "")
+		if (request->getHeaderValue("content-length") != "")
 			return this->lengthParser(request);
 		if (request->getMethod() == POST) {
 			this->re3_deque.back().getReqPtr()->setStatus(kLengthReq);

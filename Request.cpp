@@ -35,11 +35,11 @@ void	Request::appendBody(std::string& buffer) {
 	this->body += buffer;
 }
 
-const Status			Request::getStatus() const {
+const Status&			Request::getStatus() const {
 	return this->status;
 }
 
-const Method				Request::getMethod() const {
+const Method&				Request::getMethod() const {
 	return this->method;
 }
 

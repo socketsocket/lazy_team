@@ -31,8 +31,8 @@ class Request {
 		void	appendBody(std::string& buffer);
 
 		//getter
-		const Status		getStatus() const;
-		const Method		getMethod() const;
+		const Status&		getStatus() const;
+		const Method&		getMethod() const;
 		const std::string&	getUri() const;
 		const std::string&	getVersion() const;
 		std::string			getHeaderValue(const std::string& key) const;
