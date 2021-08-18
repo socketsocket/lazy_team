@@ -51,8 +51,8 @@ void	CgiConnector::makeEnvMap(Request* req) {
 	// temp_map["AUTH_TYPE"]
 	// temp_map["REMOTE_USER"]
 	// temp_map["REMOTE_IDENT"]
-	if (req->getHeaderValue("Content-Type") != "")
-		this->env_map["CONTENT_TYPE"] = req->getHeaderValue("Content-Type");
+	if (req->getHeaderValue("content-type") != "")
+		this->env_map["CONTENT_TYPE"] = req->getHeaderValue("content-type");
 	this->env_map["CONTENT_LENGTH"];
 	this->env_map["GATEWAY_INTERFACE"];
 	this->env_map["PATH_INFO"];

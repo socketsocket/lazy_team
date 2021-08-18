@@ -111,6 +111,7 @@ int	Client::headerParser(Request* request) {
 		tmp = this->read_buff.substr(0, pos);
 		this->read_buff.erase(0, pos + 2);
 		pos = tmp.find(":");
+		std::transform(key.begin(), key.end(), key.begin(), ::tolower);
 		key = tmp.substr(0, pos);
 		value = tmp.substr(pos + 2);
 		request->insertHeader(key, value);
@@ -129,7 +130,7 @@ int	Client::initParser(Request* request) {
 	if (request->getStatus() == kHeader)
 		this->headerParser(request);
 	if (request->getStatus() == kBody) {
-		if (request->getHeaderValue("Transfer-Encoding").find("chunked") != std::string::npos)
+		if (request->getHeaderValue("transfer-encoding").find("chunked") != std::string::npos)
 			return this->chunkedParser(request); // chunked error인 경우에 servermanager까지 전해줘서 연결 닫도록 해야돼요
 		if (request->getHeaderValue("content-length") != "")
 			return this->lengthParser(request);
