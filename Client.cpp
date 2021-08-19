@@ -111,8 +111,8 @@ int	Client::headerParser(Request* request) {
 		tmp = this->read_buff.substr(0, pos);
 		this->read_buff.erase(0, pos + 2);
 		pos = tmp.find(":");
-		std::transform(key.begin(), key.end(), key.begin(), ::tolower);
 		key = tmp.substr(0, pos);
+		std::transform(key.begin(), key.end(), key.begin(), ::tolower);
 		value = tmp.substr(pos + 2);
 		request->insertHeader(key, value);
 		pos = this->read_buff.find("\r\n");
