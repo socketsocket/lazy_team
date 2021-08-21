@@ -4,7 +4,6 @@ std::map<std::string, std::string>	Server::mime_types;
 
 ServerStatus Server::makeResponse(Re3* re3) const {
 	Request *request = re3->getReqPtr();
-
 	const Location* curr_location = this->currLocation(request->getUri());
 
 	if (re3->getReqPtr()->getStatus() == kLengthReq)
@@ -13,6 +12,7 @@ ServerStatus Server::makeResponse(Re3* re3) const {
 	stat_type stat = this->requestValidCheck(request, curr_location);
 	if (std::string(stat).compare(C200))
 		return this->makeErrorResponse(re3, curr_location, stat);
+
 	//리소스 상태는 'empty'/읽는중/읽음완료/에러 네가지로 들어옴
 	//만약 리소스 상태가 == 에러라면
 	assert(re3->getRscPtr() != NULL);
@@ -20,12 +20,10 @@ ServerStatus Server::makeResponse(Re3* re3) const {
 	|| re3->getRscPtr()->getStatus() == kReadFail)
 		return this->makeErrorResponse(re3, curr_location, C500);
 	//만약 리소스 상태가 == 읽는중이라면
-	else if (re3->getRscPtr()->getStatus() == kReading) {
-		if (request->getMethod() & GET)
+	if (re3->getRscPtr()->getStatus() == kReading && request->getMethod() & GET)
 			return kResourceReadWaiting;
-		if (request->getMethod() & POST)
-			return kResourceWriteWaiting;
-	}
+	if (re3->getRscPtr()->getStatus() == kWriting && request->getMethod() & POST)
+		return kResourceWriteWaiting;
 
 	// TODO extension을 파악해서 cgi로 넘겨주기.
 	// return ServerStatus	makeCgiResponse(Request* req, Location* loc, std::string target);
@@ -173,7 +171,6 @@ ServerStatus Server::makePOSTResponse(Re3* re3, const Location* curr_location, s
 	Resource* resource = re3->getRscPtr();
 
 	if (resource->getStatus() == kNothing) {
-		headers["Content-Location"] = resource_path.substr(1);
 		switch (checkPath(resource_path)) {
 			case kNotFound : {
 				if ((fd = open(resource_path.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644)) < 0)
@@ -197,11 +194,14 @@ ServerStatus Server::makePOSTResponse(Re3* re3, const Location* curr_location, s
 	}
 	if (re3->getRscPtr()->getStatus() == kFinished) {
 		Request* request = re3->getReqPtr();
-		assert(re3->getRspPtr() == NULL); // NOTE 여기 무조건 false 아닌가요?
+		headers["Date"] = this->dateHeaderInfo();
+		headers["Server"] = "Passive Server";
+		headers["Content-Location"] = resource_path.substr(1);
+		assert(re3->getRspPtr() == NULL); 
 		if (checkPath(resource_path) == kDirectory) {
-			re3->setRspPtr(new Response(kFinished, std::string(C201), headers, resource->getContent(), request->getVersion()));
+			re3->setRspPtr(new Response(kFinished, std::string(C201), headers, "", request->getVersion()));
 		} else {
-			re3->setRspPtr(new Response(kFinished, std::string(C200), headers, resource->getContent(), request->getVersion()));
+			re3->setRspPtr(new Response(kFinished, std::string(C200), headers, "", request->getVersion()));
 		}
 		return kResponseMakingDone;
 	}

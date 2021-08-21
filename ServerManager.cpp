@@ -165,29 +165,56 @@ int	ServerManager::resourceReadEvent() {
 
 int	ServerManager::resourceWriteEvent() {
 	Re3*		re3 = this->re3s[this->cur_fd];
+	Request*	request = re3->getReqPtr();
 	Resource*	resource = re3->getRscPtr();
-	std::string	write_str = resource->getContent(LOCAL_BUFF);
-	if (write_str.length() == 0) {
+
+	if (request->getBody().length() == 0) {
 		this->setAndPassResource(re3, kFinished);
+		close(this->cur_fd);
+		return OK;
 	}
-	this->checker = write(this->cur_fd, write_str.c_str(), write_str.length());
-
-	if (this->checker < 0) {
-		putErr("Write resource failed\n");
-		this->setAndPassResource(re3, kWriteFail);
-		return ERROR;
-	}
-
-	// nothing left in resource
-	if (write_str.length() < LOCAL_BUFF) {
-		// error
-		if (this->checker < static_cast<int>(write_str.length())) {
-			putErr("Write resource not finished\n");
+	//첫 쓰기이면
+	if (resource->getContent().empty()) {
+		//request body를 처음부터 resource에 넣으면 속도 문제로 일부러 하지 않음
+		this->checker = write(this->cur_fd, request->getBody().c_str(), request->getBody().length());
+		if (this->checker < 0) {
+			putErr("Write resource failed\n");
 			this->setAndPassResource(re3, kWriteFail);
 			return ERROR;
 		}
-		// No error
-		this->setAndPassResource(re3, kFinished);
+		// 아직 다 못 쓴 것이 있다면
+		if (this->checker < static_cast<int>(request->getBody().length()))
+		{
+			resource->addContent(request->getBody().substr(this->checker, request->getBody().length() - this->checker));
+			this->setAndPassResource(re3, kWriting);
+			// putErr("Write resource not finished\n");
+			// return ERROR;
+		}
+		else
+		{
+			this->setAndPassResource(re3, kFinished);
+			close(this->cur_fd);
+		}
+	}
+	else
+	{
+		this->checker = write(this->cur_fd, resource->getContent().c_str(), resource->getContent().length());
+		if (this->checker < 0) {
+			putErr("Write resource failed\n");
+			this->setAndPassResource(re3, kWriteFail);
+			return ERROR;
+		}
+		// 아직 다 못 쓴 것이 있다면
+		if (this->checker < static_cast<int>(resource->getContent().length()))
+		{
+			resource->addContent(resource->getContent().substr(this->checker, resource->getContent().length() - this->checker));
+			this->setAndPassResource(re3, kWriting);
+		}
+		else
+		{
+			this->setAndPassResource(re3, kFinished);
+			close(this->cur_fd);
+		}
 	}
 	return OK;
 }
