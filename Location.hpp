@@ -41,6 +41,7 @@ class Location {
 		const bool&								isAutoIndex() const;
 		const std::map<stat_type, std::string>&	getDefaultErrorPages() const;
 		const std::string						getDefaultErrorPage(stat_type stat) const;
+		const std::string						getCgiBinary(std::string) const;
 };
 
 #endif

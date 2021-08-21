@@ -3,73 +3,105 @@
 // Private Functions
 //------------------------------------------------------------------------------
 
-const char**	CgiConnector::makeEnvp() const {
-	const char**	envp = new char*[this->env_map.size() + 1];
-	envp[this->env_map.size()] = NULL;
-	int i = 0;
-	for(std::map<std::string, std::string>::const_iterator it = this->env_map.begin(); \
-	it != this->env_map.end(); ++it) {
-		envp[i] = strdup((it->first + "=" + it->second).c_str());
-		i++;
-	}
-	return envp;
-}
+// const char**	CgiConnector::makeEnvp() const {
+// 	const char**	envp = new char*[this->env_map.size() + 1];
+// 	envp[this->env_map.size()] = NULL;
+// 	int i = 0;
+// 	for(std::map<std::string, std::string>::const_iterator it = this->env_map.begin(); \
+// 	it != this->env_map.end(); ++it) {
+// 		envp[i] = strdup((it->first + "=" + it->second).c_str());
+// 		i++;
+// 	}
+// 	return envp;
+// }
 
 //------------------------------------------------------------------------------
 // Public Functions
 //------------------------------------------------------------------------------
 
-// GET / HTTP/1.1
-// Host: localhost:8080
-// Connection: keep-alive
-// Cache-Control: max-age=0
-// sec-ch-ua: "Chromium";v="92", " Not A;Brand";v="99", "Google Chrome";v="92"
-// sec-ch-ua-mobile: ?0
-// Upgrade-Insecure-Requests: 1
-// User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.131 Safari/537.36
-// Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9
-// Sec-Fetch-Site: none
-// Sec-Fetch-Mode: navigate
-// Sec-Fetch-User: ?1
-// Sec-Fetch-Dest: document
-// Accept-Encoding: gzip, deflate, br
-// Accept-Language: ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7,ja;q=0.6
+ServerStatus	CgiConnector::makeCgiResponse(Re3* re3, Location* loc/*, std::string target*/) {
+	int		pipe_fd[2];
+	int		ret;
+	pid_t	pid;
+	Request* req = re3->getReqPtr();
 
-// POST /index/dd HTTP/1.1
-// user-agent: vscode-restclient
-// content-type: application/json
-// accept-encoding: gzip, deflate
-// content-length: 69
-// Host: 127.0.0.1:8080
-// Connection: close
 
-// {
-//     "name": "sample",
-//     "time": "Wed, 21 Oct 2015 18:27:50 GMT"
-// }
-void	CgiConnector::makeEnvMap(Request* req) {
-	// temp_map["AUTH_TYPE"]
-	// temp_map["REMOTE_USER"]
-	// temp_map["REMOTE_IDENT"]
-	if (req->getHeaderValue("content-type") != "")
-		this->env_map["CONTENT_TYPE"] = req->getHeaderValue("content-type");
-	this->env_map["CONTENT_LENGTH"];
-	this->env_map["GATEWAY_INTERFACE"];
-	this->env_map["PATH_INFO"];
-	this->env_map["PATH_TRANSLATED"];
-	this->env_map["QUERY_STRING"];
-	this->env_map["REMOTE_ADDR"];
-	this->env_map["REMOTE_HOST"];
-	this->env_map["REQUEST_METHOD"];
-	this->env_map["REQUEST_URI"];
-	this->env_map["REDIRECT_STATUS"];
-	this->env_map["SCRIPT_NAME"];
-	// this->env_map["SCRIPT_FILENAME"];
-	this->env_map["SERVER_NAME"];
-	this->env_map["SERVER_PORT"];
-	this->env_map["SERVER_PROTOCOL"];
-	this->env_map["SERVER_SOFTWARE"];
+	ret = pipe(pipe_fd);
+	write(pipe_fd[1], req->getBody().c_str(), req->getBody().length());
+	if (ret < 0)
+		return kResponseError;
+	pid = fork();
+	if (pid < 0) {
+		//500 에러 리턴.
+		return kResponseError;
+	} else if (pid == 0) {
+		dup2(pipe_fd[0], STDIN_FILENO);
+		dup2(pipe_fd[1], STDOUT_FILENO);
+		close(pipe_fd[0]);
+		close(pipe_fd[1]);
 
+		size_t	idx = req->getUri().find("?");
+		std::string query_string, path, bin, extension;
+
+		if (idx != std::string::npos) {
+			query_string = req->getUri().substr(idx + 1);
+			path = req->getUri().substr(0, idx);
+		} else {
+			query_string = "";
+			path = req->getUri();
+		}
+		extension = path.substr(path.find(".") + 1);
+		bin = loc->getCgiBinary(extension);
+
+		char *av[3] = {const_cast<char*>(bin.c_str()), const_cast<char*>(path.c_str()), NULL};
+
+		setenv("AUTH_TYPE", "", 1);
+		setenv("CONTENT_TYPE", req->getHeaderValue("content_type").c_str(), 1);
+		setenv("CONTENT_LENGTH", req->getHeaderValue("content_length").c_str(), 1);
+		setenv("PATH_INFO", path.c_str(), 1);
+		setenv("PATH_TRANSLATED", (loc->getRoot() + path).c_str(), 1);
+		setenv("SCRIPT_NAME", path.c_str(), 1);
+		setenv("SCRIPT_FILENAME", (loc->getRoot() + path).c_str(), 1); // 절대경로.
+		setenv("SERVER_PROTOCOL", "HTTP/1.1", 1);
+		setenv("SERVER_NAME", "passive_server", 1); // NOTE 맞나?
+		setenv("SERVER_SOFTWARE", "passive_server/1.1", 1);
+		// setenv("SERVER_PORT", ; 포트번호를 어떻게 알죠?
+		setenv("GATEWAY_INTERFACE", "CGI/1.1", 1);
+		setenv("HTTP_ACCEPT", req->getHeaderValue("accept").c_str(), 1);
+		setenv("HTTP_ACCEPT_CHARSET", req->getHeaderValue("accept_charset").c_str(), 1);
+		setenv("HTTP_ACCEPT_ENCODING", req->getHeaderValue("accept_encoding").c_str(), 1);
+		setenv("HTTP_ACCEPT_LANGUAGE", req->getHeaderValue("accept_language").c_str(), 1);
+		setenv("HTTP_CONNECTION", req->getHeaderValue("connection").c_str(), 1);
+		setenv("HTTP_COOKIE", req->getHeaderValue("cookie").c_str(), 1);
+		setenv("HTTP_FORWARDED", req->getHeaderValue("forwarded").c_str(), 1);
+		setenv("HTTP_HOST", req->getHeaderValue("host").c_str(), 1);
+		setenv("HTTP_PROXY_AUTHORIZATION", req->getHeaderValue("proxy_authorization").c_str(), 1);
+		setenv("HTTP_REFERER", req->getHeaderValue("referer").c_str(), 1);
+		setenv("HTTP_USER_AGENT", req->getHeaderValue("user_agent").c_str(), 1);
+		// setenv("REMOTE_ADDR", "", 1); // ip 주소?
+		setenv("REMOTE_HOST", req->getHeaderValue("host").c_str(), 1);;
+		setenv("REQUEST_URI", path.c_str(), 1);
+		if (req->getMethod() & GET)
+			setenv("REQUEST_METHOD", "GET", 1);
+		if (req->getMethod() & POST)
+			setenv("REQUEST_METHOD", "POST", 1);
+		if (req->getMethod() & DELETE)
+			setenv("REQUEST_METHOD", "DELETE", 1);
+		setenv("REMOTE_USER", "", 1);
+		setenv("REMOTE_IDENT", "", 1);
+		// setenv("REDIRECT_STATUS"); 200?
+		setenv("QUERY_STRING", query_string.c_str(), 1);
+
+		ret = execv(bin.c_str(), av);
+		close(STDOUT_FILENO);
+		exit(ret);
+	} else {
+		close(pipe_fd[1]);
+		waitpid(-1, NULL, 0); // NOTE 비동기로 해줄 수 있나?
+		// pipe_fd[0] read event set;
+		re3->getRscPtr()->setResourceFd(pipe_fd[0]);
+	}
+	return kResourceReadInit;
 }
 
 CgiConnector::CgiConnector() {}

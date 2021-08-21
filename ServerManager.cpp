@@ -115,6 +115,9 @@ int	ServerManager::clientReadEvent() {
 		}
 		else if (ss == kResponseMakingDone)
 			this->setEvent(re3->getClientId(), EVFILT_WRITE, EV_ENABLE);
+		else if (ss == kResponseError) {
+			// 500 ?? 종료
+		}
 	}
 	return OK;
 }

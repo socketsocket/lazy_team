@@ -5,6 +5,8 @@
 #include <string>
 #include "Webserv.hpp"
 #include "Re3.hpp"
+#include "Location.hpp"
+#include <cstdlib>
 
 class CgiConnector {
 	private:
@@ -12,7 +14,7 @@ class CgiConnector {
 		const char**	makeEnvp() const;
 
 	public:
-		void	makeEnvMap(Request* req);
+		ServerStatus	makeCgiResponse(Re3* re3, Location* loc/*, std::string target*/);
 
 		CgiConnector();
 		CgiConnector(const CgiConnector& ref);

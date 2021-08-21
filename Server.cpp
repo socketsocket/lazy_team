@@ -15,7 +15,6 @@ ServerStatus Server::makeResponse(Re3* re3) const {
 		return this->makeErrorResponse(re3, curr_location, stat);
 	//리소스 상태는 'empty'/읽는중/읽음완료/에러 네가지로 들어옴
 	//만약 리소스 상태가 == 에러라면
-	// 저 request가 411에러면 상태를 kLengthReq로 바꿔 놓을게요. good??
 	assert(re3->getRscPtr() != NULL);
 	if (re3->getRscPtr()->getStatus() == kDisconnect
 	|| re3->getRscPtr()->getStatus() == kReadFail)
@@ -27,6 +26,9 @@ ServerStatus Server::makeResponse(Re3* re3) const {
 		if (request->getMethod() & POST)
 			return kResourceWriteWaiting;
 	}
+
+	// TODO extension을 파악해서 cgi로 넘겨주기.
+	// return ServerStatus	makeCgiResponse(Request* req, Location* loc, std::string target);
 	std::string resource_path;
 	if (re3->getRscPtr()->getStatus() == kFinished)
 		resource_path = re3->getRscPtr()->getResourceUri();
@@ -195,7 +197,7 @@ ServerStatus Server::makePOSTResponse(Re3* re3, const Location* curr_location, s
 	}
 	if (re3->getRscPtr()->getStatus() == kFinished) {
 		Request* request = re3->getReqPtr();
-		assert(re3->getRspPtr() == NULL);
+		assert(re3->getRspPtr() == NULL); // NOTE 여기 무조건 false 아닌가요?
 		if (checkPath(resource_path) == kDirectory) {
 			re3->setRspPtr(new Response(kFinished, std::string(C201), headers, resource->getContent(), request->getVersion()));
 		} else {
