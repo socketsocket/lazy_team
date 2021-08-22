@@ -2,6 +2,36 @@
 
 std::map<std::string, std::string>	Server::mime_types;
 
+bool Server::isCgi(Request* request, const Location* location) const
+{
+	///dir/aa.py?query=asdf
+	std::string uri = request->getUri().substr(location->getPath().length());
+	//aa.py?query=asdf
+	const std::map<std::string, std::string>& cgi_infos = location->getCgiInfos();
+
+	for (std::map<std::string, std::string>::const_iterator it = cgi_infos.begin(); it != cgi_infos.end(); it++)
+	{
+		//index = 2
+		size_t index = uri.find(it->first);
+		if (index != std::string::npos && uri.compare(index, it->first.length(), it->first) == 0)
+		{
+			int queryIndex;
+			//aa.py
+			if ((queryIndex = uri.find('?')) != -1)
+				uri = uri.substr(0, queryIndex);
+			//.py
+			// uri = uri.substr(index);
+			// size_t pathIndex = uri.find('/');
+			// if (pathIndex != std::string::npos)
+			// 	uri = uri.substr(0, pathIndex);
+			// if(uri.compare(0, it->first.length() + 1, it->first) != 0)
+			// 	return false;
+			return true;
+		}
+	}
+	return false;
+}
+
 ServerStatus Server::makeResponse(Re3* re3) const {
 	Request *request = re3->getReqPtr();
 	const Location* curr_location = this->currLocation(request->getUri());
@@ -26,7 +56,13 @@ ServerStatus Server::makeResponse(Re3* re3) const {
 		return kResourceWriteWaiting;
 
 	// TODO extension을 파악해서 cgi로 넘겨주기.
-	// return ServerStatus	makeCgiResponse(Request* req, Location* loc, std::string target);
+	if (isCgi(request, curr_location))
+	{
+		CgiConnector cgi_connector;
+		if (cgi_connector.makeCgiResponse(re3, curr_location) == kResponseError)
+			return this->makeErrorResponse(re3, curr_location, C500);
+		return kResourceReadInit;
+	}
 	std::string resource_path;
 	if (re3->getRscPtr()->getStatus() == kFinished)
 		resource_path = re3->getRscPtr()->getResourceUri();

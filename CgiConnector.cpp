@@ -19,7 +19,7 @@
 // Public Functions
 //------------------------------------------------------------------------------
 
-ServerStatus	CgiConnector::makeCgiResponse(Re3* re3, Location* loc/*, std::string target*/) {
+ServerStatus	CgiConnector::makeCgiResponse(Re3* re3, const Location* loc) {
 	int		pipe_fd[2];
 	int		ret;
 	pid_t	pid;

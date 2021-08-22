@@ -42,6 +42,7 @@ class Location {
 		const std::map<stat_type, std::string>&	getDefaultErrorPages() const;
 		const std::string						getDefaultErrorPage(stat_type stat) const;
 		const std::string						getCgiBinary(std::string) const;
+		const std::map<std::string, std::string>&	getCgiInfos() const;
 };
 
 #endif

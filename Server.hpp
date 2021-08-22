@@ -11,7 +11,7 @@
 #include "Location.hpp"
 #include "Re3.hpp"
 #include "TermPrinter.hpp"
-
+#include "CgiConnector.hpp"
 
 class Server
 {
@@ -39,6 +39,7 @@ class Server
 		std::string fileExtension(std::string resource_path) const;
 		std::string	makeAutoIndexPage(Request* request, std::string resource_path) const;
 		std::string makeHTMLPage(std::string str) const;
+		bool		isCgi(Request* request, const Location* location) const;
 
 		Server();
 		Server&	operator=(const Server &ref);

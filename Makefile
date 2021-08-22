@@ -27,7 +27,8 @@ INC_REQUEST = Request.hpp $(INC_LOCATION)
 INC_RESPONSE = Response.hpp
 INC_RESOURCE = Resource.hpp
 INC_RE3 = Re3.hpp $(INC_REQUEST) $(INC_RESPONSE) $(INC_RESOURCE)
-INC_SERVER = Server.hpp $(INC_RE3)
+INC_CGICONNECTOR = CgiConnector.hpp
+INC_SERVER = Server.hpp $(INC_RE3) $(INC_CGICONNECTOR)
 INC_PORTMANGER = PortManager.hpp $(INC_SERVER)
 INC_CLIENT = Client.hpp $(INC_PORTMANGER)
 INC_SERVERMANAGER = ServerManager.hpp $(INC_CLIENT) $(INC_ERRMSGHANDLER)
@@ -46,6 +47,8 @@ Resource.o: %.o : %.cpp $(INC_RESOURCE)
 	$(CC) $(CPPFLAGS) -c $< -o $@
 Re3.o: %.o : %.cpp $(INC_RE3)
 	$(CC) $(CPPFLAGS) -c $< -o $@
+CgiConnector.o: %.o : %.cpp $(INC_CGICONNECTOR)
+	$(CC) $(CPPFLAGS) -c $< -o $@
 Server.o: %.o : %.cpp $(INC_SERVER)
 	$(CC) $(CPPFLAGS) -c $< -o $@
 PortManager.o: %.o : %.cpp $(INC_PORTMANGER)
@@ -63,6 +66,7 @@ OBJS = TermPrinter.o \
 	Response.o \
 	Resource.o \
 	Re3.o \
+	CgiConnector.o \
 	Server.o \
 	PortManager.o \
 	Client.o \

@@ -57,8 +57,6 @@ const std::map<stat_type, std::string>& Location::getDefaultErrorPages() const {
 	return this->error_pages;
 }
 
-#include <iostream> // NOTE 뭐에요?
-
 const std::string Location::getDefaultErrorPage(stat_type stat) const {
 	if (this->error_pages.count(stat))
 		return (*this->error_pages.find(stat)).second;
@@ -72,4 +70,8 @@ const std::string		Location::getCgiBinary(std::string extension) const {
 	if (tmp == this->cgi_infos.end())
 		return "";
 	return tmp->second;
+}
+
+const std::map<std::string, std::string>&	Location::getCgiInfos() const {
+	return this->cgi_infos;
 }

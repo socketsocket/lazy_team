@@ -14,7 +14,7 @@ class CgiConnector {
 		const char**	makeEnvp() const;
 
 	public:
-		ServerStatus	makeCgiResponse(Re3* re3, Location* loc/*, std::string target*/);
+		ServerStatus	makeCgiResponse(Re3* re3, const Location* loc);
 
 		CgiConnector();
 		CgiConnector(const CgiConnector& ref);
