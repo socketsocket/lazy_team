@@ -4,30 +4,14 @@ std::map<std::string, std::string>	Server::mime_types;
 
 bool Server::isCgi(Request* request, const Location* location) const
 {
-	///dir/aa.py?query=asdf
-	std::string uri = request->getUri().substr(location->getPath().length());
-	//aa.py?query=asdf
+	std::string uri = request->getUri();
 	const std::map<std::string, std::string>& cgi_infos = location->getCgiInfos();
 
-	for (std::map<std::string, std::string>::const_iterator it = cgi_infos.begin(); it != cgi_infos.end(); it++)
+	// NOTE multi cgi는 보너스
+	for (std::map<std::string, std::string>::const_iterator it = cgi_infos.begin(); it != cgi_infos.end(); ++it)
 	{
-		//index = 2
-		size_t index = uri.find(it->first);
-		if (index != std::string::npos && uri.compare(index, it->first.length(), it->first) == 0)
-		{
-			int queryIndex;
-			//aa.py
-			if ((queryIndex = uri.find('?')) != -1)
-				uri = uri.substr(0, queryIndex);
-			//.py
-			// uri = uri.substr(index);
-			// size_t pathIndex = uri.find('/');
-			// if (pathIndex != std::string::npos)
-			// 	uri = uri.substr(0, pathIndex);
-			// if(uri.compare(0, it->first.length() + 1, it->first) != 0)
-			// 	return false;
+		if (uri.find(it->first) != std::string::npos)
 			return true;
-		}
 	}
 	return false;
 }
@@ -35,38 +19,34 @@ bool Server::isCgi(Request* request, const Location* location) const
 ServerStatus Server::makeResponse(Re3* re3) const {
 	Request *request = re3->getReqPtr();
 	const Location* curr_location = this->currLocation(request->getUri());
+	stat_type stat = this->requestValidCheck(request, curr_location);
 
 	if (re3->getReqPtr()->getStatus() == kLengthReq)
 		return this->makeErrorResponse(re3, curr_location, C411);
-	assert(re3->getReqPtr()->getStatus() == kFinished);
-	stat_type stat = this->requestValidCheck(request, curr_location);
 	if (std::string(stat).compare(C200))
 		return this->makeErrorResponse(re3, curr_location, stat);
-
-	//리소스 상태는 'empty'/읽는중/읽음완료/에러 네가지로 들어옴
-	//만약 리소스 상태가 == 에러라면
-	assert(re3->getRscPtr() != NULL);
 	if (re3->getRscPtr()->getStatus() == kDisconnect
 	|| re3->getRscPtr()->getStatus() == kReadFail)
 		return this->makeErrorResponse(re3, curr_location, C500);
-	//만약 리소스 상태가 == 읽는중이라면
-	if (re3->getRscPtr()->getStatus() == kReading && request->getMethod() & GET)
-			return kResourceReadWaiting;
-	if (re3->getRscPtr()->getStatus() == kWriting && request->getMethod() & POST)
+	if (re3->getRscPtr()->getStatus() == kReading /*&& request->getMethod() & GET*/)
+		return kResourceReadWaiting;
+	if (re3->getRscPtr()->getStatus() == kWriting /*&& request->getMethod() & POST*/)
 		return kResourceWriteWaiting;
 
-	// TODO extension을 파악해서 cgi로 넘겨주기.
+	// cgi handle
 	if (isCgi(request, curr_location))
 	{
-		CgiConnector cgi_connector;
-		if (cgi_connector.makeCgiResponse(re3, curr_location) == kResponseError)
+		CgiConnector	cgi_connector;
+		ServerStatus	ret = cgi_connector.makeCgiResponse(re3, curr_location);
+		if (ret == kResponseError)
 			return this->makeErrorResponse(re3, curr_location, C500);
-		return kResourceReadInit;
+		return ret;
 	}
+
 	std::string resource_path;
-	if (re3->getRscPtr()->getStatus() == kFinished)
+	if (re3->getRscPtr()->getStatus() == kReadDone) {
 		resource_path = re3->getRscPtr()->getResourceUri();
-	else {
+	} else {
 		resource_path = request->getUri();
 		size_t path_pos = resource_path.find(curr_location->getPath());
 		resource_path.replace(path_pos, curr_location->getPath().length(), curr_location->getRoot());
@@ -92,6 +72,7 @@ ServerStatus Server::makeErrorResponse(Re3* re3, const Location* location, stat_
 	headers["Content-Type"] = this->contentTypeHeaderInfo(".html");
 
 	//해당 에러코드의 디폴트 에러페이지가 있으명
+	// NOTE 리소스를 읽다가 실패를 해서 온거면, 기존에 있던 resource fd라던지 처리해야할게 있지 않을까요?
 	if (!location->getDefaultErrorPage(http_status_code).empty()) {
 		int fd = open(location->getDefaultErrorPage(http_status_code).c_str(), O_RDONLY);
 		if (fd != ERROR) {
@@ -182,7 +163,7 @@ ServerStatus Server::makeGETResponse(Re3* re3, const Location* curr_location, st
 		}
 		return kResourceReadInit;
 	//만약 리소스 상태가 == Finished
-	} else if (re3->getRscPtr()->getStatus() == kFinished) {
+	} else if (re3->getRscPtr()->getStatus() == kReadDone) {
 		headers["Content-Type"] = this->contentTypeHeaderInfo(fileExtension(resource_path.substr()));
 		headers["Content-Language"] = "ko-KR";
 		headers["Content-Location"] = resource_path.substr(1);
@@ -228,12 +209,12 @@ ServerStatus Server::makePOSTResponse(Re3* re3, const Location* curr_location, s
 		}
 		return this->makeErrorResponse(re3, curr_location, C403);
 	}
-	if (re3->getRscPtr()->getStatus() == kFinished) {
+	if (re3->getRscPtr()->getStatus() == kWriteDone) {
 		Request* request = re3->getReqPtr();
 		headers["Date"] = this->dateHeaderInfo();
 		headers["Server"] = "Passive Server";
 		headers["Content-Location"] = resource_path.substr(1);
-		assert(re3->getRspPtr() == NULL); 
+		assert(re3->getRspPtr() == NULL);
 		if (checkPath(resource_path) == kDirectory) {
 			re3->setRspPtr(new Response(kFinished, std::string(C201), headers, "", request->getVersion()));
 		} else {
