@@ -14,10 +14,11 @@
 // 4. Resource struct는 open한 uri의 fd와 그 상태를 백업
 struct Resource {
 	private:
-		Status				status;
+		Status			status;
 		int				resource_fd; // status를 보고 소멸자에서 close;
 		std::string		content;
 		std::string		uri;
+		stat_type		is_created; //POST 요청에서 쓰게 될 response Stat. 파일이 신규생성되었는지/기존에 존재했는지 백업
 		Resource();
 
 	public:
@@ -33,9 +34,11 @@ struct Resource {
 		const std::string&		getContent() const;
 		std::string				getResourceUri() const;
 		void					setResourceUri(std::string uri);
-		void		addContent(const std::string& str);
-		void		setStatus(Status status);
-		void		setResourceFd(int fd);
+		void					addContent(const std::string& str);
+		void					setStatus(Status status);
+		void					setResourceFd(int fd);
+		void					setIsCreated(stat_type stat);
+		stat_type				getIsCreated() const;
 };
 
 #endif

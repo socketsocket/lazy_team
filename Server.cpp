@@ -213,6 +213,7 @@ ServerStatus Server::makePOSTResponse(Re3* re3, const Location* curr_location, s
 					return this->makeErrorResponse(re3, curr_location, C500);
 				resource->setStatus(kWriting);
 				resource->setResourceFd(fd);
+				resource->setIsCreated(C201);
 				return kResourceWriteInit;
 			}
 			case kFile :
@@ -221,6 +222,7 @@ ServerStatus Server::makePOSTResponse(Re3* re3, const Location* curr_location, s
 					return this->makeErrorResponse(re3, curr_location, C500);
 				resource->setStatus(kWriting);
 				resource->setResourceFd(fd);
+				resource->setIsCreated(C200);
 				return kResourceWriteInit;
 			}
 			default :
@@ -234,11 +236,7 @@ ServerStatus Server::makePOSTResponse(Re3* re3, const Location* curr_location, s
 		headers["Server"] = "Passive Server";
 		headers["Content-Location"] = resource_path.substr(1);
 		assert(re3->getRspPtr() == NULL); 
-		if (checkPath(resource_path) == kDirectory) {
-			re3->setRspPtr(new Response(kFinished, std::string(C201), headers, "", request->getVersion()));
-		} else {
-			re3->setRspPtr(new Response(kFinished, std::string(C200), headers, "", request->getVersion()));
-		}
+		re3->setRspPtr(new Response(kFinished, std::string(resource->getIsCreated()), headers, "", request->getVersion()));
 		return kResponseMakingDone;
 	}
 	return kResourceWriteWaiting;

@@ -55,3 +55,11 @@ void Resource::setResourceUri(std::string input) {
 void Resource::setResourceFd(int fd) {
 	this->resource_fd = fd;
 }
+
+void Resource::setIsCreated(stat_type stat) {
+	this->is_created = stat;
+}
+
+stat_type Resource::getIsCreated() const {
+	return this->is_created;
+}
