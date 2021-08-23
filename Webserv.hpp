@@ -97,6 +97,8 @@ enum	Status {
 	kBody, // Request
 	kReading, // Resource
 	kWriting, // Resource
+	kReadDone, // NOTE newly add
+	kWriteDone, // NOTE newly add
 	kFinished, // Request, Resource
 	kDisconnect,
 	kReadFail, // Resource, Request

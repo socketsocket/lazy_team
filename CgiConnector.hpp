@@ -10,8 +10,13 @@
 
 class CgiConnector {
 	private:
+		int									pipe_fd[2];
 		std::map<std::string, std::string>	env_map;
-		const char**	makeEnvp() const;
+
+		ServerStatus	prepareResource(Request* req, Resource* rsc, const Location* loc);
+		ServerStatus	prepareResponse(Re3* re3);
+		ServerStatus	CgiConnector::waitCgi(Resource* rsc);
+
 
 	public:
 		ServerStatus	makeCgiResponse(Re3* re3, const Location* loc);

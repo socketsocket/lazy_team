@@ -156,7 +156,7 @@ int	ServerManager::resourceReadEvent() {
 	// read done.
 	if (this->checker < LOCAL_BUFF) {
 		resource->addContent(std::string(this->read_buffer, this->checker));
-		this->setAndPassResource(re3, kFinished);
+		this->setAndPassResource(re3, kReadDone);
 	} else { // this->checker == LOCAL_BUFF
 		resource->addContent(std::string(this->read_buffer, LOCAL_BUFF));
 	}
@@ -169,7 +169,7 @@ int	ServerManager::resourceWriteEvent() {
 	Resource*	resource = re3->getRscPtr();
 
 	if (request->getBody().length() == 0) {
-		this->setAndPassResource(re3, kFinished);
+		this->setAndPassResource(re3, kWriteDone);
 		close(this->cur_fd);
 		return OK;
 	}
@@ -192,7 +192,8 @@ int	ServerManager::resourceWriteEvent() {
 		}
 		else
 		{
-			this->setAndPassResource(re3, kFinished);
+			// NOTE cgi 처리를 위해 새로운 상태를 추가함.
+			this->setAndPassResource(re3, kWriteDone);
 			close(this->cur_fd);
 		}
 	}
@@ -212,7 +213,7 @@ int	ServerManager::resourceWriteEvent() {
 		}
 		else
 		{
-			this->setAndPassResource(re3, kFinished);
+			this->setAndPassResource(re3, kWriteDone);
 			close(this->cur_fd);
 		}
 	}
