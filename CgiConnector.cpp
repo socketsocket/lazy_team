@@ -168,7 +168,6 @@ ServerStatus	CgiConnector::makeCgiResponse(Re3* re3, const Location* loc, unsign
 		return prepareResponse(re3);
 }
 
-
 CgiConnector::CgiConnector(const CgiConnector& ref): env_map(ref.env_map) {
 	*this = ref;
 }

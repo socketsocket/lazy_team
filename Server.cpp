@@ -35,7 +35,7 @@ ServerStatus Server::makeResponse(Re3* re3) const {
 	if (handleCGI(request, curr_location))
 	{
 		CgiConnector	cgi_connector;
-		ServerStatus	ret = cgi_connector.makeCgiResponse(re3, curr_location);
+		ServerStatus	ret = cgi_connector.makeCgiResponse(re3, curr_location, this->port_num);
 		if (ret == kResponseError)
 			return this->makeErrorResponse(re3, curr_location, C500);
 		return ret;
