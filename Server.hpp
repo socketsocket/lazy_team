@@ -17,13 +17,13 @@ class Server
 {
 	private:
 		static std::map<std::string, std::string>	mime_types;
-
 		const std::string							server_name;
 		const std::string							default_root;
 		std::map<stat_type, std::string>			default_error_pages;
 		unsigned long								client_body_limit;
 		const std::vector<Location>					locations;
 		const std::pair<stat_type, std::string>		return_to;
+		unsigned int								port_num;
 
 		ServerStatus		makeGETResponse(Re3* re3, const Location* curr_location, std::string resource_path) const;
 		ServerStatus		makePOSTResponse(Re3* re3, const Location* curr_location, std::string resource_path) const;
@@ -39,7 +39,7 @@ class Server
 		std::string fileExtension(std::string resource_path) const;
 		std::string	makeAutoIndexPage(Request* request, std::string resource_path) const;
 		std::string makeHTMLPage(std::string str) const;
-		bool		isCgi(Request* request, const Location* location) const;
+		bool		handleCGI(Request* request, const Location* location) const;
 
 		Server();
 		Server&	operator=(const Server &ref);
@@ -57,6 +57,8 @@ class Server
 
 		ServerStatus		makeResponse(Re3* re3) const;
 		const std::string&	getServerName() const;
+		void				setPortNum(unsigned int num);
+		unsigned int		getPortNum() const;
 };
 
 #endif

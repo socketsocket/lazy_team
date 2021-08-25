@@ -2,39 +2,37 @@
 
 std::map<std::string, std::string>	Server::mime_types;
 
-bool Server::isCgi(Request* request, const Location* location) const
+bool Server::handleCGI(Request* request, const Location* location) const
 {
-	std::string uri = request->getUri();
+	std::string	uri = request->getUri();
 	const std::map<std::string, std::string>& cgi_infos = location->getCgiInfos();
 
-	// NOTE multi cgi는 보너스
 	for (std::map<std::string, std::string>::const_iterator it = cgi_infos.begin(); it != cgi_infos.end(); ++it)
-	{
 		if (uri.find(it->first) != std::string::npos)
 			return true;
-	}
 	return false;
 }
 
 ServerStatus Server::makeResponse(Re3* re3) const {
-	Request *request = re3->getReqPtr();
+	Request*	request = re3->getReqPtr();
+	Resource*	resource = re3->getRscPtr();
+	const Status req_status = request->getStatus();
+	const Status rsc_status = resource->getStatus();
 	const Location* curr_location = this->currLocation(request->getUri());
 	stat_type stat = this->requestValidCheck(request, curr_location);
 
-	if (re3->getReqPtr()->getStatus() == kLengthReq)
+	if (req_status == kLengthReq)
 		return this->makeErrorResponse(re3, curr_location, C411);
 	if (std::string(stat).compare(C200))
 		return this->makeErrorResponse(re3, curr_location, stat);
-	if (re3->getRscPtr()->getStatus() == kDisconnect
-	|| re3->getRscPtr()->getStatus() == kReadFail)
+	if (req_status == kReadFail || rsc_status == kDisconnect || rsc_status == kReadFail)
 		return this->makeErrorResponse(re3, curr_location, C500);
-	if (re3->getRscPtr()->getStatus() == kReading /*&& request->getMethod() & GET*/)
+	if (rsc_status == kReading /*&& request->getMethod() & GET*/)
 		return kResourceReadWaiting;
-	if (re3->getRscPtr()->getStatus() == kWriting /*&& request->getMethod() & POST*/)
+	if (rsc_status == kWriting /*&& request->getMethod() & POST*/)
 		return kResourceWriteWaiting;
 
-	// cgi handle
-	if (isCgi(request, curr_location))
+	if (handleCGI(request, curr_location))
 	{
 		CgiConnector	cgi_connector;
 		ServerStatus	ret = cgi_connector.makeCgiResponse(re3, curr_location);
@@ -44,6 +42,7 @@ ServerStatus Server::makeResponse(Re3* re3) const {
 	}
 
 	std::string resource_path;
+
 	if (re3->getRscPtr()->getStatus() == kReadDone) {
 		resource_path = re3->getRscPtr()->getResourceUri();
 	} else {
@@ -183,9 +182,9 @@ ServerStatus Server::makeGETResponse(Re3* re3, const Location* curr_location, st
 }
 
 ServerStatus Server::makePOSTResponse(Re3* re3, const Location* curr_location, std::string resource_path) const {
-	int fd;
-	std::map<std::string, std::string> headers;
-	Resource* resource = re3->getRscPtr();
+	int 								fd;
+	std::map<std::string, std::string>	headers;
+	Resource*							resource = re3->getRscPtr();
 
 	if (resource->getStatus() == kNothing) {
 		switch (checkPath(resource_path)) {
@@ -212,26 +211,17 @@ ServerStatus Server::makePOSTResponse(Re3* re3, const Location* curr_location, s
 		return this->makeErrorResponse(re3, curr_location, C403);
 	}
 	if (re3->getRscPtr()->getStatus() == kWriteDone) {
+		close(re3->getRscPtr()->getResourceFd());
 		Request* request = re3->getReqPtr();
 		headers["Date"] = this->dateHeaderInfo();
 		headers["Server"] = "Passive Server";
 		headers["Content-Location"] = resource_path.substr(1);
-<<<<<<< HEAD
-		assert(re3->getRspPtr() == NULL); 
-		re3->setRspPtr(new Response(kFinished, std::string(resource->getIsCreated()), headers, "", request->getVersion()));
-=======
 		assert(re3->getRspPtr() == NULL);
-		if (checkPath(resource_path) == kDirectory) {
-			re3->setRspPtr(new Response(kFinished, std::string(C201), headers, "", request->getVersion()));
-		} else {
-			re3->setRspPtr(new Response(kFinished, std::string(C200), headers, "", request->getVersion()));
-		}
->>>>>>> 25541964c88218f33f46ff17e6cc63f35fa2f3f2
+		re3->setRspPtr(new Response(kFinished, std::string(resource->getIsCreated()), headers, "", request->getVersion()));
 		return kResponseMakingDone;
 	}
 	return kResourceWriteWaiting;
 }
-
 
 ServerStatus Server::makeDELETEResponse(Re3* re3, const Location* curr_location, std::string resource_path) const {
 	std::map<std::string, std::string> headers;
@@ -454,4 +444,12 @@ Server::~Server() {}
 
 const std::string&	Server::getServerName() const {
 	return this->server_name;
+}
+
+void				Server::setPortNum(unsigned int num) {
+	this->port_num = num;
+}
+
+unsigned int		Server::getPortNum() const {
+	return this->port_num;
 }

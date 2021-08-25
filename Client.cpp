@@ -46,7 +46,8 @@ int	Client::chunkedParser(Request* request) {
 		if (tmp.find_first_of("0123456789ABCDEFabcdef") != std::string::npos) {
 			putErr("An invalid chunked body received");
 			request->setStatus(kReadFail);
-			return ERROR; // parsing이 꼬임. ㅈ댐
+			this->read_buff.erase(0);
+			return ERROR;
 		}
 		iss.str(tmp);
 		iss >> std::hex >> len;
@@ -163,15 +164,10 @@ std::vector<std::pair<Re3*, ServerStatus> >	Client::recvRequest(std::string rawR
 			this->re3_deque.push_back(Re3(this->client_fd));
 			this->re3_deque.back().setReqPtr(new Request);
 		}
-		if (ERROR == (this->initParser(this->re3_deque.back().getReqPtr()))) {
-			if (this->re3_deque.back().getReqPtr()->getStatus() == kReadFail) { // 응답 없이 연결 끊기
-				std::vector<std::pair<Re3*, ServerStatus> >	chunked_length_read_fail(1, std::make_pair(&re3_deque.back(), kResponseError));
-				return chunked_length_read_fail;
-			} else if (this->re3_deque.back().getReqPtr()->getStatus() == kLengthReq) { // 응답 후 연결 끊기
-				server_response = this->port_manager.passRequest(&this->re3_deque.back());
-				std::vector<std::pair<Re3*, ServerStatus> >	length_read_fail(1, std::make_pair(&re3_deque.back(), server_response));
-				return length_read_fail; // NOTE 클라이언트와 연결을 끊어야 할 상황.
-			}
+		if (ERROR == this->initParser(this->re3_deque.back().getReqPtr())) {
+			server_response = this->port_manager.passRequest(&this->re3_deque.back());
+			std::vector<std::pair<Re3*, ServerStatus> >	request_error(1, std::make_pair(&re3_deque.back(), server_response));
+			return request_error; // NOTE 클라이언트와 연결을 끊어야 할 상황
 		}
 	} while (this->re3_deque.back().getReqPtr()->getStatus() == kFinished);
 	return rsc_claim;

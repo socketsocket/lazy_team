@@ -1,4 +1,6 @@
 #include "CgiConnector.hpp"
+#include <arpa/inet.h>
+
 //------------------------------------------------------------------------------
 // Private Functions
 //------------------------------------------------------------------------------
@@ -19,56 +21,80 @@
 // Public Functions
 //------------------------------------------------------------------------------
 
-static void	setEnvVariable(Request* req, const Location* loc, std::string& path, std::string& query_string) {
-	setenv("AUTH_TYPE", "", 1);
-	setenv("CONTENT_TYPE", req->getHeaderValue("content_type").c_str(), 1);
-	setenv("CONTENT_LENGTH", req->getHeaderValue("content_length").c_str(), 1);
-	setenv("PATH_INFO", path.c_str(), 1);
-	setenv("PATH_TRANSLATED", (loc->getRoot() + path).c_str(), 1);
-	setenv("SCRIPT_NAME", path.c_str(), 1);
-	setenv("SCRIPT_FILENAME", (loc->getRoot() + path).c_str(), 1); // 절대경로.
-	setenv("SERVER_PROTOCOL", "HTTP/1.1", 1);
-	setenv("SERVER_NAME", "passive_server", 1); // NOTE 맞나?
-	setenv("SERVER_SOFTWARE", "passive_server/1.1", 1);
-	// setenv("SERVER_PORT", ; 포트번호를 어떻게 알죠?
-	setenv("GATEWAY_INTERFACE", "CGI/1.1", 1);
-	setenv("HTTP_ACCEPT", req->getHeaderValue("accept").c_str(), 1);
-	setenv("HTTP_ACCEPT_CHARSET", req->getHeaderValue("accept_charset").c_str(), 1);
-	setenv("HTTP_ACCEPT_ENCODING", req->getHeaderValue("accept_encoding").c_str(), 1);
-	setenv("HTTP_ACCEPT_LANGUAGE", req->getHeaderValue("accept_language").c_str(), 1);
-	setenv("HTTP_CONNECTION", req->getHeaderValue("connection").c_str(), 1);
-	setenv("HTTP_COOKIE", req->getHeaderValue("cookie").c_str(), 1);
-	setenv("HTTP_FORWARDED", req->getHeaderValue("forwarded").c_str(), 1);
-	setenv("HTTP_HOST", req->getHeaderValue("host").c_str(), 1);
-	setenv("HTTP_PROXY_AUTHORIZATION", req->getHeaderValue("proxy_authorization").c_str(), 1);
-	setenv("HTTP_REFERER", req->getHeaderValue("referer").c_str(), 1);
-	setenv("HTTP_USER_AGENT", req->getHeaderValue("user_agent").c_str(), 1);
-	// setenv("REMOTE_ADDR", "", 1); // ip 주소?
-	setenv("REMOTE_HOST", req->getHeaderValue("host").c_str(), 1);;
-	setenv("REQUEST_URI", path.c_str(), 1);
-	if (req->getMethod() & GET)
-		setenv("REQUEST_METHOD", "GET", 1);
-	if (req->getMethod() & POST)
-		setenv("REQUEST_METHOD", "POST", 1);
-	if (req->getMethod() & DELETE)
-		setenv("REQUEST_METHOD", "DELETE", 1);
-	setenv("REMOTE_USER", "", 1);
-	setenv("REMOTE_IDENT", "", 1);
-	// setenv("REDIRECT_STATUS"); 200?
-	setenv("QUERY_STRING", query_string.c_str(), 1);
+static std::string	getIP(int client_fd) {
+	struct sockaddr_in	client_addr;
+	socklen_t			addr_len = sizeof(struct sockaddr_in);
+	char				ip[16];
+
+	getsockname(client_fd, (struct sockaddr *)&client_addr, &addr_len);
+	strncpy(ip, inet_ntoa(client_addr.sin_addr), 16);
+	return (ip);
 }
 
-ServerStatus	CgiConnector::prepareResource(Request* req, Resource* rsc, const Location* loc) {
+static char**	setEnvVariable(Re3* re3, const Location* loc, std::string& path, std::string& query_string, unsigned int port_num) {
+	Request*							req = re3->getReqPtr();
+	std::map<std::string, std::string>	tmp;
+
+	tmp["AUTH_TYPE"] = "";
+	tmp["CONTENT_TYPE"] = req->getHeaderValue("content_type");
+	tmp["CONTENT_LENGTH"] = req->getHeaderValue("content_length");
+	tmp["PATH_TRANSLATED"] = (loc->getRoot() + path);
+	tmp["PATH_INFO"] = path;
+	tmp["SCRIPT_NAME"] = path;
+	tmp["SCRIPT_FILENAME"] = loc->getRoot() + path;
+	tmp["SERVER_PROTOCOL"] = "HTTP/1.1";
+	tmp["SERVER_NAME"] = req->getHeaderValue("host");
+	tmp["SERVER_SOFTWARE"] = "passive_server/1.1";
+	tmp["SERVER_PORT"] = std::to_string(port_num);
+	tmp["GATEWAY_INTERFACE"] = "CGI/1.1";
+	tmp["HTTP_ACCEPT"] = req->getHeaderValue("accept");
+	tmp["HTTP_ACCEPT_CHARSET"] = req->getHeaderValue("accept_charset");
+	tmp["HTTP_ACCEPT_ENCODING"] = req->getHeaderValue("accept_encoding");
+	tmp["HTTP_ACCEPT_LANGUAGE"] = req->getHeaderValue("accept_language");
+	tmp["HTTP_CONNECTION"] = req->getHeaderValue("connection");
+	tmp["HTTP_COOKIE"] = req->getHeaderValue("cookie");
+	tmp["HTTP_FORWARDED"] = req->getHeaderValue("forwarded");
+	tmp["HTTP_HOST"] = req->getHeaderValue("host");
+	tmp["HTTP_PROXY_AUTHORIZATION"] = req->getHeaderValue("proxy_authorization");
+	tmp["HTTP_REFERER"] = req->getHeaderValue("referer");
+	tmp["HTTP_USER_AGENT"] = req->getHeaderValue("user_agent");
+	tmp["REMOTE_ADDR"] = getIP(re3->getClientId());
+	tmp["REMOTE_HOST"] = req->getHeaderValue("host");
+	tmp["REQUEST_URI"] = req->getUri();
+	if (req->getMethod() & GET)
+		tmp["REQUEST_METHOD"] = "GET";
+	if (req->getMethod() & POST)
+		tmp["REQUEST_METHOD"] = "POST";
+	if (req->getMethod() & DELETE)
+		tmp["REQUEST_METHOD"] = "DELETE";
+	tmp["REMOTE_USER"] = "";
+	tmp["REMOTE_IDENT"] = "";
+	tmp["QUERY_STRING"] = query_string;
+
+	char** envp = static_cast<char**>(malloc(sizeof(char*) * tmp.size()));
+
+	if (envp == NULL)
+		return NULL;
+	int i = 0;
+	for(std::map<std::string, std::string>::iterator it = tmp.begin(); it != tmp.end(); ++it) {
+		envp[i] = strdup((it->first + "=" + it->second).c_str());
+		++i;
+	}
+	return envp;
+}
+
+ServerStatus	CgiConnector::prepareResource(Re3* re3, const Location* loc, unsigned int port_num) {
+	Request*	req = re3->getReqPtr();
+	Resource*	rsc = re3->getRscPtr();
 	int		ret;
-	pid_t	pid;
 
 	ret = pipe(this->pipe_fd);
 	if (ret < 0)
 		return kResponseError;
-	pid = fork();
-	if (pid < 0) {
+	this->pid = fork();
+	if (this->pid < 0) {
 		return kResponseError;
-	} else if (pid == 0) {
+	} else if (this->pid == 0) {
 		dup2(this->pipe_fd[0], STDIN_FILENO);
 		dup2(this->pipe_fd[1], STDOUT_FILENO);
 		close(this->pipe_fd[0]);
@@ -87,8 +113,11 @@ ServerStatus	CgiConnector::prepareResource(Request* req, Resource* rsc, const Lo
 		extension = path.substr(path.find(".") + 1);
 		bin = loc->getCgiBinary(extension);
 		char *av[3] = {const_cast<char*>(bin.c_str()), const_cast<char*>(path.c_str()), NULL};
-		setEnvVariable(req, loc, path, query_string);
-		ret = execv(bin.c_str(), av);
+		char** envp = setEnvVariable(re3, loc, path, query_string, port_num);
+		if (envp != NULL)
+			ret = execve(bin.c_str(), av, envp);
+		else
+			exit(1);
 		close(STDOUT_FILENO);
 		exit(ret);
 	} else {
@@ -99,8 +128,18 @@ ServerStatus	CgiConnector::prepareResource(Request* req, Resource* rsc, const Lo
 }
 
 ServerStatus	CgiConnector::waitCgi(Resource* rsc) {
+	int		statloc;
+	pid_t	ret = waitpid(this->pid, &statloc, WNOHANG);
+
+	if (ret == 0)
+		return kWaiting;
 	close(this->pipe_fd[1]);
-	waitpid(-1, NULL, 0); // NOTE 비동기로 해줄 수 있나?
+	if (ret == -1)
+		return kResponseError;
+	if (WIFEXITED(statloc) && WEXITSTATUS(statloc))
+		return kResponseError;
+	if (WIFSIGNALED(statloc))
+		return kResponseError;
 	rsc->setResourceFd(pipe_fd[0]);
 	rsc->setStatus(kReading);
 	return kResourceReadInit;
@@ -118,16 +157,13 @@ ServerStatus	CgiConnector::prepareResponse(Re3* re3) {
 	return kResponseMakingDone;
 }
 
-ServerStatus	CgiConnector::makeCgiResponse(Re3* re3, const Location* loc) {
-	Request*	req = re3->getReqPtr();
+ServerStatus	CgiConnector::makeCgiResponse(Re3* re3, const Location* loc, unsigned int port_num) {
 	Resource*	rsc = re3->getRscPtr();
 
 	if (rsc->getStatus() == kNothing)
-		return prepareResource(req, rsc, loc);
+		return prepareResource(re3, loc, port_num);
 	if (rsc->getStatus() == kWriteDone)
 		return waitCgi(rsc);
-	// if (rsc->getStatus() == kReading) NOTE server에서 미리 반환.
-	// if (rsc->getStatus() == kWriting)
 	if (rsc->getStatus() == kReadDone)
 		return prepareResponse(re3);
 }

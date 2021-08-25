@@ -81,8 +81,7 @@ void	ServerManager::setRe3s(int fd, Re3* re3) {
 }
 
 void	ServerManager::setAndPassResource(Re3* re3, Status status) {
-	Resource*	resource = re3->getRscPtr();
-	resource->setStatus(status);
+	re3->getRscPtr()->setStatus(status);
 	ServerStatus	ss = this->managers[re3->getPortId()]->passResource(re3);
 	if (ss == kResponseMakingDone)
 		this->setEvent(re3->getClientId(), EVFILT_WRITE, EV_ENABLE);
@@ -108,16 +107,13 @@ int	ServerManager::clientReadEvent() {
 		if (ss == kResourceReadInit) {
 			this->setEvent(fd, EVFILT_READ, EV_ADD);
 			this->setRe3s(fd, re3);
-		} else if (ss == kResourceWriteInit) {
-			int fd = re3->getRscPtr()->getResourceFd();
+		}
+		if (ss == kResourceWriteInit) {
 			this->setEvent(fd, EVFILT_WRITE, EV_ADD);
 			this->setRe3s(fd, re3);
 		}
-		else if (ss == kResponseMakingDone)
+		if (ss == kResponseMakingDone)
 			this->setEvent(re3->getClientId(), EVFILT_WRITE, EV_ENABLE);
-		else if (ss == kResponseError) {
-			// 500 ?? 종료
-		}
 	}
 	return OK;
 }
@@ -168,54 +164,34 @@ int	ServerManager::resourceWriteEvent() {
 	Request*	request = re3->getReqPtr();
 	Resource*	resource = re3->getRscPtr();
 
-	if (request->getBody().length() == 0) {
+	if (resource->getStatus() == kWriteDone || request->getBody().length() == 0) {
 		this->setAndPassResource(re3, kWriteDone);
-		close(this->cur_fd);
+		// close(this->cur_fd);
 		return OK;
 	}
-	//첫 쓰기이면
+	//request body를 처음부터 resource에 넣으면 속도 문제로 일부러 하지 않음
 	if (resource->getContent().empty()) {
-		//request body를 처음부터 resource에 넣으면 속도 문제로 일부러 하지 않음
 		this->checker = write(this->cur_fd, request->getBody().c_str(), request->getBody().length());
-		if (this->checker < 0) {
-			putErr("Write resource failed\n");
-			this->setAndPassResource(re3, kWriteFail);
-			return ERROR;
-		}
-		// 아직 다 못 쓴 것이 있다면
-		if (this->checker < static_cast<int>(request->getBody().length()))
-		{
-			resource->addContent(request->getBody().substr(this->checker, request->getBody().length() - this->checker));
-			this->setAndPassResource(re3, kWriting);
-			// putErr("Write resource not finished\n");
-			// return ERROR;
-		}
-		else
-		{
-			// NOTE cgi 처리를 위해 새로운 상태를 추가함.
-			this->setAndPassResource(re3, kWriteDone);
-			close(this->cur_fd);
-		}
-	}
-	else
-	{
+	} else {
 		this->checker = write(this->cur_fd, resource->getContent().c_str(), resource->getContent().length());
-		if (this->checker < 0) {
-			putErr("Write resource failed\n");
-			this->setAndPassResource(re3, kWriteFail);
-			return ERROR;
-		}
-		// 아직 다 못 쓴 것이 있다면
-		if (this->checker < static_cast<int>(resource->getContent().length()))
-		{
-			resource->addContent(resource->getContent().substr(this->checker, resource->getContent().length() - this->checker));
-			this->setAndPassResource(re3, kWriting);
-		}
-		else
-		{
-			this->setAndPassResource(re3, kWriteDone);
-			close(this->cur_fd);
-		}
+	}
+	if (this->checker < 0) {
+		putErr("Write resource failed\n");
+		this->setAndPassResource(re3, kWriteFail);
+		return ERROR;
+	}
+	if (resource->getContent().empty() \
+	&& this->checker < static_cast<int>(request->getBody().length())) {
+		resource->addContent(resource->getContent().substr(this->checker));
+		re3->getRscPtr()->setStatus(kWriting);
+	}
+	if (!resource->getContent().empty() \
+	&& this->checker < static_cast<int>(resource->getContent().length())) {
+		resource->addContent(resource->getContent().substr(this->checker));
+		re3->getRscPtr()->setStatus(kWriting);
+	} else {
+		this->setAndPassResource(re3, kWriteDone);
+		// close(this->cur_fd);
 	}
 	return OK;
 }

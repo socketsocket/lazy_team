@@ -114,6 +114,7 @@ enum	ServerStatus {
 	kResourceReadWaiting,
 	kResponseMakingDone,
 	kResponseError,
+	kWaiting,
 };
 
 

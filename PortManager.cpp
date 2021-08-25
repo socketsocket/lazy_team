@@ -1,13 +1,21 @@
 #include "PortManager.hpp"
 
 PortManager::PortManager(const PortManager& ref)
-	: port_num(ref.port_num), port_fd(ref.port_fd), servers(ref.servers) {}
+	: port_num(ref.port_num), port_fd(ref.port_fd), servers(ref.servers) {
+	for (std::vector<Server*>::const_iterator serv_it = servers.begin(); \
+	serv_it < servers.end(); ++serv_it)
+		(*serv_it)->setPortNum(this->port_num);
+}
 
 PortManager::PortManager(
 	const unsigned int port_num,
 	const int port_fd,
 	const std::vector<Server*> servers)
-	: port_num(port_num), port_fd(port_fd), servers(servers) {}
+	: port_num(port_num), port_fd(port_fd), servers(servers) {
+	for (std::vector<Server*>::const_iterator serv_it = servers.begin(); \
+	serv_it < servers.end(); ++serv_it)
+		(*serv_it)->setPortNum(this->port_num);
+}
 
 PortManager::~PortManager() {}
 
