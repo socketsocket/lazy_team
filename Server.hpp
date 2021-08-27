@@ -12,7 +12,6 @@
 #include "Re3.hpp"
 #include "TermPrinter.hpp"
 #include "CgiConnector.hpp"
-
 class Server
 {
 	private:

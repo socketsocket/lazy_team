@@ -158,7 +158,7 @@ std::vector<std::pair<Re3*, ServerStatus> >	Client::recvRequest(std::string rawR
 		return rsc_claim;
 	this->read_buff += rawRequest;
 	do {
-		if (this->re3_deque.back().getReqPtr()->getStatus() == kFinished) {
+		if (this->re3_deque.back().getReqPtr()->getStatus() == kFinished) { // NOTE 수상.
 			server_response = this->port_manager.passRequest(&this->re3_deque.back());
 			rsc_claim.push_back(std::make_pair(&re3_deque.back(), server_response));
 			this->re3_deque.push_back(Re3(this->client_fd));

@@ -5,15 +5,14 @@
 #include "Request.hpp"
 #include "Response.hpp"
 #include "Resource.hpp"
-
 class Re3
 {
 	private:
-		Request*	req_ptr;
-		Response*	rsp_ptr;
-		Resource*	rsc_ptr;
-		int			client_id;
-		int			port_manager_id;
+		Request*		req_ptr;
+		Response*		rsp_ptr;
+		Resource*		rsc_ptr;
+		int				client_id;
+		int				port_manager_id;
 
 	public:
 		Re3();

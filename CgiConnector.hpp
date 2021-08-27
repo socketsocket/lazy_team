@@ -7,21 +7,16 @@
 #include "Re3.hpp"
 #include "Location.hpp"
 #include <cstdlib>
+#include <arpa/inet.h>
 
 class CgiConnector {
 	private:
-		int									pipe_fd[2];
-		pid_t								pid;
-		std::map<std::string, std::string>	env_map;
-
 		ServerStatus	prepareResource(Re3* re3, const Location* loc, unsigned int port_num);
 		ServerStatus	prepareResponse(Re3* re3);
-		ServerStatus	CgiConnector::waitCgi(Resource* rsc);
-
+		ServerStatus	waitCgi(Resource* rsc);
 
 	public:
 		ServerStatus	makeCgiResponse(Re3* re3, const Location* loc, unsigned int port_num);
-
 		CgiConnector();
 		CgiConnector(const CgiConnector& ref);
 		~CgiConnector();

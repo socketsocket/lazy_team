@@ -19,6 +19,10 @@ struct Resource {
 		std::string		content;
 		std::string		uri;
 		stat_type		is_created; //POST 요청에서 쓰게 될 response Stat. 파일이 신규생성되었는지/기존에 존재했는지 백업
+
+		int				read_fd;
+		int				write_fd;
+		pid_t			pid;
 		Resource();
 
 	public:
@@ -31,7 +35,7 @@ struct Resource {
 		int						getResourceFd() const;
 		int						getPortFd() const;
 		std::string				getContent(size_t size);
-		const std::string&		getContent() const;
+		std::string&			getContent();
 		std::string				getResourceUri() const;
 		void					setResourceUri(std::string uri);
 		void					addContent(const std::string& str);
@@ -39,6 +43,13 @@ struct Resource {
 		void					setResourceFd(int fd);
 		void					setIsCreated(stat_type stat);
 		stat_type				getIsCreated() const;
+		//For CGI
+		int						getReadFd();
+		int						getWriteFd();
+		pid_t					getPid();
+		void					setReadFd(int fd);
+		void					setWriteFd(int fd);
+		void					setPid(pid_t pid);
 };
 
 #endif

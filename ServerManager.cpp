@@ -85,6 +85,11 @@ void	ServerManager::setAndPassResource(Re3* re3, Status status) {
 	ServerStatus	ss = this->managers[re3->getPortId()]->passResource(re3);
 	if (ss == kResponseMakingDone)
 		this->setEvent(re3->getClientId(), EVFILT_WRITE, EV_ENABLE);
+	if (ss == kResourceReadInit) {
+		this->setEvent(re3->getRscPtr()->getResourceFd(), EVFILT_READ, EV_ADD | EV_ENABLE);
+		setRe3s(re3->getRscPtr()->getResourceFd(), re3);
+	}
+	// NOTE kProcessWaiting이 들어 올 수 있나??
 }
 
 int	ServerManager::clientReadEvent() {
@@ -114,13 +119,16 @@ int	ServerManager::clientReadEvent() {
 		}
 		if (ss == kResponseMakingDone)
 			this->setEvent(re3->getClientId(), EVFILT_WRITE, EV_ENABLE);
+		if (ss == kProcessWaiting) {
+			//TODO proc exit event 등록.??
+		}
 	}
 	return OK;
 }
 
 int	ServerManager::clientWriteEvent() {
 	std::string	str = clients[this->cur_fd]->passResponse();
-	putMsg(str + "!"); // ANCHOR for test
+	putMsg(str + "!"); // ANCHOR for test/
 	if (str.length() < NETWORK_BUFF)
 		this->setEvent(this->cur_fd, EVFILT_WRITE, EV_DISABLE);
 
@@ -139,6 +147,7 @@ int	ServerManager::clientWriteEvent() {
 int	ServerManager::resourceReadEvent() {
 	Re3*		re3 = this->re3s[this->cur_fd];
 	Resource*	resource = re3->getRscPtr();
+
 	this->checker = read(this->cur_fd, this->read_buffer, LOCAL_BUFF);
 	// error check
 	if (this->checker < 0) {
@@ -150,7 +159,7 @@ int	ServerManager::resourceReadEvent() {
 		return OK;
 
 	// read done.
-	if (this->checker < LOCAL_BUFF) {
+	if (this->checker < LOCAL_BUFF) {// NOTE issue #58
 		resource->addContent(std::string(this->read_buffer, this->checker));
 		this->setAndPassResource(re3, kReadDone);
 	} else { // this->checker == LOCAL_BUFF
@@ -164,9 +173,10 @@ int	ServerManager::resourceWriteEvent() {
 	Request*	request = re3->getReqPtr();
 	Resource*	resource = re3->getRscPtr();
 
+	if (resource->getStatus() != kWriteDone && request->getBody().length() == 0)
+		close(resource->getResourceFd());
 	if (resource->getStatus() == kWriteDone || request->getBody().length() == 0) {
 		this->setAndPassResource(re3, kWriteDone);
-		// close(this->cur_fd);
 		return OK;
 	}
 	//request body를 처음부터 resource에 넣으면 속도 문제로 일부러 하지 않음
@@ -182,16 +192,16 @@ int	ServerManager::resourceWriteEvent() {
 	}
 	if (resource->getContent().empty() \
 	&& this->checker < static_cast<int>(request->getBody().length())) {
-		resource->addContent(resource->getContent().substr(this->checker));
+		resource->addContent(request->getBody().substr(this->checker));
 		re3->getRscPtr()->setStatus(kWriting);
 	}
 	if (!resource->getContent().empty() \
 	&& this->checker < static_cast<int>(resource->getContent().length())) {
-		resource->addContent(resource->getContent().substr(this->checker));
+		resource->getContent(this->checker);
 		re3->getRscPtr()->setStatus(kWriting);
-	} else {
+	} else if (!resource->getContent().empty()){
+		close(resource->getResourceFd());
 		this->setAndPassResource(re3, kWriteDone);
-		// close(this->cur_fd);
 	}
 	return OK;
 }
@@ -329,6 +339,8 @@ int	ServerManager::processEvent() {
 
 	for (int i = 0; i < this->kevent_num; ++i) {
 		this->cur_fd = this->event_list[i].ident;
+		// TODO kevent에 EVFILT_PROC 등록하고, void* udata에 cgiConnector 객체 주소를 저장.
+		// exit가 발생하면, resource만들고 cgi delete.
 		if (this->event_list[i].flags & EV_ERROR) {
 			switch (this->types[this->cur_fd]) {
 				case kPortFd: {

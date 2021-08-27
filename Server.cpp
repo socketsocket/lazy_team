@@ -34,8 +34,8 @@ ServerStatus Server::makeResponse(Re3* re3) const {
 
 	if (handleCGI(request, curr_location))
 	{
-		CgiConnector	cgi_connector;
-		ServerStatus	ret = cgi_connector.makeCgiResponse(re3, curr_location, this->port_num);
+		CgiConnector tmp;
+		ServerStatus	ret = tmp.makeCgiResponse(re3, curr_location, this->port_num);
 		if (ret == kResponseError)
 			return this->makeErrorResponse(re3, curr_location, C500);
 		return ret;
@@ -163,6 +163,7 @@ ServerStatus Server::makeGETResponse(Re3* re3, const Location* curr_location, st
 		return kResourceReadInit;
 	//만약 리소스 상태가 == Finished
 	} else if (re3->getRscPtr()->getStatus() == kReadDone) {
+		close(resource->getResourceFd());
 		headers["Content-Type"] = this->contentTypeHeaderInfo(fileExtension(resource_path.substr()));
 		headers["Content-Language"] = "ko-KR";
 		headers["Content-Location"] = resource_path.substr(1);
@@ -211,7 +212,7 @@ ServerStatus Server::makePOSTResponse(Re3* re3, const Location* curr_location, s
 		return this->makeErrorResponse(re3, curr_location, C403);
 	}
 	if (re3->getRscPtr()->getStatus() == kWriteDone) {
-		close(re3->getRscPtr()->getResourceFd());
+		// close(resource->getResourceFd());
 		Request* request = re3->getReqPtr();
 		headers["Date"] = this->dateHeaderInfo();
 		headers["Server"] = "Passive Server";

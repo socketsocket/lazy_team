@@ -12,7 +12,6 @@
 static void
 	printHeader(void)
 {
-	std::cout << "Transfer-Encoding: chunked" << "\r\n";
 	std::cout << "Content-Type: text/html" << "\r\n";
 	std::cout << "\r\n";
 }
@@ -20,17 +19,7 @@ static void
 static void
 	printHTML(const std::string &html)
 {
-	std::string::size_type	str_len = html.length();
-	std::string::size_type	print_len;
-
-	for (size_t itr = 0; itr < str_len; itr += print_len)
-	{
-		print_len = std::min(CHUNK_LEN, str_len - itr);
-		std::cout << std::hex << print_len << "\r\n";
-		std::cout << html.substr(itr, print_len) << "\r\n";
-	}
-	std::cout << "0" << "\r\n";
-	std::cout << "\r\n";
+	std::cout << html;
 	return ;
 }
 
@@ -304,6 +293,7 @@ int	main(int argc, char **argv)
 	try
 	{
 		getQueryStream(query_stream);
+		log << "Query string = " << query_stream.str() << "\r\n";
 	}
 	catch (std::string &e)
 	{

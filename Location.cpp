@@ -1,5 +1,5 @@
 #include "Location.hpp"
-
+#include <iostream>
 #include "TermPrinter.hpp"
 
 Location::Location(const Location& ref)
@@ -65,11 +65,12 @@ const std::string Location::getDefaultErrorPage(stat_type stat) const {
 };
 
 const std::string		Location::getCgiBinary(std::string extension) const {
-
-	std::map<std::string, std::string>::const_iterator tmp = this->cgi_infos.find(extension);
-	if (tmp == this->cgi_infos.end())
-		return "";
-	return tmp->second;
+	for (std::map<std::string, std::string>::const_iterator it = this->cgi_infos.begin();
+	it != this->cgi_infos.end(); ++it) {
+		if (it->first == "." + extension)
+			return it->second;
+	}
+	return "";
 }
 
 const std::map<std::string, std::string>&	Location::getCgiInfos() const {

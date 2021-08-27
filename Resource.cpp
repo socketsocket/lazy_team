@@ -26,7 +26,7 @@ int	Resource::getResourceFd() const {
 	return this->resource_fd;
 }
 
-const std::string&	Resource::getContent() const {
+std::string&	Resource::getContent() {
 	return this->content;
 }
 
@@ -62,4 +62,28 @@ void Resource::setIsCreated(stat_type stat) {
 
 stat_type Resource::getIsCreated() const {
 	return this->is_created;
+}
+
+int						Resource::getReadFd() {
+	return this->read_fd;
+}
+
+int						Resource::getWriteFd() {
+	return this->write_fd;
+}
+
+pid_t					Resource::getPid() {
+	return this->pid;
+}
+
+void					Resource::setReadFd(int fd) {
+	this->read_fd = fd;
+}
+
+void					Resource::setWriteFd(int fd) {
+	this->write_fd = fd;
+}
+
+void					Resource::setPid(pid_t pid) {
+	this->pid = pid;
 }

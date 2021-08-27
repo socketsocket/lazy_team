@@ -56,7 +56,6 @@ int	main(int argc, char* argv[]) {
 	if ((signal(SIGINT, sigIntHandler) == SIG_ERR))
 		return ERROR;
 
-
 	while (true) {
 		server_manager.processEvent();
 		if (server_manager.getStatus() != OK && !hasMsg(STDERR))
