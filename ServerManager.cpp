@@ -26,7 +26,7 @@ int	ServerManager::makeClient(PortManager& port_manager) {
 
 	fcntl(client_fd, F_SETFL, O_NONBLOCK);
 
-	this->setEvent(client_fd, EVFILT_READ, EV_ADD);
+	this->setEvent(client_fd, EVFILT_READ, EV_ADD | EV_ENABLE);
 	this->setEvent(client_fd, EVFILT_WRITE, EV_ADD | EV_DISABLE);
 
 	if (this->types.size() < client_fd + 1)
@@ -87,9 +87,14 @@ void	ServerManager::setAndPassResource(Re3* re3, Status status) {
 		this->setEvent(re3->getClientId(), EVFILT_WRITE, EV_ENABLE);
 	if (ss == kResourceReadInit) {
 		this->setEvent(re3->getRscPtr()->getResourceFd(), EVFILT_READ, EV_ADD | EV_ENABLE);
-		setRe3s(re3->getRscPtr()->getResourceFd(), re3);
+		this->setRe3s(re3->getRscPtr()->getResourceFd(), re3);
 	}
-	// NOTE kProcessWaiting이 들어 올 수 있나??
+	if (ss == kProcessWaiting) { // cgi PROC 종료 이벤트.
+		EV_SET(&this->event_current, re3->getRscPtr()->getPid(), \
+		EVFILT_PROC, EV_ADD | EV_ENABLE, NOTE_EXIT, 0, \
+		reinterpret_cast<void*>(re3));
+		this->event_changes.push_back(this->event_current);
+	}
 }
 
 int	ServerManager::clientReadEvent() {
@@ -110,17 +115,20 @@ int	ServerManager::clientReadEvent() {
 		ServerStatus ss = resource_status[i].second;
 		int fd = re3->getRscPtr()->getResourceFd();
 		if (ss == kResourceReadInit) {
-			this->setEvent(fd, EVFILT_READ, EV_ADD);
+			this->setEvent(fd, EVFILT_READ, EV_ADD | EV_ENABLE);
 			this->setRe3s(fd, re3);
 		}
 		if (ss == kResourceWriteInit) {
-			this->setEvent(fd, EVFILT_WRITE, EV_ADD);
+			this->setEvent(fd, EVFILT_WRITE, EV_ADD | EV_ENABLE);
 			this->setRe3s(fd, re3);
 		}
 		if (ss == kResponseMakingDone)
 			this->setEvent(re3->getClientId(), EVFILT_WRITE, EV_ENABLE);
-		if (ss == kProcessWaiting) {
-			//TODO proc exit event 등록.??
+		if (ss == kProcessWaiting) { // cgiPROC 종료이벤트
+			EV_SET(&this->event_current, re3->getRscPtr()->getPid(), \
+			EVFILT_PROC, EV_ADD | EV_ENABLE, NOTE_EXIT, 0, \
+			reinterpret_cast<void*>(re3));
+			this->event_changes.push_back(this->event_current);
 		}
 	}
 	return OK;
@@ -148,6 +156,7 @@ int	ServerManager::resourceReadEvent() {
 	Re3*		re3 = this->re3s[this->cur_fd];
 	Resource*	resource = re3->getRscPtr();
 
+	//TODO pipe 랑 file 구분해야함.
 	this->checker = read(this->cur_fd, this->read_buffer, LOCAL_BUFF);
 	// error check
 	if (this->checker < 0) {
@@ -157,8 +166,6 @@ int	ServerManager::resourceReadEvent() {
 	}
 	if (this->checker == 0 && resource->getContent().length() == 0)
 		return OK;
-
-	// read done.
 	if (this->checker < LOCAL_BUFF) {// NOTE issue #58
 		resource->addContent(std::string(this->read_buffer, this->checker));
 		this->setAndPassResource(re3, kReadDone);
@@ -173,9 +180,9 @@ int	ServerManager::resourceWriteEvent() {
 	Request*	request = re3->getReqPtr();
 	Resource*	resource = re3->getRscPtr();
 
-	if (resource->getStatus() != kWriteDone && request->getBody().length() == 0)
+	if (resource->getStatus() != kWriteDone && request->getBody().length() == 0) {
+		// this->setEvent(resource->getResourceFd(), EVFILT_WRITE, EV_DISABLE);
 		close(resource->getResourceFd());
-	if (resource->getStatus() == kWriteDone || request->getBody().length() == 0) {
 		this->setAndPassResource(re3, kWriteDone);
 		return OK;
 	}
@@ -194,22 +201,21 @@ int	ServerManager::resourceWriteEvent() {
 	&& this->checker < static_cast<int>(request->getBody().length())) {
 		resource->addContent(request->getBody().substr(this->checker));
 		re3->getRscPtr()->setStatus(kWriting);
-	}
-	if (!resource->getContent().empty() \
+	} else if (!resource->getContent().empty() \
 	&& this->checker < static_cast<int>(resource->getContent().length())) {
 		resource->getContent(this->checker);
 		re3->getRscPtr()->setStatus(kWriting);
-	} else if (!resource->getContent().empty()){
+	} else {
 		close(resource->getResourceFd());
 		this->setAndPassResource(re3, kWriteDone);
 	}
 	return OK;
 }
 
+	// close(this->cur_fd);
+	// delete this->clients[this->cur_fd];
+	// this->types[this->cur_fd] = kBlank;
 void	ServerManager::clientSocketClose() {
-	close(this->cur_fd);
-	delete this->clients[this->cur_fd];
-	this->types[this->cur_fd] = kBlank;
 }
 
 //------------------------------------------------------------------------------
@@ -339,8 +345,22 @@ int	ServerManager::processEvent() {
 
 	for (int i = 0; i < this->kevent_num; ++i) {
 		this->cur_fd = this->event_list[i].ident;
-		// TODO kevent에 EVFILT_PROC 등록하고, void* udata에 cgiConnector 객체 주소를 저장.
-		// exit가 발생하면, resource만들고 cgi delete.
+		if (this->event_list[i].filter == EVFILT_PROC) { // cgi 프로세스가 끝나면 read이벤트 등록
+			Re3*	re3 = reinterpret_cast<Re3*>(this->event_list[i].udata);
+			int		statloc;
+
+			this->setEvent(this->event_list[i].ident, EVFILT_PROC, EV_DELETE);
+			if (waitpid(re3->getRscPtr()->getPid(), &statloc, WCONTINUED) < 0 \
+			|| (WIFEXITED(statloc) && WEXITSTATUS(statloc)) \
+			|| WIFSIGNALED(statloc)) {
+				this->setAndPassResource(re3, kCgiFail);
+				continue;
+			}
+			re3->getRscPtr()->setResourceFd(re3->getRscPtr()->getReadFd());
+			this->setEvent(re3->getRscPtr()->getResourceFd(), EVFILT_READ, EV_ADD | EV_ENABLE);
+			this->setRe3s(re3->getRscPtr()->getResourceFd(), re3);
+			continue;
+		}
 		if (this->event_list[i].flags & EV_ERROR) {
 			switch (this->types[this->cur_fd]) {
 				case kPortFd: {
@@ -404,6 +424,7 @@ int	ServerManager::processEvent() {
 				break;
 			}
 			case kResourceFd: {
+
 				if (event_list[i].filter == EVFILT_READ) {
 					if (this->resourceReadEvent() == ERROR) {
 						putErr("Resource read error");

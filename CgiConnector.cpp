@@ -50,7 +50,7 @@ static char**	setEnvVariable(Re3* re3, const Location* loc, std::string& path, s
 	tmp["REMOTE_IDENT"] = "";
 	tmp["QUERY_STRING"] = query_string;
 
-	char** envp = static_cast<char**>(malloc(sizeof(char*) * (tmp.size() + 1)));
+	char** envp = static_cast<char**>(new char*[sizeof(char*) * (tmp.size() + 1)]);
 
 	if (envp == NULL)
 		return NULL;
@@ -118,27 +118,27 @@ ServerStatus	CgiConnector::prepareResource(Re3* re3, const Location* loc, unsign
 			return kResourceWriteInit;
 		} else {
 			close(write_fd[1]);
-			return waitCgi(rsc);
+			return kProcessWaiting;
 		}
 	}
 }
 
-ServerStatus	CgiConnector::waitCgi(Resource* rsc) {
-	int		statloc;
-	pid_t	ret = waitpid(rsc->getPid(), &statloc, WNOHANG);
+// ServerStatus	CgiConnector::waitCgi(Resource* rsc) {
+// 	int		statloc;
+// 	pid_t	ret = waitpid(rsc->getPid(), &statloc, WNOHANG);
 
-	if (ret == 0)
-		return kProcessWaiting;
-	if (ret == -1)
-		return kResponseError;
-	if (WIFEXITED(statloc) && WEXITSTATUS(statloc))
-		return kResponseError;
-	if (WIFSIGNALED(statloc))
-		return kResponseError;
-	rsc->setResourceFd(rsc->getReadFd());
-	rsc->setStatus(kReading);
-	return kResourceReadInit;
-}
+// 	if (ret == 0)
+// 		return kProcessWaiting;
+// 	if (ret == -1)
+// 		return kResponseError;
+// 	if (WIFEXITED(statloc) && WEXITSTATUS(statloc))
+// 		return kResponseError;
+// 	if (WIFSIGNALED(statloc))
+// 		return kResponseError;
+// 	rsc->setResourceFd(rsc->getReadFd());
+// 	rsc->setStatus(kReading);
+// 	return kResourceReadInit;
+// }
 
 ServerStatus	CgiConnector::prepareResponse(Re3* re3) {
 	Request*	req = re3->getReqPtr();
@@ -180,7 +180,7 @@ ServerStatus	CgiConnector::makeCgiResponse(Re3* re3, const Location* loc, unsign
 	if (rsc->getStatus() == kNothing)
 		return prepareResource(re3, loc, port_num);
 	if (rsc->getStatus() == kWriteDone)
-		return waitCgi(rsc);
+		return kProcessWaiting;
 	if (rsc->getStatus() == kReadDone)
 		return prepareResponse(re3);
 	return kProcessWaiting;
@@ -191,6 +191,7 @@ CgiConnector::CgiConnector(const CgiConnector& ref) {
 }
 
 CgiConnector&	CgiConnector::operator=(const CgiConnector& ref) {
+	(void)ref;
 	return *this;
 }
 

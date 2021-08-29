@@ -25,7 +25,7 @@ ServerStatus Server::makeResponse(Re3* re3) const {
 		return this->makeErrorResponse(re3, curr_location, C411);
 	if (std::string(stat).compare(C200))
 		return this->makeErrorResponse(re3, curr_location, stat);
-	if (req_status == kReadFail || rsc_status == kDisconnect || rsc_status == kReadFail)
+	if (req_status == kReadFail || rsc_status == kDisconnect || rsc_status == kReadFail || rsc_status == kCgiFail)
 		return this->makeErrorResponse(re3, curr_location, C500);
 	if (rsc_status == kReading /*&& request->getMethod() & GET*/)
 		return kResourceReadWaiting;
@@ -161,7 +161,6 @@ ServerStatus Server::makeGETResponse(Re3* re3, const Location* curr_location, st
 			resource->setResourceFd(fd);
 		}
 		return kResourceReadInit;
-	//만약 리소스 상태가 == Finished
 	} else if (re3->getRscPtr()->getStatus() == kReadDone) {
 		close(resource->getResourceFd());
 		headers["Content-Type"] = this->contentTypeHeaderInfo(fileExtension(resource_path.substr()));

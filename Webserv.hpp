@@ -104,6 +104,7 @@ enum	Status {
 	kReadFail, // Resource, Request
 	kWriteFail,
 	kLengthReq,
+	kCgiFail,
 };
 
 //Server가 리턴하는 값들
