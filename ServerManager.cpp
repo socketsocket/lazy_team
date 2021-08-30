@@ -152,26 +152,30 @@ int	ServerManager::clientWriteEvent() {
 	return OK;
 }
 
-int	ServerManager::resourceReadEvent() {
+int	ServerManager::resourceReadEvent(uint64_t data_to_read) {
 	Re3*		re3 = this->re3s[this->cur_fd];
 	Resource*	resource = re3->getRscPtr();
+	size_t		tmp;
 
-	//TODO pipe 랑 file 구분해야함.
-	this->checker = read(this->cur_fd, this->read_buffer, LOCAL_BUFF);
-	// error check
-	if (this->checker < 0) {
-		putErr("Read resource failed\n");
-		this->setAndPassResource(re3, kReadFail);
-		return ERROR;
+	this->checker = 0;
+	while (static_cast<uint64_t>(this->checker) != data_to_read) {
+		tmp = read(this->cur_fd, this->read_buffer, LOCAL_BUFF);
+		if (tmp < 0) {
+			putErr("Read resource failed\n");
+			this->setAndPassResource(re3, kReadFail);
+			return ERROR;
+		}
+		resource->addContent(std::string(this->read_buffer, tmp));
+		this->checker += tmp;
 	}
-	if (this->checker == 0 && resource->getContent().length() == 0)
-		return OK;
-	if (this->checker < LOCAL_BUFF) {// NOTE issue #58
-		resource->addContent(std::string(this->read_buffer, this->checker));
+	// if (this->checker == 0 && resource->getContent().length() == 0)
+	// 	return OK;
+	// if (this->checker < LOCAL_BUFF) {// NOTE issue #58
+		// resource->addContent(std::string(this->read_buffer, this->checker));
 		this->setAndPassResource(re3, kReadDone);
-	} else { // this->checker == LOCAL_BUFF
-		resource->addContent(std::string(this->read_buffer, LOCAL_BUFF));
-	}
+	// } else { // this->checker == LOCAL_BUFF
+	// 	resource->addContent(std::string(this->read_buffer, LOCAL_BUFF));
+	// }
 	return OK;
 }
 
@@ -212,10 +216,10 @@ int	ServerManager::resourceWriteEvent() {
 	return OK;
 }
 
-	// close(this->cur_fd);
-	// delete this->clients[this->cur_fd];
-	// this->types[this->cur_fd] = kBlank;
 void	ServerManager::clientSocketClose() {
+	close(this->cur_fd);
+	delete this->clients[this->cur_fd];
+	this->types[this->cur_fd] = kBlank;
 }
 
 //------------------------------------------------------------------------------
@@ -349,7 +353,6 @@ int	ServerManager::processEvent() {
 			Re3*	re3 = reinterpret_cast<Re3*>(this->event_list[i].udata);
 			int		statloc;
 
-			this->setEvent(this->event_list[i].ident, EVFILT_PROC, EV_DELETE);
 			if (waitpid(re3->getRscPtr()->getPid(), &statloc, WCONTINUED) < 0 \
 			|| (WIFEXITED(statloc) && WEXITSTATUS(statloc)) \
 			|| WIFSIGNALED(statloc)) {
@@ -426,7 +429,7 @@ int	ServerManager::processEvent() {
 			case kResourceFd: {
 
 				if (event_list[i].filter == EVFILT_READ) {
-					if (this->resourceReadEvent() == ERROR) {
+					if (this->resourceReadEvent(event_list[i].data) == ERROR) {
 						putErr("Resource read error");
 					}
 				} else if (event_list[i].filter == EVFILT_WRITE) {

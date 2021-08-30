@@ -70,7 +70,7 @@ class ServerManager {
 		void	setAndPassResource(Re3* re3, Status status);
 		int		clientReadEvent();
 		int		clientWriteEvent();
-		int		resourceReadEvent();
+		int		resourceReadEvent(uint64_t data_to_read);
 		int		resourceWriteEvent();
 		void	clientSocketClose();
 
