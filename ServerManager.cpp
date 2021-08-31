@@ -84,7 +84,7 @@ void	ServerManager::setAndPassResource(Re3* re3, Status status) {
 	re3->getRscPtr()->setStatus(status);
 	ServerStatus	ss = this->managers[re3->getPortId()]->passResource(re3);
 	if (ss == kResponseMakingDone)
-		this->setEvent(re3->getClientId(), EVFILT_WRITE, EV_ENABLE);
+		this->setEvent(re3->getClientId(), EVFILT_WRITE, EV_ADD | EV_ENABLE);
 	if (ss == kResourceReadInit) {
 		this->setEvent(re3->getRscPtr()->getResourceFd(), EVFILT_READ, EV_ADD | EV_ENABLE);
 		this->setRe3s(re3->getRscPtr()->getResourceFd(), re3);
@@ -168,14 +168,8 @@ int	ServerManager::resourceReadEvent(uint64_t data_to_read) {
 		resource->addContent(std::string(this->read_buffer, tmp));
 		this->checker += tmp;
 	}
-	// if (this->checker == 0 && resource->getContent().length() == 0)
-	// 	return OK;
-	// if (this->checker < LOCAL_BUFF) {// NOTE issue #58
-		// resource->addContent(std::string(this->read_buffer, this->checker));
-		this->setAndPassResource(re3, kReadDone);
-	// } else { // this->checker == LOCAL_BUFF
-	// 	resource->addContent(std::string(this->read_buffer, LOCAL_BUFF));
-	// }
+	close(resource->getResourceFd());
+	this->setAndPassResource(re3, kReadDone);
 	return OK;
 }
 

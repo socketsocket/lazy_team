@@ -187,7 +187,7 @@ void Client::putRspIntoBuff(size_t& network_buff_left, std::string& to_be_sent, 
 
 std::string	Client::passResponse() {
 	size_t		network_buff_left = NETWORK_BUFF;
-	std::string to_be_sent;
+	std::string	to_be_sent;
 	Response*	response = this->re3_deque.front().getRspPtr();
 
 	assert(this->re3_deque.size());

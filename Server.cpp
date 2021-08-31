@@ -154,7 +154,6 @@ ServerStatus Server::makeGETResponse(Re3* re3, const Location* curr_location, st
 			close(fd);
 			return this->makeErrorResponse(re3, curr_location, C500);
 		}
-		//Re3에 resource fd 추가
 		if (resource->getStatus() == kNothing)
 		{
 			resource->setStatus(kReading);
@@ -162,7 +161,7 @@ ServerStatus Server::makeGETResponse(Re3* re3, const Location* curr_location, st
 		}
 		return kResourceReadInit;
 	} else if (re3->getRscPtr()->getStatus() == kReadDone) {
-		close(resource->getResourceFd());
+		// close(resource->getResourceFd());
 		headers["Content-Type"] = this->contentTypeHeaderInfo(fileExtension(resource_path.substr()));
 		headers["Content-Language"] = "ko-KR";
 		headers["Content-Location"] = resource_path.substr(1);
@@ -171,11 +170,8 @@ ServerStatus Server::makeGETResponse(Re3* re3, const Location* curr_location, st
 		headers["Content-Length"] = length.str();
 		stat(resource_path.c_str(), &sb);
 		headers["Last-Modified"] = this->lastModifiedHeaderInfo(sb);
-
-		//Re3에 Response 추가
 		assert(response == NULL);
 		re3->setRspPtr(new Response(kFinished, std::string(C200), headers, resource->getContent(), request->getVersion()));
-
 		return kResponseMakingDone;
 	}
 	return kResourceReadWaiting; // compile에러 잡기위한 아무 코드
@@ -186,41 +182,36 @@ ServerStatus Server::makePOSTResponse(Re3* re3, const Location* curr_location, s
 	std::map<std::string, std::string>	headers;
 	Resource*							resource = re3->getRscPtr();
 
-	if (resource->getStatus() == kNothing) {
-		switch (checkPath(resource_path)) {
-			case kNotFound : {
-				if ((fd = open(resource_path.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644)) < 0)
-					return this->makeErrorResponse(re3, curr_location, C500);
-				resource->setStatus(kWriting);
-				resource->setResourceFd(fd);
-				resource->setIsCreated(C201);
-				return kResourceWriteInit;
-			}
-			case kFile :
-			{
-				if ((fd = open(resource_path.c_str(), O_WRONLY | O_APPEND )) < 0)
-					return this->makeErrorResponse(re3, curr_location, C500);
-				resource->setStatus(kWriting);
-				resource->setResourceFd(fd);
-				resource->setIsCreated(C200);
-				return kResourceWriteInit;
-			}
-			default :
-				return this->makeErrorResponse(re3, curr_location, C403);
-		}
-		return this->makeErrorResponse(re3, curr_location, C403);
-	}
 	if (re3->getRscPtr()->getStatus() == kWriteDone) {
-		// close(resource->getResourceFd());
 		Request* request = re3->getReqPtr();
 		headers["Date"] = this->dateHeaderInfo();
 		headers["Server"] = "Passive Server";
 		headers["Content-Location"] = resource_path.substr(1);
+		headers["Content-Length"] = "0"; // ANCHOR test
 		assert(re3->getRspPtr() == NULL);
 		re3->setRspPtr(new Response(kFinished, std::string(resource->getIsCreated()), headers, "", request->getVersion()));
 		return kResponseMakingDone;
 	}
-	return kResourceWriteWaiting;
+	switch (checkPath(resource_path)) {
+		case kNotFound : {
+			if ((fd = open(resource_path.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644)) < 0)
+				return this->makeErrorResponse(re3, curr_location, C500);
+			resource->setStatus(kWriting);
+			resource->setResourceFd(fd);
+			resource->setIsCreated(C201);
+			return kResourceWriteInit;
+		}
+		case kFile : {
+			if ((fd = open(resource_path.c_str(), O_WRONLY | O_APPEND )) < 0)
+				return this->makeErrorResponse(re3, curr_location, C500);
+			resource->setStatus(kWriting);
+			resource->setResourceFd(fd);
+			resource->setIsCreated(C200);
+			return kResourceWriteInit;
+		}
+		default :
+			return this->makeErrorResponse(re3, curr_location, C403);
+	}
 }
 
 ServerStatus Server::makeDELETEResponse(Re3* re3, const Location* curr_location, std::string resource_path) const {
@@ -228,6 +219,7 @@ ServerStatus Server::makeDELETEResponse(Re3* re3, const Location* curr_location,
 
 	headers["Date"] = this->dateHeaderInfo();
 	headers["Server"] = "Passive Server";
+	headers["Content-Length"] = "0";
 	if (this->checkPath(resource_path) == kFile)
 	{
 		unlink(resource_path.c_str());
