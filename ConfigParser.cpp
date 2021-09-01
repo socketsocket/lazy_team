@@ -271,6 +271,7 @@ int	ConfigParser::serverBlock( \
 						return this->putError(SEMANTIC_ERR, "server_name");
 					server_name = elements[1];
 					server_name_check = true;
+					break;
 				}
 				case kRoot: {
 					if (default_root.length())
