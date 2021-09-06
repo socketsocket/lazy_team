@@ -19,8 +19,10 @@ ServerStatus Server::makeResponse(Re3* re3) const {
 	const Status req_status = request->getStatus();
 	const Status rsc_status = resource->getStatus();
 	const Location* curr_location = this->currLocation(request->getUri());
-	stat_type stat = this->requestValidCheck(request, curr_location);
 
+	if (request->getHeaderValue("host") == "" || req_status == kNothing)
+		return this->makeErrorResponse(re3, curr_location, C400);
+	stat_type stat = this->requestValidCheck(request, curr_location);
 	if (req_status == kLengthReq)
 		return this->makeErrorResponse(re3, curr_location, C411);
 	if (std::string(stat).compare(C200))
@@ -187,7 +189,7 @@ ServerStatus Server::makePOSTResponse(Re3* re3, const Location* curr_location, s
 		headers["Date"] = this->dateHeaderInfo();
 		headers["Server"] = "Passive Server";
 		headers["Content-Location"] = resource_path.substr(1);
-		headers["Content-Length"] = "0"; // ANCHOR test
+		headers["Content-Length"] = "0";
 		assert(re3->getRspPtr() == NULL);
 		re3->setRspPtr(new Response(kFinished, std::string(resource->getIsCreated()), headers, "", request->getVersion()));
 		return kResponseMakingDone;
@@ -231,7 +233,7 @@ ServerStatus Server::makeDELETEResponse(Re3* re3, const Location* curr_location,
 }
 
 const Location* Server::currLocation(std::string request_uri) const {
-	std::vector<Location>::const_iterator res;
+	std::vector<Location>::const_iterator res = this->locations.begin();
 	unsigned long	longest = 0;
 
 	for (std::vector<Location>::const_iterator it = this->locations.begin(); \

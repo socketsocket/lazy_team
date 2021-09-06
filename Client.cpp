@@ -75,34 +75,6 @@ int	Client::lengthParser(Request* request) {
 	return OK;
 }
 
-int	Client::reqLineParser(Request* request) {
-	size_t				pos;
-	std::string			tmp;
-	std::stringstream	ss;
-
-	pos = this->read_buff.find("\r\n");
-	if (pos == std::string::npos || pos == 0)
-		return OK; // 개행이 없음. 버퍼가 중간에 끊김.
-	tmp = this->read_buff.substr(0, pos);
-	this->read_buff.erase(0, pos + 2);
-	ss.str(tmp);
-	ss >> tmp;
-	if (tmp == "GET")
-		request->setMethod(GET);
-	else if (tmp == "POST")
-		request->setMethod(POST);
-	else if (tmp == "DELETE")
-		request->setMethod(DELETE);
-	else
-		request->setMethod(OTHER);
-	ss >> tmp;
-	request->setUri(tmp);
-	ss >> tmp;
-	request->setVersion(tmp);
-	request->setStatus(kHeader);
-	return OK;
-}
-
 int	Client::headerParser(Request* request) {
 	std::string tmp, key, value;
 	size_t		pos;
@@ -125,9 +97,44 @@ int	Client::headerParser(Request* request) {
 	return OK;
 }
 
+int	Client::reqLineParser(Request* request) {
+	size_t				pos;
+	std::string			tmp;
+	std::stringstream	ss;
+
+	pos = this->read_buff.find("\r\n");
+	if (pos == std::string::npos || pos == 0)
+		return ERROR;
+	tmp = this->read_buff.substr(0, pos);
+	this->read_buff.erase(0, pos + 2);
+	ss.str(tmp);
+	ss >> tmp;
+	if (tmp == "GET")
+		request->setMethod(GET);
+	else if (tmp == "POST")
+		request->setMethod(POST);
+	else if (tmp == "DELETE")
+		request->setMethod(DELETE);
+	else
+		request->setMethod(OTHER);
+	ss >> tmp;
+	if (tmp.find("://") != std::string::npos) {
+		tmp = tmp.substr(tmp.find("://") + 3);
+		tmp = tmp.substr(tmp.find("/"));
+	}
+	request->setUri(tmp);
+	ss >> tmp;
+	request->setVersion(tmp);
+	request->setStatus(kHeader);
+	return OK;
+}
+
 int	Client::initParser(Request* request) {
+	if (!this->read_buff.size())
+		return OK;
 	if (request->getStatus() == kNothing)
-		this->reqLineParser(request);
+		if (this->reqLineParser(request) == ERROR)
+			return ERROR;
 	if (request->getStatus() == kHeader)
 		this->headerParser(request);
 	if (request->getStatus() == kBody) {
@@ -158,7 +165,7 @@ std::vector<std::pair<Re3*, ServerStatus> >	Client::recvRequest(std::string rawR
 		return rsc_claim;
 	this->read_buff += rawRequest;
 	do {
-		if (this->re3_deque.back().getReqPtr()->getStatus() == kFinished) { // NOTE 수상.
+		if (this->re3_deque.back().getReqPtr()->getStatus() == kFinished) {
 			server_response = this->port_manager.passRequest(&this->re3_deque.back());
 			rsc_claim.push_back(std::make_pair(&re3_deque.back(), server_response));
 			this->re3_deque.push_back(Re3(this->client_fd));
@@ -167,7 +174,7 @@ std::vector<std::pair<Re3*, ServerStatus> >	Client::recvRequest(std::string rawR
 		if (ERROR == this->initParser(this->re3_deque.back().getReqPtr())) {
 			server_response = this->port_manager.passRequest(&this->re3_deque.back());
 			std::vector<std::pair<Re3*, ServerStatus> >	request_error(1, std::make_pair(&re3_deque.back(), server_response));
-			return request_error; // NOTE 클라이언트와 연결을 끊어야 할 상황
+			return request_error;
 		}
 	} while (this->re3_deque.back().getReqPtr()->getStatus() == kFinished);
 	return rsc_claim;

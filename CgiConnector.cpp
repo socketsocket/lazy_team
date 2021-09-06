@@ -104,7 +104,7 @@ ServerStatus	CgiConnector::prepareResource(Re3* re3, const Location* loc, unsign
 		close(read_fd[1]);
 		if (envp != NULL)
 			ret1 = execve(bin.c_str(), av, envp);
-		else
+		else // NOTE error일때 프리 해줘야 하는데 운영체제 믿고 안하는 걸로.
 			exit(1);
 		exit(ret1);
 	} else {
