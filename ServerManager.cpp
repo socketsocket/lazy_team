@@ -165,8 +165,9 @@ int	ServerManager::resourceReadEvent(uint64_t data_to_read) {
 			this->setAndPassResource(re3, kReadFail);
 			return ERROR;
 		}
-		resource->addContent(std::string(this->read_buffer, tmp));
-		this->checker += tmp;
+		read_buffer[tmp] = '\0';
+		resource->addContent(std::string(this->read_buffer));
+		this->checker += static_cast<int>(tmp);
 	}
 	close(resource->getResourceFd());
 	this->setAndPassResource(re3, kReadDone);
@@ -372,14 +373,14 @@ int	ServerManager::processEvent() {
 					break;
 				}
 				case kClientFd: {
-					// std::cout << "에렁레어레어레어레얼에러ㅔ어레어레어레어레어ㅔ러에러에러에러ㅔ어레어레얼에ㅓ레어렝\n\n";
 					putErr("Client socket error\n");
-					perror("sersersr");
+					perror("client");
 					this->clientSocketClose();
 					break;
 				}
 				case kResourceFd: {
 					putErr("Resource error\n");
+					perror("resource");
 					close(this->cur_fd);
 					if (this->event_list[i].filter == EVFILT_WRITE) {
 						this->re3s[this->cur_fd]->getRscPtr()->setStatus(kWriteFail);
@@ -405,7 +406,7 @@ int	ServerManager::processEvent() {
 				case kClientFd: {
 					if (event_list[i].flags & EV_EOF) {
 						// putMsg("Client closed connection\n");
-						// this->clientSocketClose();
+						this->clientSocketClose();
 						continue;
 					}
 					if (event_list[i].filter == EVFILT_READ) {
