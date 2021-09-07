@@ -68,7 +68,7 @@ int main(int argc, char const *argv[])
 
 	while (true)
 	{
-		num_events = kevent(kq, &change_list[0], change_list.size(), event_list, EVENTSIZE, NULL);
+		num_events = kevent(kq, &change_list[0], change_list.length(), event_list, EVENTSIZE, NULL);
 							//vec는 컨테이너, 포인터를 넣어야해서 타입을 맞춰주기 위함!
 		if (num_events == -1)
 			exit_with_perror("kevent error");

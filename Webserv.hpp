@@ -26,7 +26,7 @@
 #define LINE_BUFF 1024
 #define	NETWORK_BUFF 16384
 #define LOCAL_BUFF 8192
-#define MAX_CLIENT 5
+#define MAX_CLIENT 500
 
 #define C100 "100 Continue"
 #define C101 "101 Switching Protocols"

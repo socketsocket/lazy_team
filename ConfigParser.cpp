@@ -246,7 +246,7 @@ int	ConfigParser::serverBlock( \
 	std::vector<std::string>	elements;
 	if (this->getLineElements(elements))
 		return ERROR;
-	do { // while (elements.size() > 1);
+	do { // while (elements.length() > 1);
 		// if find something else, assuming it a location block.
 		if (this->server_config.count(elements[0]) == 0) {
 			if (this->locationBlock(locations, elements))
@@ -274,7 +274,7 @@ int	ConfigParser::serverBlock( \
 					break;
 				}
 				case kRoot: {
-					if (default_root.length())
+					if (default_root.size())
 						return this->putError(NAME_DUP_ERR, "root");
 					if (elements.size() != 2)
 						return this->putError(SEMANTIC_ERR, "root");
@@ -311,7 +311,7 @@ int	ConfigParser::serverBlock( \
 					break;
 				}
 				case kReturn: {
-					if (std::string(return_to.first).length())
+					if (std::string(return_to.first).size())
 						return this->putError(NAME_DUP_ERR, "return");
 					if (elements.size() != 3 && elements.size() != 2)
 						return this->putError(SEMANTIC_ERR, "return");
@@ -337,10 +337,8 @@ int	ConfigParser::serverBlock( \
 	// if there is no root directive and location or no return directive
 	if (!default_root.length() && !locations.size() && !std::string(return_to.first).length())
 		return this->putError(NO_ENTITY_ERR, "root/return");
-	putMsg("before push\n");
 	configs.push_back(std::make_pair(Server(server_name, default_root, \
 		default_error_pages, client_body_limit, locations, return_to), ports));
-	putMsg("after push\n");
 	this->method_name.pop_back();
 	return OK;
 }
@@ -368,7 +366,7 @@ int	ConfigParser::locationBlock(std::vector<Location>& locations, \
 	if (this->getLineElements(line_elements))
 		return ERROR;
 
-	do { // while (line_elements.size() > 1);
+	do { // while (line_elements.length() > 1);
 		if (this->location_config.count(line_elements[0]) == 0)
 			return this->putError(NAME_MATCH_ERR);
 
@@ -428,7 +426,7 @@ int	ConfigParser::locationBlock(std::vector<Location>& locations, \
 				for (size_t i = 1; i < line_elements.size(); ++i) {
 					if (!line_elements[i].compare("GET")) {
 						if (methods_allowed & GET)
-							return this->putError(NAME_DUP_ERR, "method_allowed: GET");
+							return this->putError(NAME_DUP_ERR, "methsod_allowed: GET");
 						methods_allowed |= GET;
 					} else if (!line_elements[i].compare("POST")) {
 						if (methods_allowed & POST)
@@ -528,7 +526,7 @@ int	ConfigParser::setData(ServerManager& server_manager) {
 	ret = getSemanticLine(line);
 	if (ret == ERROR)
 		return ERROR;
-	if (ret != END_OF_FILE || line.size() != 0)
+	if (ret != END_OF_FILE || line.length() != 0)
 		return ERROR;
 	this->config_file.close();
 	return OK;

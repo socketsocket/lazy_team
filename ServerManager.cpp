@@ -35,8 +35,8 @@ int	ServerManager::makeClient(PortManager& port_manager) {
 		this->clients.resize(client_fd + 1, NULL);
 	types[client_fd] = kClientFd;
 	clients[client_fd] = new Client(client_fd, port_manager);
-	putMsg(std::string() + "New client connected on port " \
-		+ std::to_string(port_manager.getPortNum()) + '\n');
+	// putMsg(std::string() + "New client connected on port " \
+	// 	+ std::to_string(port_manager.getPortNum()) + '\n');
 	return OK;
 }
 
@@ -99,7 +99,7 @@ void	ServerManager::setAndPassResource(Re3* re3, Status status) {
 
 int	ServerManager::clientReadEvent() {
 	this->checker = recv(this->cur_fd, this->recv_buffer, NETWORK_BUFF, 0);
-	putMsg(this->recv_buffer); // ANCHOR for test
+	// putMsg(this->recv_buffer); // ANCHOR for test
 	if (this->checker == ERROR)
 		return ERROR;
 	std::vector<std::pair<Re3*, ServerStatus> >	resource_status \
@@ -136,7 +136,7 @@ int	ServerManager::clientReadEvent() {
 
 int	ServerManager::clientWriteEvent() {
 	std::string	str = clients[this->cur_fd]->passResponse();
-	putMsg(str + "!"); // ANCHOR for test/
+	// putMsg(str + "!"); // ANCHOR for test/
 	if (str.length() < NETWORK_BUFF)
 		this->setEvent(this->cur_fd, EVFILT_WRITE, EV_DISABLE);
 
@@ -360,6 +360,9 @@ int	ServerManager::processEvent() {
 		}
 		if (this->event_list[i].flags & EV_ERROR) {
 			switch (this->types[this->cur_fd]) {
+				case kBlank: {
+					break;
+				}
 				case kPortFd: {
 					putErr("Server socket error\n");
 					close(this->cur_fd);
@@ -369,7 +372,9 @@ int	ServerManager::processEvent() {
 					break;
 				}
 				case kClientFd: {
+					// std::cout << "에렁레어레어레어레얼에러ㅔ어레어레어레어레어ㅔ러에러에러에러ㅔ어레어레얼에ㅓ레어렝\n\n";
 					putErr("Client socket error\n");
+					perror("sersersr");
 					this->clientSocketClose();
 					break;
 				}
@@ -389,59 +394,60 @@ int	ServerManager::processEvent() {
 					assert(false);
 				}
 			}
-		}
-		switch (this->types[this->cur_fd]) {
-			case kPortFd: {
-				if (this->makeClient(*this->managers[this->cur_fd]) == ERROR) {
-					putErr("Recv error\n");
-				}
-				break;
-			}
-			case kClientFd: {
-				if (event_list[i].flags & EV_EOF) {
-					putMsg("Client closed connection\n");
-					this->clientSocketClose();
-					continue;
-				}
-				if (event_list[i].filter == EVFILT_READ) {
-					if (this->clientReadEvent() == ERROR) {
-						putErr("Client read error\n");
-						this->clientSocketClose();
+		} else {
+			switch (this->types[this->cur_fd]) {
+				case kPortFd: {
+					if (this->makeClient(*this->managers[this->cur_fd]) == ERROR) {
+						putErr("Recv error\n");
 					}
-				} else if (event_list[i].filter == EVFILT_WRITE) {
-					if (this->clientWriteEvent() == ERROR) {
-						putErr("Client write error\n");
-						this->clientSocketClose();
-					}
-					// send(this->cur_fd, this->recv_buffer, this->checker, 0); // ANCHOR for test
-				} else {
-					assert(false);
+					break;
 				}
-				// clients[i].callClient;
-				break;
-			}
-			case kResourceFd: {
+				case kClientFd: {
+					if (event_list[i].flags & EV_EOF) {
+						// putMsg("Client closed connection\n");
+						// this->clientSocketClose();
+						continue;
+					}
+					if (event_list[i].filter == EVFILT_READ) {
+						if (this->clientReadEvent() == ERROR) {
+							putErr("Client read error\n");
+							this->clientSocketClose();
+						}
+					} else if (event_list[i].filter == EVFILT_WRITE) {
+						if (this->clientWriteEvent() == ERROR) {
+							putErr("Client write error\n");
+							this->clientSocketClose();
+						}
+						// send(this->cur_fd, this->recv_buffer, this->checker, 0); // ANCHOR for test
+					} else {
+						assert(false);
+					}
+					// clients[i].callClient;
+					break;
+				}
+				case kResourceFd: {
 
-				if (event_list[i].filter == EVFILT_READ) {
-					if (this->resourceReadEvent(event_list[i].data) == ERROR) {
-						putErr("Resource read error");
+					if (event_list[i].filter == EVFILT_READ) {
+						if (this->resourceReadEvent(event_list[i].data) == ERROR) {
+							putErr("Resource read error");
+						}
+					} else if (event_list[i].filter == EVFILT_WRITE) {
+						if (this->resourceWriteEvent() == ERROR) {
+							putErr("Resource write error");
+						}
 					}
-				} else if (event_list[i].filter == EVFILT_WRITE) {
-					if (this->resourceWriteEvent() == ERROR) {
-						putErr("Resource write error");
-					}
+					break;
 				}
-				break;
-			}
-			case kStdOutErrFd: {
-				this->msg = getMsg(this->cur_fd);
-				if (this->msg.length())
-					write(this->cur_fd, this->msg.c_str(), this->msg.length());
-				break;
-			}
-			default: {
-				this->status = ERROR;
-				return ERROR;
+				case kStdOutErrFd: {
+					this->msg = getMsg(this->cur_fd);
+					if (this->msg.length())
+						write(this->cur_fd, this->msg.c_str(), this->msg.length());
+					break;
+				}
+				default: {
+					this->status = ERROR;
+					return ERROR;
+				}
 			}
 		}
 	}

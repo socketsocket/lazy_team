@@ -169,7 +169,7 @@ ServerStatus	CgiConnector::prepareResponse(Re3* re3) {
 		buff.erase(0, idx1 + 2);
 	body = buff.substr(idx1 + 2);
 	headers["Content-Language"] = "ko-KR";
-	headers["Content-Length"] = std::to_string(body.size());
+	headers["Content-Length"] = std::to_string(body.length());
 	re3->setRspPtr(new Response(kFinished, http_status, headers, buff, req->getVersion()));
 	return kResponseMakingDone;
 }

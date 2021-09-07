@@ -66,7 +66,7 @@ int	Client::lengthParser(Request* request) {
 	std::istringstream iss(request->getHeaderValue("content-length"));
 
 	iss >> len;
-	if (this->read_buff.size() >= len) {
+	if (this->read_buff.length() >= len) {
 		tmp = this->read_buff.substr(0, len);
 		this->read_buff.erase(0, len);
 		request->appendBody(tmp);
@@ -130,7 +130,7 @@ int	Client::reqLineParser(Request* request) {
 }
 
 int	Client::initParser(Request* request) {
-	if (!this->read_buff.size())
+	if (!this->read_buff.length())
 		return OK;
 	if (request->getStatus() == kNothing)
 		if (this->reqLineParser(request) == ERROR)
@@ -161,7 +161,7 @@ std::vector<std::pair<Re3*, ServerStatus> >	Client::recvRequest(std::string rawR
 		this->re3_deque.push_back(Re3(client_fd));
 		this->re3_deque.back().setReqPtr(new Request);
 	}
-	if (!rawRequest.size())
+	if (!rawRequest.length())
 		return rsc_claim;
 	this->read_buff += rawRequest;
 	do {
@@ -181,8 +181,8 @@ std::vector<std::pair<Re3*, ServerStatus> >	Client::recvRequest(std::string rawR
 }
 
 void Client::putRspIntoBuff(size_t& network_buff_left, std::string& to_be_sent, std::string& data) {
-	if (network_buff_left >= data.size()) {
-		network_buff_left -= data.size();
+	if (network_buff_left >= data.length()) {
+		network_buff_left -= data.length();
 		to_be_sent += data;
 		data.erase(0);
 	} else {
@@ -201,9 +201,9 @@ std::string	Client::passResponse() {
 	assert(response != NULL);
 	while (network_buff_left && this->re3_deque.size() \
 		&& response->getStatus() == kFinished) {
-		if (response->getHead().size() > 0) {
+		if (response->getHead().length() > 0) {
 			this->putRspIntoBuff(network_buff_left, to_be_sent, response->getHead());
-		} else if (response->getBody().size() > 0) {
+		} else if (response->getBody().length() > 0) {
 			this->putRspIntoBuff(network_buff_left, to_be_sent, response->getBody());
 		} else {
 			this->re3_deque.pop_front();

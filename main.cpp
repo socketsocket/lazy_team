@@ -61,8 +61,9 @@ int	main(int argc, char* argv[]) {
 		if (server_manager.getStatus() != OK && !hasMsg(STDERR))
 			break;
 	}
-	if (server_manager.getStatus() == ERROR)
+	if (server_manager.getStatus() == ERROR){
 		return ERROR;
+	}
 	if (server_manager.getStatus() == INTR) {
 		// Adequate processing
 	}
