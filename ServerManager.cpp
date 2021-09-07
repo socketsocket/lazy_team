@@ -161,6 +161,8 @@ int	ServerManager::resourceReadEvent(uint64_t data_to_read) {
 	while (static_cast<uint64_t>(this->checker) != data_to_read) {
 		tmp = read(this->cur_fd, this->read_buffer, LOCAL_BUFF);
 		if (tmp < 0) {
+			close(resource->getResourceFd());
+			this->types[resource->getResourceFd()] = kBlank;
 			putErr("Read resource failed\n");
 			this->setAndPassResource(re3, kReadFail);
 			return ERROR;
@@ -170,6 +172,7 @@ int	ServerManager::resourceReadEvent(uint64_t data_to_read) {
 		this->checker += static_cast<int>(tmp);
 	}
 	close(resource->getResourceFd());
+	this->types[resource->getResourceFd()] = kBlank;
 	this->setAndPassResource(re3, kReadDone);
 	return OK;
 }
@@ -182,6 +185,7 @@ int	ServerManager::resourceWriteEvent() {
 	if (resource->getStatus() != kWriteDone && request->getBody().length() == 0) {
 		// this->setEvent(resource->getResourceFd(), EVFILT_WRITE, EV_DISABLE);
 		close(resource->getResourceFd());
+		this->types[resource->getResourceFd()] = kBlank;
 		this->setAndPassResource(re3, kWriteDone);
 		return OK;
 	}
@@ -206,6 +210,7 @@ int	ServerManager::resourceWriteEvent() {
 		re3->getRscPtr()->setStatus(kWriting);
 	} else {
 		close(resource->getResourceFd());
+		this->types[resource->getResourceFd()] = kBlank;
 		this->setAndPassResource(re3, kWriteDone);
 	}
 	return OK;
