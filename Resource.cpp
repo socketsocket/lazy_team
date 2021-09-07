@@ -7,7 +7,6 @@ Resource::Resource(const Resource &ref)
 	: status(ref.status), resource_fd(ref.resource_fd) {}
 
 Resource::~Resource() {
-	close(this->resource_fd);
 }
 
 Resource& Resource::operator=(const Resource &ref) {

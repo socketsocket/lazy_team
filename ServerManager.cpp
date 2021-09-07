@@ -384,7 +384,9 @@ int	ServerManager::processEvent() {
 					break;
 				}
 				case kResourceFd: {
-					putErr("Resource error\n");
+					// std::stringstream fd_id;
+					// fd_id << this->cur_fd;
+					// putErr("Resource error : " + fd_id.str() + "\n");
 					perror("resource");
 					close(this->cur_fd);
 					if (this->event_list[i].filter == EVFILT_WRITE) {
