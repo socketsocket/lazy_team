@@ -7,7 +7,12 @@ all: $(NAME)
 
 CC = clang++
 
+INC_DIR = ./include/
+OBJ_DIR = ./obj/
+SRC_DIR = ./src/
+
 CPPFLAGS = -Wall -Werror -Wextra -std=c++98 $(DEBUGF)
+INCFLAG = -I$(INC_DIR)
 ifeq ($(MAKECMDGOALS), debug)
 DEBUGF = -g3 -fsanitize=address
 DEBUG_CHECK = 1
@@ -18,75 +23,78 @@ else
 DEBUG_CHECK = 0
 endif
 
-INC_DIR = .
-
 # header files dependencies
-INC_TERMPRINTER = TermPrinter.hpp
-INC_LOCATION = Location.hpp
-INC_REQUEST = Request.hpp $(INC_LOCATION)
-INC_RESPONSE = Response.hpp
-INC_RESOURCE = Resource.hpp
-INC_RE3 = Re3.hpp $(INC_REQUEST) $(INC_RESPONSE) $(INC_RESOURCE)
-INC_SERVER = Server.hpp $(INC_RE3)
-INC_PORTMANGER = PortManager.hpp $(INC_SERVER)
-INC_CLIENT = Client.hpp $(INC_PORTMANGER)
-INC_SERVERMANAGER = ServerManager.hpp $(INC_CLIENT) $(INC_ERRMSGHANDLER)
-INC_CONFIGPARSER = Webserv.hpp $(INC_SERVERMANAGER)
+INC_TERMPRINTER = $(INC_DIR)TermPrinter.hpp
+INC_LOCATION = $(INC_DIR)Location.hpp
+INC_REQUEST = $(INC_DIR)Request.hpp $(INC_LOCATION)
+INC_RESPONSE = $(INC_DIR)Response.hpp
+INC_RESOURCE = $(INC_DIR)Resource.hpp
+INC_RE3 = $(INC_DIR)Re3.hpp $(INC_REQUEST) $(INC_RESPONSE) $(INC_RESOURCE)
+INC_CGICONNECTOR = $(INC_DIR)CgiConnector.hpp
+INC_SERVER = $(INC_DIR)Server.hpp $(INC_RE3) $(INC_CGICONNECTOR)
+INC_PORTMANGER = $(INC_DIR)PortManager.hpp $(INC_SERVER)
+INC_CLIENT = $(INC_DIR)Client.hpp $(INC_PORTMANGER)
+INC_SERVERMANAGER = $(INC_DIR)ServerManager.hpp $(INC_CLIENT) $(INC_ERRMSGHANDLER)
+INC_CONFIGPARSER = $(INC_DIR)Webserv.hpp $(INC_SERVERMANAGER)
 INC_MAIN = $(INC_CONFIGPARSER)
 
-TermPrinter.o: %.o : %.cpp $(INC_ERRMSGHANDLER)
-	$(CC) $(CPPFLAGS) -c $< -o $@
-Location.o: %.o : %.cpp $(INC_LOCATION)
-	$(CC) $(CPPFLAGS) -c $< -o $@
-Request.o: %.o : %.cpp $(INC_REQUEST)
-	$(CC) $(CPPFLAGS) -c $< -o $@
-Response.o: %.o : %.cpp $(INC_RESPONSE)
-	$(CC) $(CPPFLAGS) -c $< -o $@
-Resource.o: %.o : %.cpp $(INC_RESOURCE)
-	$(CC) $(CPPFLAGS) -c $< -o $@
-Re3.o: %.o : %.cpp $(INC_RE3)
-	$(CC) $(CPPFLAGS) -c $< -o $@
-Server.o: %.o : %.cpp $(INC_SERVER)
-	$(CC) $(CPPFLAGS) -c $< -o $@
-PortManager.o: %.o : %.cpp $(INC_PORTMANGER)
-	$(CC) $(CPPFLAGS) -c $< -o $@
-Client.o: %.o : %.cpp $(INC_CLIENT)
-	$(CC) $(CPPFLAGS) -c $< -o $@
-ServerManager.o: %.o : %.cpp $(INC_SERVERMANAGER)
-	$(CC) $(CPPFLAGS) -c $< -o $@
-ConfigParser.o: %.o : %.cpp $(INC_CONFIGPARSER)
-	$(CC) $(CPPFLAGS) -c $< -o $@
+$(OBJ_DIR)TermPrinter.o : $(SRC_DIR)TermPrinter.cpp $(INC_ERRMSGHANDLER)
+	$(CC) $(CPPFLAGS) $(INCFLAG) -c $< -o $@
+$(OBJ_DIR)Location.o: $(SRC_DIR)Location.cpp $(INC_LOCATION)
+	$(CC) $(CPPFLAGS) $(INCFLAG) -c $< -o $@
+$(OBJ_DIR)Request.o: $(SRC_DIR)Request.cpp $(INC_REQUEST)
+	$(CC) $(CPPFLAGS) $(INCFLAG) -c $< -o $@
+$(OBJ_DIR)Response.o: $(SRC_DIR)Response.cpp $(INC_RESPONSE)
+	$(CC) $(CPPFLAGS) $(INCFLAG) -c $< -o $@
+$(OBJ_DIR)Resource.o: $(SRC_DIR)Resource.cpp $(INC_RESOURCE)
+	$(CC) $(CPPFLAGS) $(INCFLAG) -c $< -o $@
+$(OBJ_DIR)Re3.o: $(SRC_DIR)Re3.cpp $(INC_RE3)
+	$(CC) $(CPPFLAGS) $(INCFLAG) -c $< -o $@
+$(OBJ_DIR)CgiConnector.o: $(SRC_DIR)CgiConnector.cpp $(INC_CGICONNECTOR)
+	$(CC) $(CPPFLAGS) $(INCFLAG) -c $< -o $@
+$(OBJ_DIR)Server.o: $(SRC_DIR)Server.cpp $(INC_SERVER)
+	$(CC) $(CPPFLAGS) $(INCFLAG) -c $< -o $@
+$(OBJ_DIR)PortManager.o: $(SRC_DIR)PortManager.cpp $(INC_PORTMANGER)
+	$(CC) $(CPPFLAGS) $(INCFLAG) -c $< -o $@
+$(OBJ_DIR)Client.o: $(SRC_DIR)Client.cpp $(INC_CLIENT)
+	$(CC) $(CPPFLAGS) $(INCFLAG) -c $< -o $@
+$(OBJ_DIR)ServerManager.o: $(SRC_DIR)ServerManager.cpp $(INC_SERVERMANAGER)
+	$(CC) $(CPPFLAGS) $(INCFLAG) -c $< -o $@
+$(OBJ_DIR)ConfigParser.o: $(SRC_DIR)ConfigParser.cpp $(INC_CONFIGPARSER)
+	$(CC) $(CPPFLAGS) $(INCFLAG) -c $< -o $@
 
-OBJS = TermPrinter.o \
+OBJ = TermPrinter.o \
 	Location.o \
 	Request.o \
 	Response.o \
 	Resource.o \
 	Re3.o \
+	CgiConnector.o \
 	Server.o \
 	PortManager.o \
 	Client.o \
 	ServerManager.o \
 	ConfigParser.o \
 	main.o
+OBJS = $(addprefix $(OBJ_DIR),$(OBJ))
 
-%.o: %.cpp
-	$(CC) $(CPPFLAGS) -c $< -o $@
+$(OBJ_DIR)%.o: $(SRC_DIR)%.cpp
+	$(CC) $(CPPFLAGS) $(INCFLAG) -c $< -o $@
 
 # if debug_check is not set, just compile.
 ifeq ($(shell cat .make.tmp), $(DEBUG_CHECK))
 $(NAME): $(OBJS)
-	$(CC) $(CPPFLAGS) $(OBJS) -o $@
+	$(CC) $(CPPFLAGS) $(INCFLAG) $(OBJS) -o $@
 	echo $(DEBUG_CHECK) > .make.tmp
 # if the former make command is same as before, just compile.
 else ifeq ($(shell echo $debug_check), $(DEBUG_CHECK))
 $(NAME): $(OBJS)
-	$(CC) $(CPPFLAGS) $(OBJS) -o $@
+	$(CC) $(CPPFLAGS) $(INCFLAG) $(OBJS) -o $@
 	echo $(DEBUG_CHECK) > .make.tmp
 # if the former make command is equal to the current one, delete files and recompile.
 else
 $(NAME): fclean $(OBJS)
-	$(CC) $(CPPFLAGS) $(OBJS) -o $@
+	$(CC) $(CPPFLAGS) $(INCFLAG) $(OBJS) -o $@
 	echo $(DEBUG_CHECK) > .make.tmp
 endif
 

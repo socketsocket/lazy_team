@@ -1,3 +1,9 @@
+```
+$make all
+```
+```
+$make debug && ./webserv
+```
 ### 구조
 1. ServerFd ReadEvent 발생 -> Client 생성
 2. ClientFd ReadEvent 발생 -> RawRequest 생성하여 Client에게 넘김 -> Client가 RawRequest 파싱하여 Re3 Deque에 push Re3 -> Re3Iter를 PortManager 통하여 Server에 넘김 -> Server는 vector(resourceFd)로 Re3* 관리 -> resource 필요하다면 해당 Re3에 resource 등록, return. -> Client는 return하기 전에 새로 만든 Re3들을 살펴보고 read 필요한 Resource 있다면 vector에 넣어 return. -> ServerManager는 return 받은 vector의 Re3를 살펴서 등록이 필요한 것이 있다면 kq에 등록
