@@ -38,15 +38,6 @@ ServerStatus Server::makeResponse(Re3* re3) const {
 	if (rsc_status == kWriting /*&& request->getMethod() & POST*/)
 		return kResourceWriteWaiting;
 
-	if (handleCGI(request, curr_location))
-	{
-		CgiConnector	tmp;
-		ServerStatus	ret = tmp.makeCgiResponse(re3, curr_location, this->port_num);
-		if (ret == kResponseError)
-			return this->makeErrorResponse(re3, curr_location, C500);
-		return ret;
-	}
-
 	std::string resource_path;
 
 	if (re3->getRscPtr()->getStatus() == kReadDone) {
@@ -56,6 +47,17 @@ ServerStatus Server::makeResponse(Re3* re3) const {
 		size_t path_pos = resource_path.find(curr_location->getPath());
 		resource_path.replace(path_pos, curr_location->getPath().length(), curr_location->getRoot());
 		re3->getRscPtr()->setResourceUri(resource_path);
+	}
+
+	if (handleCGI(request, curr_location))
+	{
+		if (checkPath(resource_path) == kNotFound)
+			return this->makeErrorResponse(re3, curr_location, C404);
+		CgiConnector	tmp;
+		ServerStatus	ret = tmp.makeCgiResponse(re3, curr_location, this->port_num);
+		if (ret == kResponseError)
+			return this->makeErrorResponse(re3, curr_location, C500);
+		return ret;
 	}
 
 	if (request->getMethod() & GET)
