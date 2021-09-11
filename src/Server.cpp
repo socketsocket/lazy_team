@@ -39,13 +39,14 @@ ServerStatus Server::makeResponse(Re3* re3) const {
 		return kResourceWriteWaiting;
 
 	std::string resource_path;
+	std::string	root = curr_location->getRoot().length() ? curr_location->getRoot() : this->default_root;
 
 	if (re3->getRscPtr()->getStatus() == kReadDone) {
 		resource_path = re3->getRscPtr()->getResourceUri();
 	} else {
 		resource_path = request->getUri();
 		size_t path_pos = resource_path.find(curr_location->getPath());
-		resource_path.replace(path_pos, curr_location->getPath().length(), curr_location->getRoot());
+		resource_path.replace(path_pos, curr_location->getPath().length(), root);
 		re3->getRscPtr()->setResourceUri(resource_path);
 	}
 
@@ -54,7 +55,7 @@ ServerStatus Server::makeResponse(Re3* re3) const {
 		if (checkPath(resource_path) == kNotFound)
 			return this->makeErrorResponse(re3, curr_location, C404);
 		CgiConnector	tmp;
-		ServerStatus	ret = tmp.makeCgiResponse(re3, curr_location, this->port_num);
+		ServerStatus	ret = tmp.makeCgiResponse(re3, curr_location, this->port_num, root);
 		if (ret == kResponseError)
 			return this->makeErrorResponse(re3, curr_location, C500);
 		return ret;
@@ -389,7 +390,9 @@ std::string Server::contentTypeHeaderInfo(std::string extension) const {
 
 std::string	Server::makeAutoIndexPage(Request* request, std::string resource_path) const {
 	std::string body;
-	std::string addr = "http://" + request->getHeaderValue("host") + "/"; //하이퍼링크용 경로
+	std::cout << request->getHeaderValue("host") << ", " << resource_path << ", " << request->getUri() << std::endl;
+	std::string addr = "http://" + request->getHeaderValue("host") + request->getUri() + "/";
+	//  request->getHeaderValue("host") + "/"; //하이퍼링크용 경로
 
 	body += "<!DOCTYPE html>\n";
 	body += "<html>\n";

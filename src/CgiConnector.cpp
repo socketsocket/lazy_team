@@ -63,7 +63,7 @@ static char**	setEnvVariable(Re3* re3, const Location* loc, std::string& path, s
 	return envp;
 }
 
-ServerStatus	CgiConnector::prepareResource(Re3* re3, const Location* loc, unsigned int port_num) {
+ServerStatus	CgiConnector::prepareResource(Re3* re3, const Location* loc, unsigned int port_num, std::string root) {
 	Request*	req = re3->getReqPtr();
 	Resource*	rsc = re3->getRscPtr();
 	int			ret1, ret2;
@@ -82,7 +82,7 @@ ServerStatus	CgiConnector::prepareResource(Re3* re3, const Location* loc, unsign
 	} else if (pid == 0) {
 
 		size_t	idx = req->getUri().find("?");
-		std::string query_string, path, bin, extension, root;
+		std::string query_string, path, bin, extension;
 
 		if (idx != std::string::npos) {
 			query_string = req->getUri().substr(idx + 1);
@@ -93,7 +93,7 @@ ServerStatus	CgiConnector::prepareResource(Re3* re3, const Location* loc, unsign
 		}
 		extension = path.substr(path.find(".") + 1);
 		bin = loc->getCgiBinary(extension);
-		root = loc->getRoot() + path.substr(1);
+		root = root + path.substr(1);
 		char *av[3] = {const_cast<char*>(bin.c_str()), const_cast<char*>(root.c_str()), NULL};
 		char** envp = setEnvVariable(re3, loc, path, query_string, port_num);
 		dup2(write_fd[0], STDIN_FILENO);
@@ -167,18 +167,17 @@ ServerStatus	CgiConnector::prepareResponse(Re3* re3) {
 	}
 	while ((idx1 = buff.find("\r\n")) != std::string::npos)
 		buff.erase(0, idx1 + 2);
-	body = buff.substr(idx1 + 2);
 	headers["Content-Language"] = "ko-KR";
-	headers["Content-Length"] = std::to_string(body.length());
+	headers["Content-Length"] = std::to_string(buff.size());
 	re3->setRspPtr(new Response(kFinished, http_status, headers, buff, req->getVersion()));
 	return kResponseMakingDone;
 }
 
-ServerStatus	CgiConnector::makeCgiResponse(Re3* re3, const Location* loc, unsigned int port_num) {
+ServerStatus	CgiConnector::makeCgiResponse(Re3* re3, const Location* loc, unsigned int port_num, std::string root) {
 	Resource*	rsc = re3->getRscPtr();
 
 	if (rsc->getStatus() == kNothing)
-		return prepareResource(re3, loc, port_num);
+		return prepareResource(re3, loc, port_num, root);
 	if (rsc->getStatus() == kWriteDone)
 		return kProcessWaiting;
 	if (rsc->getStatus() == kReadDone)

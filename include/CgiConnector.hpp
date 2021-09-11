@@ -11,12 +11,12 @@
 
 class CgiConnector {
 	private:
-		ServerStatus	prepareResource(Re3* re3, const Location* loc, unsigned int port_num);
+		ServerStatus	prepareResource(Re3* re3, const Location* loc, unsigned int port_num, std::string root);
 		ServerStatus	prepareResponse(Re3* re3);
 		// ServerStatus	waitCgi(Resource* rsc);
 
 	public:
-		ServerStatus	makeCgiResponse(Re3* re3, const Location* loc, unsigned int port_num);
+		ServerStatus	makeCgiResponse(Re3* re3, const Location* loc, unsigned int port_num, std::string root);
 		CgiConnector();
 		CgiConnector(const CgiConnector& ref);
 		~CgiConnector();
