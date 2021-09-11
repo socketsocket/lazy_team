@@ -1,5 +1,5 @@
-#include "Location.hpp"
 #include <iostream>
+#include "Location.hpp"
 #include "TermPrinter.hpp"
 
 Location::Location(const Location& ref)
@@ -75,4 +75,8 @@ const std::string		Location::getCgiBinary(std::string extension) const {
 
 const std::map<std::string, std::string>&	Location::getCgiInfos() const {
 	return this->cgi_infos;
+}
+
+std::pair<stat_type, std::string>	Location::getReturnTo() const {
+	return this->return_to;
 }

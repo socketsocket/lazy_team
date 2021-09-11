@@ -19,6 +19,10 @@ ServerStatus Server::makeResponse(Re3* re3) const {
 	const Status req_status = request->getStatus();
 	const Status rsc_status = resource->getStatus();
 	const Location* curr_location = this->currLocation(request->getUri());
+	if (this->return_to.second.length() || curr_location->getReturnTo().second.length()) {
+		std::pair<stat_type, std::string>	return_to = this->return_to.second.length() ? this->return_to : curr_location->getReturnTo();
+		return this->makeRedirectResponse(re3, return_to);
+	}
 
 	if (request->getHeaderValue("host") == "" || req_status == kNothing)
 		return this->makeErrorResponse(re3, curr_location, C400);
@@ -61,6 +65,23 @@ ServerStatus Server::makeResponse(Re3* re3) const {
 	if (request->getMethod() & DELETE)
 		return this->makeDELETEResponse(re3, curr_location, resource_path);
 	return this->makeErrorResponse(re3, curr_location, C501);
+}
+
+ServerStatus	Server::makeRedirectResponse(Re3* re3, const std::pair<stat_type, std::string> return_to) const {
+	std::map<std::string, std::string> headers;
+
+	headers["Date"] = this->dateHeaderInfo();
+	headers["Server"] = "Passive Server";
+	headers["Content-Type"] = this->contentTypeHeaderInfo(".html");
+	headers["Location"] = return_to.second;
+
+	std::string error_page_body = this->makeHTMLPage(return_to.first);
+	std::stringstream length;
+	length << error_page_body.length();
+	headers["Content-Length"] = length.str();
+	assert(re3->getRspPtr() == NULL);
+	re3->setRspPtr(new Response(kFinished, std::string(return_to.first), headers, error_page_body, re3->getReqPtr()->getVersion()));
+	return kResponseMakingDone;
 }
 
 //@return: 디폴트 에러파일을 열 때 - ResourceReadWaiting

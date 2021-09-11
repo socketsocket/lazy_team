@@ -335,7 +335,7 @@ int	ConfigParser::serverBlock( \
 	if (elements[0].compare("}"))
 		return this->putError(SEMANTIC_ERR);
 	// if there is no root directive and location or no return directive
-	if (!default_root.length() && !locations.size() && !std::string(return_to.first).length() && port == 0)
+	if (port == 0 || (!default_root.length() && !locations.size() && !std::string(return_to.first).length()))
 		return this->putError(NO_ENTITY_ERR, "root/return/listen");
 
 	if (locations.size() == 0) {

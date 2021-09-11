@@ -309,10 +309,10 @@ int	ServerManager::initServerManager( \
 
 		this->setEvent(server_socket, EVFILT_READ, EV_ADD);
 		putMsg(std::string("Port number: ") + std::to_string((*it).first) + "\n");
-		if (this->types.size() < server_socket)
+		if (this->types.size() < server_socket + 1)
 			this->types.resize(server_socket + 1, kBlank);
 		this->types[server_socket] = kPortFd;
-		if (this->managers.size() < server_socket)
+		if (this->managers.size() < server_socket + 1)
 			this->managers.resize(server_socket + 1, NULL);
 		this->managers[server_socket] = new PortManager(it->first, server_socket, (*it).second);
 	}
@@ -460,10 +460,5 @@ int	ServerManager::processEvent() {
 		}
 	}
 	this->checkStdBuffer();
-	// if (ptr != NULL) // ANCHOR
-	// {
-	// 	delete[] ptr;
-	// 	ptr = NULL;
-	// }
 	return OK;
 }

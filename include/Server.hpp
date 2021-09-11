@@ -28,6 +28,7 @@ class Server
 		ServerStatus		makePOSTResponse(Re3* re3, const Location* curr_location, std::string resource_path) const;
 		ServerStatus		makeDELETEResponse(Re3* re3, const Location* curr_location, std::string resource_path) const;
 		ServerStatus		makeErrorResponse(Re3* re3, const Location* curr_location, stat_type http_status_code) const;
+		ServerStatus		makeRedirectResponse(Re3* re3, const std::pair<stat_type, std::string> return_to) const;
 
 		stat_type	requestValidCheck(Request* request, const Location* curr_location) const;
 		const Location*	currLocation(std::string request_uri) const;
