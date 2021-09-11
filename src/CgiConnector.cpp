@@ -93,9 +93,6 @@ ServerStatus	CgiConnector::prepareResource(Re3* re3, const Location* loc, unsign
 		}
 		extension = path.substr(path.find(".") + 1);
 		bin = loc->getCgiBinary(extension);
-		std::cerr<< "bin: " << bin <<
-		"root: " << loc->getRoot() << "path:" << path
-		<< std::endl;
 		root = loc->getRoot() + path.substr(1);
 		char *av[3] = {const_cast<char*>(bin.c_str()), const_cast<char*>(root.c_str()), NULL};
 		char** envp = setEnvVariable(re3, loc, path, query_string, port_num);
@@ -106,7 +103,7 @@ ServerStatus	CgiConnector::prepareResource(Re3* re3, const Location* loc, unsign
 		close(read_fd[0]);
 		close(read_fd[1]);
 		if (envp != NULL)
-			ret1 = execve(bin.c_str(), av, envp);
+			ret1 = execve(av[0], av, envp);
 		else
 			exit(1);
 		exit(ret1);
@@ -152,8 +149,6 @@ ServerStatus	CgiConnector::prepareResponse(Re3* re3) {
 	std::string							body;
 	size_t	idx1, idx2;
 
-	std::cout<< "22 " << std::endl;
-
 	close(rsc->getResourceFd());
 	if ((idx1 = buff.find("Status: ")) != std::string::npos) {
 		idx2 = buff.find("\r\n");
@@ -170,7 +165,7 @@ ServerStatus	CgiConnector::prepareResponse(Re3* re3) {
 		headers["Content-Type"] = buff.substr(idx1 + 10, idx2 - (idx1 + 10));
 		buff.erase(idx1, idx2 + 2);
 	}
-	while ((idx1 = buff.find("\r\n")) != 0)
+	while ((idx1 = buff.find("\r\n")) != std::string::npos)
 		buff.erase(0, idx1 + 2);
 	body = buff.substr(idx1 + 2);
 	headers["Content-Language"] = "ko-KR";

@@ -1,0 +1,41 @@
+ERROR: Cannot get query stream
+Query string = 
+Target file : ./www/test.php
+1.2
+0.1
+0.5
+CGI Tester
+hson seyu webserv
+#4040bf
+#bf4060
+
+Query string = 
+Target file : ./www/test.php
+1.2
+0.1
+0.5
+CGI Tester
+hson seyu webserv
+#4040bf
+#bf4060
+
+Query string = 
+Target file : ./www/test.php
+1.2
+0.1
+0.5
+CGI Tester
+hson seyu webserv
+#4040bf
+#bf4060
+
+Query string = 
+Target file : ./www/test.php
+1.2
+0.1
+0.5
+CGI Tester
+hson seyu webserv
+#4040bf
+#bf4060
+
