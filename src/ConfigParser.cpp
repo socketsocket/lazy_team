@@ -233,7 +233,7 @@ int	ConfigParser::serverBlock( \
 		return ERROR;
 
 	std::vector<unsigned int>			ports;
-	unsigned int						port;
+	unsigned int						port = 0;
 	std::string							server_name = "localhost";
 	bool								server_name_check = false;
 	std::string							default_root;
@@ -335,8 +335,12 @@ int	ConfigParser::serverBlock( \
 	if (elements[0].compare("}"))
 		return this->putError(SEMANTIC_ERR);
 	// if there is no root directive and location or no return directive
-	if (!default_root.length() && !locations.size() && !std::string(return_to.first).length())
-		return this->putError(NO_ENTITY_ERR, "root/return");
+	if (!default_root.length() && !locations.size() && !std::string(return_to.first).length() && port == 0)
+		return this->putError(NO_ENTITY_ERR, "root/return/listen");
+
+	if (locations.size() == 0) {
+		locations.push_back(Location("/", default_root, std::vector<std::string>(), false, std::map<stat_type, std::string>(), GET, std::map<std::string, std::string>(), std::pair<stat_type, std::string>()));
+	}
 	configs.push_back(std::make_pair(Server(server_name, default_root, \
 		default_error_pages, client_body_limit, locations, return_to), ports));
 	this->method_name.pop_back();

@@ -73,7 +73,7 @@ typedef const char*	stat_type;
 
 extern stat_type	stat_code_arr[40];
 
-#define DEFAULT_ROUTE "default.config"
+#define DEFAULT_ROUTE "./config/default.config"
 
 #include <map>
 #include <string>

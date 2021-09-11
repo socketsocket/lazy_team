@@ -36,7 +36,7 @@ ServerStatus Server::makeResponse(Re3* re3) const {
 
 	if (handleCGI(request, curr_location))
 	{
-		CgiConnector tmp;
+		CgiConnector	tmp;
 		ServerStatus	ret = tmp.makeCgiResponse(re3, curr_location, this->port_num);
 		if (ret == kResponseError)
 			return this->makeErrorResponse(re3, curr_location, C500);
@@ -233,6 +233,9 @@ ServerStatus Server::makeDELETEResponse(Re3* re3, const Location* curr_location,
 }
 
 const Location* Server::currLocation(std::string request_uri) const {
+	if (this->locations.size() == 0)
+		return NULL;
+
 	std::vector<Location>::const_iterator res = this->locations.begin();
 	unsigned long	longest = 0;
 
