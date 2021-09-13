@@ -22,6 +22,7 @@ PortManager::~PortManager() {}
 Server* PortManager::findServer(const std::string& host_name) const {
 	for (std::vector<Server*>::const_iterator serv_it = servers.begin(); \
 	serv_it < servers.end(); ++serv_it) {
+		std::cout << host_name << "\n" << (*serv_it)->getServerName() << std::endl;
 		if (host_name == (*serv_it)->getServerName())
 			return *serv_it;
 	}
@@ -40,10 +41,13 @@ ServerStatus	PortManager::passRequest(Re3* ptr) const {
 	ptr->setPortId(this->port_fd);
 	ptr->setRscPtr(new Resource(kNothing));
 	std::string	host_name = ptr->getReqPtr()->getHeaderValue("host");
+	host_name = host_name.substr(0, host_name.find_first_of(':'));
+	putMsg(host_name);
 	return this->findServer(host_name)->makeResponse(ptr);
 }
 
 ServerStatus	PortManager::passResource(Re3* ptr) const {
 	std::string	host_name = ptr->getReqPtr()->getHeaderValue("host");
+	host_name = host_name.substr(0, host_name.find_first_of(':'));
 	return this->findServer(host_name)->makeResponse(ptr);
 }
