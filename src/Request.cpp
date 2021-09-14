@@ -60,3 +60,10 @@ std::string				Request::getHeaderValue(const std::string& key) const {
 const std::string&		Request::getBody() const {
 	return this->body;
 }
+void	Request::setQuery(std::string& query) {
+	this->query_string = query;
+}
+
+const std::string&	Request::getQuery() const {
+	return this->query_string;
+}

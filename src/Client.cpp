@@ -123,6 +123,16 @@ int	Client::reqLineParser(Request* request) {
 		tmp = tmp.substr(tmp.find("/"));
 	}
 	request->setUri(tmp);
+	size_t	idx = tmp.find("?");
+	std::string query;
+
+	if (idx != std::string::npos) {
+		query = tmp.substr(idx + 1);
+		tmp = tmp.substr(0, idx);
+	} else
+		query = "";
+	request->setQuery(query);
+	request->setUri(tmp);
 	ss >> tmp;
 	request->setVersion(tmp);
 	request->setStatus(kHeader);

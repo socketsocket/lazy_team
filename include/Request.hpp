@@ -12,6 +12,7 @@ class Request {
 		Status								status;
 		Method								method;
 		std::string							uri;
+		std::string							query_string;
 		std::string							version;
 		std::map<std::string, std::string>	headers;
 		std::string							body;
@@ -26,6 +27,7 @@ class Request {
 		void	setStatus(Status);
 		void	setMethod(Method);
 		void	setUri(std::string&);
+		void	setQuery(std::string&);
 		void	setVersion(std::string&);
 		void	insertHeader(std::string& key, std::string& value);
 		void	appendBody(std::string& buffer);
@@ -37,6 +39,7 @@ class Request {
 		const std::string&	getVersion() const;
 		std::string			getHeaderValue(const std::string& key) const;
 		const std::string&	getBody() const;
+		const std::string&	getQuery() const;
 };
 
 #endif

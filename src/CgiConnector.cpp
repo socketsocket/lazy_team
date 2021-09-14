@@ -10,7 +10,7 @@ static std::string	getIP(int client_fd) {
 	return (ip);
 }
 
-static char**	setEnvVariable(Re3* re3, const Location* loc, std::string& path, std::string& query_string, unsigned int port_num) {
+static char**	setEnvVariable(Re3* re3, const Location* loc, const std::string& path, const std::string& query_string, unsigned int port_num) {
 	Request*							req = re3->getReqPtr();
 	std::map<std::string, std::string>	tmp;
 
@@ -80,22 +80,12 @@ ServerStatus	CgiConnector::prepareResource(Re3* re3, const Location* loc, unsign
 	if (pid < 0) {
 		return kResponseError;
 	} else if (pid == 0) {
-
-		size_t	idx = req->getUri().find("?");
-		std::string query_string, path, bin, extension;
-
-		if (idx != std::string::npos) {
-			query_string = req->getUri().substr(idx + 1);
-			path = req->getUri().substr(0, idx);
-		} else {
-			query_string = "";
-			path = req->getUri();
-		}
-		extension = path.substr(path.find(".") + 1);
+		std::string bin, extension;
+		extension = req->getUri().substr(req->getUri().find(".") + 1);
 		bin = loc->getCgiBinary(extension);
-		root = root + path.substr(1);
+		root = root + req->getUri().substr(1);
 		char *av[3] = {const_cast<char*>(bin.c_str()), const_cast<char*>(root.c_str()), NULL};
-		char** envp = setEnvVariable(re3, loc, path, query_string, port_num);
+		char** envp = setEnvVariable(re3, loc, req->getUri(), req->getQuery(), port_num);
 		dup2(write_fd[0], STDIN_FILENO);
 		dup2(read_fd[1], STDOUT_FILENO);
 		close(write_fd[0]);
