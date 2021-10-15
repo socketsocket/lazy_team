@@ -24,43 +24,36 @@ This project is here to make you write your HTTP server.
 5. Client WriteEvent 발생 -> Client는 Response가 완성되어있는지 확인. -> `send`
 6. Stderr WriteEvent 발생 -> stderr에 출력.
 
+## *Goal*:
+- [x] GET, POST, DELETE
+- [x] multiple ports
+- [x] CGI
+- [x] multiplexing
+
 ## *Code Convention*:
 > [Google C++ Style Guide](https://google.github.io/styleguide/cppguide.html#The__define_Guard)
 
 ## *Reference*:
-> https://developer.mozilla.org/ko/docs/Web/HTTP
->
+> [HTTP](https://developer.mozilla.org/ko/docs/Web/HTTP)
+> [Poller](http://openlook.org/src/articles/maso0109-kqueue.pdf)
 
 ## *Project Contribution*:
 
 - *jolim*
-	- kqueue event (소켓 프로그래밍) / config파일 파싱
 	- ServerManager
+		- poller: kqueue
+		- multiplexing
 	- ConfigParser
-		- Location 생성
-		- Server 생성
+		- config parsing
 	- TermPrinter
-	- Re3
-		- Request
-		- Response
-		- Resource
 
 - *seohchoi*
-	- response 클래스 제작
-		- 완성된 응답저장 및 반환
 	- Server
-		- 파싱된 Request 받아 까보기
-		- Request에 따라 Response 제작 / Response가 필요하다면 Response open
-		- Response가 완성되면 Client->Response에 입력
-	- Resource
-		- 리소스 read하고 저장
-		- 리소스를 다 읽었는지/아닌지 상태 저장
+		- Request -> Response
+		- Resource
 
 - *jinbekim*
-	- read/write event/request 파싱
 	- Client
-		- Request를 읽고 파싱
-		- Request / Response -> 요청 리퀘스트/리스폰스 스트링을 '담아두는' 클래스
-	- PortManager
-		- 클라이언트의 Request를 받아 올바른 Server로 데이터를 넘겨주는 클래스
-	- CGI
+		- Request parsing
+	- CgiConnector
+		- CGI
