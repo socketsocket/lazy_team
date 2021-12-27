@@ -1,13 +1,13 @@
 # Webserv
 
 # *Summary*:
-This project is here to make you write your HTTP server.
+This project is here to make you write your HTTP server. This multiplexing, multi-port, virtual-hosting server is basically running on a single thread, except for cgi handling.
 
 # *Period*:
 2021.08. ~ 2021.10
 
 # *CMD*:
-> `$> make all`
+> `$> make all && ./webserv`
 >
 > `$> make debug && ./webserv`
 
