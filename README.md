@@ -13,7 +13,7 @@ This project is here to make you write your HTTP server. This multiplexing, mult
 
 
 ## *Structure*:
-<img src="https://user-images.githubusercontent.com/59330110/137316671-2ffe88a7-d14c-498b-b27b-1d199e906bb6.png" alt="drawing" width="500"/>
+![image](https://user-images.githubusercontent.com/3518710/149898433-d3d2b2ed-1d1c-4a70-89c3-6520850e78fd.png)
 
 1. ServerFd ReadEvent 발생 -> `ClientFd 생성`
 2. ClientFd ReadEvent 발생 -> `Client에서 Request 파싱`
